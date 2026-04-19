@@ -252,28 +252,6 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
         $bridge_code .= "            echo '<script type=\"application/ld+json\" class=\"artitech-schema-bridge\">' . wp_json_encode(\$schema_array) . \"</script>\\n\";\n";
         $bridge_code .= "        }\n";
         $bridge_code .= "    }\n";
-        
-        $bridge_code .= "    /* FAQ Schema Injection (Redundancy Check) */\n";
-        $bridge_code .= "    \$faq_data = get_post_meta(\$object_id, '_artitechcore_ce_faq', true);\n";
-        $bridge_code .= "    if (!empty(\$faq_data) && is_array(\$faq_data)) {\n";
-        $bridge_code .= "        \$faq_items = [];\n";
-        $bridge_code .= "        foreach (\$faq_data as \$item) {\n";
-        $bridge_code .= "            if (!empty(\$item['q']) && !empty(\$item['a'])) {\n";
-        $bridge_code .= "                \$faq_items[] = [\n";
-        $bridge_code .= "                    '@type' => 'Question',\n";
-        $bridge_code .= "                    'name' => esc_html(\$item['q']),\n";
-        $bridge_code .= "                    'acceptedAnswer' => [\n";
-        $bridge_code .= "                        '@type' => 'Answer',\n";
-        $bridge_code .= "                        'text' => wp_strip_all_tags(wpautop(esc_html(\$item['a'])))\n";
-        $bridge_code .= "                    ]\n";
-        $bridge_code .= "                ];\n";
-        $bridge_code .= "            }\n";
-        $bridge_code .= "        }\n";
-        $bridge_code .= "        if (!empty(\$faq_items)) {\n";
-        $bridge_code .= "            echo \"\\n<!-- ArtitechCore FAQ Schema Bridge -->\\n\";\n";
-        $bridge_code .= "            echo '<script type=\"application/ld+json\" class=\"artitech-faq-bridge\">' . wp_json_encode(['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => \$faq_items]) . \"</script>\\n\";\n";
-        $bridge_code .= "        }\n";
-        $bridge_code .= "    }\n";
         $bridge_code .= "}, 30);\n\n";
     }
 

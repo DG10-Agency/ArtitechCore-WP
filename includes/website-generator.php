@@ -273,6 +273,9 @@ function artitechcore_website_builder_tab() {
                     <div class="artitechcore-progress-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold;">0%</div>
                 </div>
                 <p id="artitechcore-progress-status" style="margin-top: 10px; font-style: italic;">Initializing...</p>
+                <div id="artitechcore-progress-control" style="margin-top: 10px; display: none;">
+                    <button type="button" id="artitechcore-cancel-generation" class="button button-secondary"><?php esc_html_e('Cancel Generation', 'artitechcore'); ?></button>
+                </div>
             </div>
         </div>
 
@@ -453,9 +456,12 @@ function artitechcore_website_builder_tab() {
             const $text = $('.artitechcore-progress-text');
             const $status = $('#artitechcore-progress-status');
             const $results = $('#artitechcore-generation-results');
+            const $control = $('#artitechcore-progress-control');
 
             $btn.prop('disabled', true);
             $progress.show();
+            $control.hide();
+            $('#artitechcore-cancel-generation').prop('disabled', false).text('<?php esc_js(esc_html__('Cancel Generation', 'artitechcore')); ?>');
             $results.hide().empty();
             $status.text('<?php esc_html_e('Queueing generation job...', 'artitechcore'); ?>');
             $fill.css('width', '0%');
@@ -498,11 +504,13 @@ function artitechcore_website_builder_tab() {
                     if (res.success && res.data.job_id) {
                         currentJobId = res.data.job_id;
                         $status.text('<?php esc_html_e('Job queued. Starting processing...', 'artitechcore'); ?>');
+                        $control.show();
                         // Start polling for status
                         startJobPolling(currentJobId);
                     } else {
                         handleGenerationError(res.data || {message: '<?php esc_html_e('Unknown error', 'artitechcore'); ?>'});
                         $btn.prop('disabled', false);
+                        $control.hide();
                     }
                 },
                 error: function(xhr, status, error) {
@@ -553,6 +561,7 @@ function artitechcore_website_builder_tab() {
                                 // Show results
                                 showGenerationResults(data);
                                 $('#artitechcore-start-generation').prop('disabled', false);
+                                $('#artitechcore-progress-control').hide();
                             } else if (data.status === 'failed') {
                                 clearInterval(jobPollingInterval);
                                 jobPollingInterval = null;
@@ -562,6 +571,13 @@ function artitechcore_website_builder_tab() {
                                     errors: data.errors || []
                                 });
                                 $('#artitechcore-start-generation').prop('disabled', false);
+                                $('#artitechcore-progress-control').hide();
+                            } else if (data.status === 'cancelled') {
+                                clearInterval(jobPollingInterval);
+                                jobPollingInterval = null;
+                                $status.text('<?php esc_html_e('Generation cancelled.', 'artitechcore'); ?>');
+                                $('#artitechcore-start-generation').prop('disabled', false);
+                                $('#artitechcore-progress-control').hide();
                             }
                         } else {
                             // Job not found or error
@@ -655,6 +671,42 @@ function artitechcore_website_builder_tab() {
 
             $results.html(html).show();
         }
+
+        // Cancel Job Handler
+        $('#artitechcore-cancel-generation').on('click', function() {
+            if (!currentJobId) return;
+            
+            $(this).prop('disabled', true).text('<?php echo esc_js(__('Cancelling...', 'artitechcore')); ?>');
+            
+            $.ajax({
+                url: ajaxurl,
+                method: 'POST',
+                data: {
+                    action: 'artitechcore_builder_cancel_job',
+                    job_id: currentJobId,
+                    nonce: '<?php echo wp_create_nonce("artitechcore_website_builder_nonce"); ?>'
+                },
+                success: function(res) {
+                    if (res.success) {
+                        $('#artitechcore-progress-status').text('<?php echo esc_js(__('Generation cancelled.', 'artitechcore')); ?>');
+                        $('#artitechcore-start-generation').prop('disabled', false);
+                        $('#artitechcore-progress-control').hide();
+                        if (jobPollingInterval) {
+                            clearInterval(jobPollingInterval);
+                            jobPollingInterval = null;
+                        }
+                    } else {
+                        // Reset button if cancellation failed
+                        $('#artitechcore-cancel-generation').prop('disabled', false).text('<?php esc_js(esc_html__('Cancel Generation', 'artitechcore')); ?>');
+                        alert(res.data.message || '<?php echo esc_js(__('Failed to cancel job', 'artitechcore')); ?>');
+                    }
+                },
+                error: function() {
+                    $('#artitechcore-cancel-generation').prop('disabled', false).text('<?php esc_js(esc_html__('Cancel Generation', 'artitechcore')); ?>');
+                    alert('<?php echo esc_js(__('Network error while cancelling', 'artitechcore')); ?>');
+                }
+            });
+        });
 
         // Update cost estimate when image checkbox changes
         $('#artitechcore-generate-images').on('change', updateCostEstimate);
@@ -879,27 +931,43 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                 $page_title = $title;
 
                 // Prepare post arguments with filter for customization
+                $css_preamble = sprintf(
+                    '<style>:root { --ac-primary: %s; --ac-secondary: %s; --ac-accent: %s; --ac-heading-font: "%s", sans-serif; --ac-body-font: "%s", sans-serif; }</style>',
+                    esc_attr($brand_kit['primary_color']),
+                    esc_attr($brand_kit['secondary_color']),
+                    esc_attr($brand_kit['accent_color']),
+                    esc_attr($brand_kit['heading_font']),
+                    esc_attr($brand_kit['body_font'])
+                );
+
                 $post_args = [
                     'post_title'    => $title,
                     'post_name'     => sanitize_title($title),
-                    'post_content'  => $page_data['content'],
+                    'post_content'  => $css_preamble . "\n" . $page_data['content'],
                     'post_status'   => $publish_status,
                     'post_type'     => 'page',
                     'post_excerpt'  => $page_data['meta_description'] ?? '',
                 ];
 
-                /**
-                 * Filter post arguments before page creation
-                 *
-                 * @filter artitechcore_page_generation_post_args
-                 * @param array $post_args WordPress post insertion arguments
-                 * @param string $page_type Type of page being generated
-                 * @param array $brand_kit Brand configuration
-                 */
-                $post_args = apply_filters('artitechcore_page_generation_post_args', $post_args, $type, $brand_kit);
+                $page_id = false;
+                $existing_post = get_page_by_title($title, OBJECT, 'page');
+                if ($existing_post && in_array($existing_post->post_status, ['publish', 'draft', 'pending', 'private'])) {
+                    $page_id = $existing_post->ID;
+                    $page_result['note'] = 'Skipped creation (already exists)';
+                } else {
+                    /**
+                     * Filter post arguments before page creation
+                     *
+                     * @filter artitechcore_page_generation_post_args
+                     * @param array $post_args WordPress post insertion arguments
+                     * @param string $page_type Type of page being generated
+                     * @param array $brand_kit Brand configuration
+                     */
+                    $post_args = apply_filters('artitechcore_page_generation_post_args', $post_args, $type, $brand_kit);
 
-                // Create the page
-                $page_id = wp_insert_post($post_args);
+                    // Create the page
+                    $page_id = wp_insert_post($post_args);
+                }
 
                 if ($page_id && !is_wp_error($page_id)) {
                     $pages_created++;
@@ -909,7 +977,7 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
 
                     // Generate featured image
                     $image_success = false;
-                    if ($generate_images) {
+                    if ($generate_images && !has_post_thumbnail($page_id)) {
                         try {
                             // This will use existing image generation
                             $image_success = artitechcore_generate_and_set_featured_image_for_page($page_id, $title, $type, $brand_kit);
@@ -1121,13 +1189,15 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
     $prompt = artitechcore_build_page_generation_prompt($page_type, $brand_kit, $instance);
 
     $url = $endpoint;
+    
+    $model_name = strpos($endpoint, 'deepseek') !== false ? 'deepseek-chat' : 'gpt-4o';
 
-    $body = json_encode([
-        'model' => 'gpt-4o',
+    $request_data = [
+        'model' => $model_name,
         'messages' => [
             [
                 'role' => 'system',
-                'content' => 'You are an expert WordPress developer and content creator. Return ONLY complete, valid HTML pages with no markdown formatting, no code blocks, no explanations.'
+                'content' => 'You are an expert WordPress developer and content creator. You must respond in valid JSON format only.'
             ],
             [
                 'role' => 'user',
@@ -1136,7 +1206,13 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
         ],
         'temperature' => ARTITECHCORE_AI_TEMPERATURE,
         'max_tokens' => ARTITECHCORE_AI_MAX_TOKENS,
-    ]);
+    ];
+    
+    if ($model_name === 'gpt-4o') {
+        $request_data['response_format'] = ['type' => 'json_object'];
+    }
+
+    $body = json_encode($request_data);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
         throw new Exception(__('Failed to encode request data for OpenAI API.', 'artitechcore'));
@@ -1207,25 +1283,40 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
 
     $html_content = trim($decoded_response['choices'][0]['message']['content']);
 
-    // Remove markdown code blocks if present
-    $html_content = preg_replace('/^```html\s*/i', '', $html_content);
-    $html_content = preg_replace('/\s*```$/', '', $html_content);
-    $html_content = trim($html_content);
+    // Remove markdown code blocks if present (some models still wrap JSON in markdown)
+    $response_content = trim($decoded_response['choices'][0]['message']['content']);
+    $response_content = preg_replace('/^```(?:json)?\s*/i', '', $response_content);
+    $response_content = preg_replace('/\s*```$/', '', $response_content);
+    $response_content = trim($response_content);
 
-    if (empty($html_content)) {
+    if (empty($response_content)) {
         throw new Exception(__('Empty content received from OpenAI API.', 'artitechcore'));
     }
+    
+    $parsed_response = json_decode($response_content, true);
+    
+    if (json_last_error() === JSON_ERROR_NONE && isset($parsed_response['content'])) {
+        $title = $parsed_response['title'] ?? $page_type;
+        $html_content = $parsed_response['content'];
+        $meta_description = $parsed_response['meta_description'] ?? '';
+    } else {
+        // Fallback for broken JSON
+        $html_content = $response_content;
+        $title = $page_type;
+        $meta_description = '';
+    }
 
-    // Extract title from HTML BEFORE sanitization (since <title> is stripped by wp_kses)
-    $title = $page_type;
-    if (preg_match('/<title[^>]*>(.*?)<\/title>/i', $html_content, $matches)) {
-        $title = sanitize_text_field(html_entity_decode(trim($matches[1]), ENT_QUOTES, 'UTF-8'));
-    } elseif (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html_content, $matches)) {
-        $title = sanitize_text_field(html_entity_decode(trim(strip_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
+    // Extract title from HTML if not provided
+    if (empty($title) || $title === $page_type) {
+        if (preg_match('/<title[^>]*>(.*?)<\/title>/i', $html_content, $matches)) {
+            $title = sanitize_text_field(html_entity_decode(trim($matches[1]), ENT_QUOTES, 'UTF-8'));
+        } elseif (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html_content, $matches)) {
+            $title = sanitize_text_field(html_entity_decode(trim(strip_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
+        }
     }
     
     // Limit title length for DB safety and UX
-    $title = mb_substr($title, 0, 200);
+    $title = mb_substr(sanitize_text_field($title), 0, 200);
 
     // SECURITY: Sanitize AI-generated HTML to prevent XSS
     $html_content = wp_kses($html_content, artitechcore_get_allowed_html_tags());
@@ -1234,15 +1325,21 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
     $html_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $html_content);
 
     // Generate meta description
-    $meta_description = $brand_kit['description'];
-    if (empty($meta_description) && !empty($brand_kit['tagline'])) {
-        $meta_description = $brand_kit['tagline'];
+    if (empty($meta_description)) {
+        $meta_description = $brand_kit['description'];
+        if (empty($meta_description) && !empty($brand_kit['tagline'])) {
+            $meta_description = $brand_kit['tagline'];
+        }
     }
+    
+    // Fallback trimming for body tag instances
+    $html_content = preg_replace('/^.*<body[^>]*>\s*/is', '', $html_content);
+    $html_content = preg_replace('/\s*<\/body>.*$/is', '', $html_content);
 
     return [
         'title' => $title,
-        'content' => $html_content,
-        'meta_description' => $meta_description
+        'content' => trim($html_content),
+        'meta_description' => sanitize_text_field($meta_description)
     ];
 }
 
@@ -1336,43 +1433,62 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
         throw new Exception(__('Unexpected response format from Gemini API.', 'artitechcore'));
     }
 
-    $html_content = trim($decoded_response['candidates'][0]['content']['parts'][0]['text']);
+    $response_content = trim($decoded_response['candidates'][0]['content']['parts'][0]['text']);
 
     // Remove markdown code blocks if present
-    $html_content = preg_replace('/^```html\s*/i', '', $html_content);
-    $html_content = preg_replace('/\s*```$/', '', $html_content);
-    $html_content = trim($html_content);
+    $response_content = preg_replace('/^```(?:json)?\s*/i', '', $response_content);
+    $response_content = preg_replace('/\s*```$/', '', $response_content);
+    $response_content = trim($response_content);
 
-    if (empty($html_content)) {
+    if (empty($response_content)) {
         throw new Exception(__('Empty content received from Gemini API.', 'artitechcore'));
     }
 
-    $html_content = wp_kses($html_content, artitechcore_get_allowed_html_tags());
+    $parsed_response = json_decode($response_content, true);
+    
+    if (json_last_error() === JSON_ERROR_NONE && isset($parsed_response['content'])) {
+        $title = $parsed_response['title'] ?? $page_type;
+        $html_content = $parsed_response['content'];
+        $meta_description = $parsed_response['meta_description'] ?? '';
+    } else {
+        // Fallback for broken JSON
+        $html_content = $response_content;
+        $title = $page_type;
+        $meta_description = '';
+    }
 
-    // Extract title from HTML BEFORE sanitization
-    $title = $page_type;
-    if (preg_match('/<title[^>]*>(.*?)<\/title>/i', $html_content, $matches)) {
-        $title = sanitize_text_field(html_entity_decode(trim($matches[1]), ENT_QUOTES, 'UTF-8'));
-    } elseif (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html_content, $matches)) {
-        $title = sanitize_text_field(html_entity_decode(trim(strip_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
+    // Extract title from HTML if missing
+    if (empty($title) || $title === $page_type) {
+        if (preg_match('/<title[^>]*>(.*?)<\/title>/i', $html_content, $matches)) {
+            $title = sanitize_text_field(html_entity_decode(trim($matches[1]), ENT_QUOTES, 'UTF-8'));
+        } elseif (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html_content, $matches)) {
+            $title = sanitize_text_field(html_entity_decode(trim(strip_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
+        }
     }
     
     // Limit title length
-    $title = mb_substr($title, 0, 200);
+    $title = mb_substr(sanitize_text_field($title), 0, 200);
 
+    // SECURITY: Sanitize AI-generated HTML to prevent XSS
     $html_content = wp_kses($html_content, artitechcore_get_allowed_html_tags());
     $html_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $html_content);
 
     // Generate meta description
-    $meta_description = $brand_kit['description'];
-    if (empty($meta_description) && !empty($brand_kit['tagline'])) {
-        $meta_description = $brand_kit['tagline'];
+    if (empty($meta_description)) {
+        $meta_description = $brand_kit['description'];
+        if (empty($meta_description) && !empty($brand_kit['tagline'])) {
+            $meta_description = $brand_kit['tagline'];
+        }
     }
+    
+    // Fallback trimming for body tag instances
+    $html_content = preg_replace('/^.*<body[^>]*>\s*/is', '', $html_content);
+    $html_content = preg_replace('/\s*<\/body>.*$/is', '', $html_content);
 
     return [
         'title' => $title,
-        'content' => $html_content,
-        'meta_description' => $meta_description
+        'content' => trim($html_content),
+        'meta_description' => sanitize_text_field($meta_description)
     ];
 }
 
@@ -1459,6 +1575,9 @@ function artitechcore_build_page_generation_prompt($page_type, $brand_kit, $inst
         default: $aesthetic_text = 'modern and clean';
     }
 
+    $background_style = isset($brand_kit['background_style']) ? $brand_kit['background_style'] : 'light';
+    $image_style = isset($brand_kit['image_style']) ? $brand_kit['image_style'] : 'photorealistic';
+
     $prompt = "You are an expert web designer and copywriter.
 
 BRAND IDENTITY:
@@ -1468,22 +1587,27 @@ BRAND IDENTITY:
 - Design Style: {$aesthetic_text}
 - Colors: Primary {$brand_kit['primary_color']}, Secondary {$brand_kit['secondary_color']}, Accent {$brand_kit['accent_color']}
 - Fonts: Headings {$brand_kit['heading_font']}, Body {$brand_kit['body_font']}
+- Background Style: {$background_style}
+- Preferred Image Style: {$image_style}
 
 TASK:
-Generate complete HTML content for a {$page_type} page.
+Generate content for a {$page_type} page. This is instance {$instance} of this page type. Make sure it is unique and does not duplicate content from other instances.
 
 REQUIREMENTS:
 1. Use semantic HTML5 (<section>, <header>, <main>, <footer>)
-2. Include CSS styled with brand colors as CSS variables: --brand-primary, --brand-secondary, --brand-accent
-3. Use inline styles or a <style> block
-4. Mobile-responsive with responsive meta tag
-5. Write in a {$voice_text} tone
-6. Design should be {$aesthetic_text}
-7. Include a proper structure with multiple sections
-8. Use real content that makes sense for a {$page_type} page
+2. DO NOT include <html>, <head>, or <body> tags. Output ONLY the content that goes inside the <body> tag, as this will be embedded directly in a WordPress page.
+3. Mobile-responsive design.
+4. Write in a {$voice_text} tone.
+5. Design should be {$aesthetic_text}.
+6. Use real content that makes sense for a {$page_type} page.
 
-OUTPUT:
-Return ONLY valid HTML, no markdown, no explanations. Start with <!DOCTYPE html> and include complete page structure with <html>, <head>, and <body>.";
+OUTPUT FORMAT:
+Return a valid JSON object. DO NOT wrap it in markdown code blocks. The JSON must have exactly these three keys:
+{
+  \"title\": \"The SEO-friendly title of the page\",
+  \"meta_description\": \"A unique, SEO-friendly meta description for this specific page (max 160 chars)\",
+  \"content\": \"The raw HTML content string (no markdown, no html/head/body tags)\"
+}";
 
     /**
      * Allow developers to modify the AI prompt before it's sent to the API

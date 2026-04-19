@@ -1110,7 +1110,50 @@ if (!function_exists('artitechcore_generate_schema_markup')) {
  * - Singular: outputs schema data from custom table if present.
  * - Term archives: outputs schema data from custom table if present; if missing and auto-enabled, generates a baseline CollectionPage graph.
  */
+/**
+ * Check if a known SEO plugin that generates schema markup is active.
+ * If so, ArtitechCore defers to avoid duplicate structured data.
+ *
+ * @return bool True if a conflicting schema plugin is active.
+ */
+function artitechcore_has_conflicting_schema_plugin() {
+    // Allow developers/site owners to force-suppress schema output via filter
+    $skip = apply_filters('artitechcore_skip_schema_output', false);
+    if ($skip) {
+        return true;
+    }
+
+    $conflicting_plugins = [
+        'wordpress-seo/wp-seo.php',                          // Yoast SEO
+        'seo-by-rank-math/rank-math.php',                    // RankMath
+        'all-in-one-seo-pack/all_in_one_seo_pack.php',      // AIOSEO
+        'wp-schema-pro/wp-schema-pro.php',                   // Schema Pro
+        'schema/schema.php',                                 // Schema plugin
+    ];
+
+    $active_plugins = (array) get_option('active_plugins', []);
+
+    // Also check network-activated plugins for multisite
+    if (is_multisite()) {
+        $network_plugins = array_keys((array) get_site_option('active_sitewide_plugins', []));
+        $active_plugins = array_merge($active_plugins, $network_plugins);
+    }
+
+    foreach ($conflicting_plugins as $plugin) {
+        if (in_array($plugin, $active_plugins, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function artitechcore_output_schema_markup() {
+    // Conflict Detection: Skip if another major SEO plugin is handling schema
+    if (artitechcore_has_conflicting_schema_plugin()) {
+        echo "\n" . '<!-- ArtitechCore Schema: Deferred (conflicting SEO plugin detected) -->' . "\n";
+        return;
+    }
     // Term archives (category/tag/custom tax)
     if (is_category() || is_tag() || is_tax()) {
         $term = get_queried_object();

@@ -1017,8 +1017,9 @@ function artitechcore_generate_and_set_featured_image($post_id, $page_title, $ov
         $provider = get_option('artitechcore_ai_provider', 'openai');
         $api_key = get_option('artitechcore_' . $provider . '_api_key');
         
-        // Use override if provided, otherwise fallback to option
-        $brand_color = $override_brand_color ?: get_option('artitechcore_brand_color', '#4A90E2');
+        // Check if third param is the brand kit array
+        $brand_kit = is_array($override_brand_color) ? $override_brand_color : artitechcore_get_brand_kit();
+        $brand_color = is_array($override_brand_color) ? ($override_brand_color['primary_color'] ?? '#4A90E2') : ($override_brand_color ?: get_option('artitechcore_brand_color', '#4A90E2'));
         
         if (empty($api_key)) {
             throw new Exception(__('API key not configured for image generation.', 'artitechcore'));
@@ -1039,12 +1040,17 @@ function artitechcore_generate_and_set_featured_image($post_id, $page_title, $ov
             $brand_color = '#4A90E2'; // Default fallback
         }
         
+        $design_style = $brand_kit['design_aesthetic'] ?? 'modern';
+        $image_style = $brand_kit['image_style'] ?? 'abstract';
+        $brand_name = $brand_kit['brand_name'] ?? 'The company';
+
         // Generate image prompt
         $prompt = "## IMAGE CREATION BRIEF
-Create a professional featured image for a webpage titled: '{$page_title}'
+Create a professional featured image for a webpage titled: '{$page_title}' for the brand '{$brand_name}'.
 
 ## STYLE & AESTHETIC REQUIREMENTS
-- **Style**: Modern, minimalist, abstract background
+- **General Style**: {$design_style}
+- **Image Style**: {$image_style}
 - **Color Palette**: Primary color: {$brand_color} with complementary tones
 - **Mood**: Professional, clean, engaging but not distracting
 - **Composition**: Balanced, with visual hierarchy that supports text overlay
@@ -1056,20 +1062,17 @@ Create a professional featured image for a webpage titled: '{$page_title}'
 - **Brand Alignment**: Reflect the professional nature of the content
 
 ## CREATIVE DIRECTION
-- Use abstract shapes, gradients, or subtle patterns
-- Incorporate the primary color {$brand_color} as the dominant hue
-- Create visual interest without being too busy or distracting
-- Ensure the image works well as a background for white text overlay
-- Maintain a professional, corporate-appropriate aesthetic
+- Incorporate the primary color {$brand_color} organically.
+- Create visual interest without being too busy or distracting.
+- Ensure the image works well as a background for white text overlay.
+- Maintain a professional aesthetic matching the brand style.
 
 ## USAGE CONTEXT
 This image will be used as a featured image for a webpage, so it should:
 - Be visually appealing but not overpower the content
 - Work well at various sizes (thumbnail to full-width)
 - Convey professionalism and relevance to the page topic
-- Have adequate contrast for text readability
-
-Avoid photorealistic images - focus on abstract, brand-aligned graphics that enhance the page's professional appearance.";
+- Have adequate contrast for text readability.";
         
         // Call the appropriate image generation API
         $image_url = '';

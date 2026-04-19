@@ -344,12 +344,30 @@ function artitechcore_process_builder_job($job_id) {
             'results' => $job_results
         ]);
 
-        // Update monthly usage stats (for cost tracking) (P1-7)
+        // Update monthly usage stats (for cost tracking) using actuals (F-11)
         $first_job = $job_data['jobs'][0] ?? null;
-        if ($first_job && !empty($first_job['metadata'])) {
-            $cost_estimate = $first_job['metadata']['cost_estimate'] ?? null;
-            $spent = $cost_estimate ? (float)$cost_estimate['total'] : 0.0;
-            artitechcore_update_monthly_stats($job_data['total'], ($first_job['generate_images'] ?? false) ? $job_data['total'] : 0, $spent);
+        if ($first_job) {
+            $total_actual_pages = 0;
+            $total_actual_images = 0;
+            foreach ($job_results as $res) {
+                if ($res['success']) {
+                    $total_actual_pages += $res['pages_created'];
+                    $total_actual_images += $res['images_generated'];
+                }
+            }
+
+            // Optional: fallback to estimated if somehow 0 but was successfully marked
+            if ($total_actual_pages === 0 && $final_status === ARTITECHCORE_QUEUE_COMPLETE) {
+                $total_actual_pages = $completed_pages;
+                $total_actual_images = ($first_job['generate_images'] ?? false) ? $completed_pages : 0;
+            }
+
+            $provider = get_option('artitechcore_ai_provider', 'openai');
+            $cost_config = ARTITECHCORE_COST[$provider] ?? ARTITECHCORE_COST['openai'];
+            
+            $actual_spent = ($total_actual_pages * $cost_config['content_per_page']) + ($total_actual_images * $cost_config['image']);
+            
+            artitechcore_update_monthly_stats($total_actual_pages, $total_actual_images, $actual_spent);
         }
 
     } catch (Exception $e) {

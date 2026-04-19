@@ -964,10 +964,10 @@ function artitechcore_ce_inject_content($content) {
         $faq_html = '<div class="artitechcore-ce-faq">';
         $faq_html .= '<h3 class="artitechcore-ce-faq-title">' . esc_html__('Frequently Asked Questions', 'artitechcore') . '</h3>';
         foreach ($faq as $item) {
-            $faq_html .= '<div class="artitechcore-ce-faq-item" itemscope itemtype="https://schema.org/Question">';
-            $faq_html .= '<span class="artitechcore-ce-faq-q" itemprop="name">' . esc_html($item['q']) . '</span>';
-            $faq_html .= '<div class="artitechcore-ce-faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">';
-            $faq_html .= '<div itemprop="text">' . wpautop(esc_html($item['a'])) . '</div>';
+            $faq_html .= '<div class="artitechcore-ce-faq-item">';
+            $faq_html .= '<span class="artitechcore-ce-faq-q">' . esc_html($item['q']) . '</span>';
+            $faq_html .= '<div class="artitechcore-ce-faq-a">';
+            $faq_html .= '<div>' . wpautop(esc_html($item['a'])) . '</div>';
             $faq_html .= '</div></div>';
         }
         $faq_html .= '</div>';
@@ -992,37 +992,9 @@ function artitechcore_ce_inject_content($content) {
     return $enhanced_content;
 }
 
-/**
- * Inject JSON-LD FAQ Schema in wp_head
- */
-function artitechcore_ce_inject_schema() {
-    if (!is_singular()) return;
-    
-    $post_id = get_the_ID();
-    $faq = get_post_meta($post_id, '_artitechcore_ce_faq', true);
-    
-    if (empty($faq) || !is_array($faq)) return;
-    
-    $schema = [
-        '@context' => 'https://schema.org',
-        '@type' => 'FAQPage',
-        'mainEntity' => []
-    ];
-    
-    foreach ($faq as $item) {
-        $schema['mainEntity'][] = [
-            '@type' => 'Question',
-            'name' => esc_html($item['q']),
-            'acceptedAnswer' => [
-                '@type' => 'Answer',
-                'text' => wp_strip_all_tags(wpautop(esc_html($item['a'])))
-            ]
-        ];
-    }
-    
-    echo "\n<!-- ArtitechCore AI FAQ Schema -->\n";
-    echo '<script type="application/ld+json">' . json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "</script>\n";
-}
+// artitechcore_ce_inject_schema() removed — FAQ schema is handled exclusively
+// by the main Schema Generator (schema-generator.php) via JSON-LD in <head>.
+// Keeping this dead code was a duplication risk (Vector 3).
 
 /**
  * Hook for Single Row Actions (Must run before headers) (FIX #4: capability check)
