@@ -76,31 +76,51 @@ function artitechcore_sanitize_brand_kit($input) {
  */
 function artitechcore_get_brand_kit() {
     $defaults = [
-        'brand_name' => '',
-        'tagline' => '',
-        'description' => '',
-        'primary_color' => '#4A90E2',
-        'secondary_color' => '#6C63FF',
-        'accent_color' => '#FF6B6B',
-        'background_style' => 'light',
-        'heading_font' => 'Inter',
-        'body_font' => 'Inter',
-        'brand_voice' => 'professional',
-        'design_aesthetic' => 'modern',
-        'image_style' => 'photorealistic',
-        'logo_attachment_id' => 0,
+        'brand_name'            => '',
+        'tagline'               => '',
+        'description'           => '',
+        'primary_color'         => '#4A90E2',
+        'secondary_color'       => '#6C63FF',
+        'accent_color'          => '#FF6B6B',
+        'background_style'      => 'light',
+        'heading_font'          => 'Inter',
+        'body_font'             => 'Inter',
+        'brand_voice'           => 'professional',
+        'design_aesthetic'      => 'modern',
+        'image_style'           => 'photorealistic',
+        'logo_attachment_id'    => 0,
         'favicon_attachment_id' => 0,
     ];
 
-    $saved = get_option('artitechcore_brand_kit', []);
-    return wp_parse_args($saved, $defaults);
+    $saved  = get_option( 'artitechcore_brand_kit', [] );
+    $brand  = wp_parse_args( $saved, $defaults );
+
+    // Always ensure brand_name and description have a meaningful fallback
+    // so the Website Builder doesn't block on a fresh install.
+    if ( empty( $brand['brand_name'] ) ) {
+        $brand['brand_name'] = get_bloginfo( 'name' );
+    }
+    if ( empty( $brand['description'] ) ) {
+        $brand['description'] = get_bloginfo( 'description' );
+    }
+    if ( empty( $brand['tagline'] ) && ! empty( $brand['description'] ) && strlen( $brand['description'] ) < 160 ) {
+        $brand['tagline'] = $brand['description'];
+    }
+
+    return $brand;
 }
 
 /**
  * Auto-detect brand kit from existing site data
  * Extends the existing business info detection
+ * 
+ * @param bool $force Determine if we should bypass the 'Init Shield' flag.
  */
-function artitechcore_auto_detect_brand_kit() {
+function artitechcore_auto_detect_brand_kit($force = false) {
+    // Init Shield: Prevent heavy rescans on every page load unless forced
+    if (!$force && get_option('artitechcore_initial_scan_completed')) {
+        return get_option('artitechcore_brand_kit', []);
+    }
     $brand_kit = [
         'brand_name' => '',
         'tagline' => '',
@@ -149,9 +169,17 @@ function artitechcore_auto_detect_brand_kit() {
         $brand_kit['design_aesthetic'] = 'clean';
     }
 
-    // 3. Use existing brand color if set
-    $existing_color = get_option('artitechcore_brand_color', '#4A90E2');
-    if (sanitize_hex_color($existing_color)) {
+    // 3. Use existing brand color if set, else try theme mods
+    $existing_color = get_option('artitechcore_brand_color');
+    if (!$existing_color || !sanitize_hex_color($existing_color)) {
+        // Try common theme mods for colors
+        $theme_primary = get_theme_mod('primary_color') ?: get_theme_mod('accent_color');
+        if ($theme_primary && sanitize_hex_color($theme_primary)) {
+            $brand_kit['primary_color'] = $theme_primary;
+        } else {
+            $brand_kit['primary_color'] = '#4A90E2'; // Default
+        }
+    } else {
         $brand_kit['primary_color'] = $existing_color;
     }
 
@@ -166,6 +194,9 @@ function artitechcore_auto_detect_brand_kit() {
         $brand_kit['tagline'] = $brand_kit['description'];
     }
 
+    // Mark initial scan as completed to trigger the Init Shield
+    update_option('artitechcore_initial_scan_completed', true);
+
     return $brand_kit;
 }
 
@@ -173,14 +204,14 @@ function artitechcore_auto_detect_brand_kit() {
  * AJAX handler for auto-detecting brand kit
  */
 function artitechcore_ajax_auto_detect_brand_kit() {
-    check_ajax_referer('artitechcore_brand_kit_nonce', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
 
     if (!current_user_can('manage_options')) {
         wp_send_json_error(['message' => 'Unauthorized']);
         return;
     }
 
-    $detected_brand = artitechcore_auto_detect_brand_kit();
+    $detected_brand = artitechcore_auto_detect_brand_kit(true); // Pass true to bypass shield
 
     // Save detected values
     update_option('artitechcore_brand_kit', $detected_brand);

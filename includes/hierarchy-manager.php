@@ -665,41 +665,6 @@ function artitechcore_ajax_export_hierarchy_json() {
     }
 }
 
-// Enqueue hierarchy assets
-function artitechcore_enqueue_hierarchy_assets($hook) {
-    if ($hook !== 'toplevel_page_artitechcore-main') {
-        return;
-    }
-
-    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'manual';
-
-    if ($active_tab === 'hierarchy') {
-        // Enqueue jsTree
-        wp_enqueue_style('jstree', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/jstree/themes/default/style.min.css');
-        wp_enqueue_script('jstree', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/jstree/jstree.min.js', array('jquery'), '3.3.15', true);
-        
-        // Enqueue D3.js for Mind Map and Org Chart
-        wp_enqueue_script('d3', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/d3/d3.v7.min.js', array(), '7.0.0', true);
-
-        // Enqueue our hierarchy scripts
-        wp_enqueue_script('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/js/hierarchy.js', array('jquery', 'jstree', 'd3'), null, true);
-        wp_enqueue_style('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/css/hierarchy.css');
-        
-        // Localize script with data
-        $localize_data = array(
-            'rest_url' => rest_url('artitechcore/v1/'),
-            'nonce' => wp_create_nonce('wp_rest'),
-            'strings' => array(
-                'loading' => 'Loading page hierarchy...',
-                'search' => 'Search pages...',
-                'readonly_note' => 'Visualization only - use WordPress editor to modify hierarchy'
-            )
-        );
-        
-        wp_localize_script('artitechcore-hierarchy', 'artitechcoreHierarchy', $localize_data);
-    }
-}
-add_action('admin_enqueue_scripts', 'artitechcore_enqueue_hierarchy_assets');
 
 // Build hierarchical structure for export (including all levels)
 function artitechcore_build_hierarchy_for_export($pages) {

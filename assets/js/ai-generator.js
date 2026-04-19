@@ -15,6 +15,28 @@
         bindEvents: function () {
             const self = this;
 
+            // Step Navigation
+            $(document).on('click', '.next-step', function() {
+                const $current = $(this).closest('.ai-form-step');
+                const stepNum = parseInt($current.data('step'));
+                
+                // Simple validation for step 1
+                if (stepNum === 1) {
+                    if (!$('#artitechcore_business_type').val() || !$('#artitechcore_business_details').val()) {
+                        alert('Please fill in both the Business Niche and Mission fields.');
+                        return;
+                    }
+                }
+
+                self.goToStep(stepNum + 1);
+            });
+
+            $(document).on('click', '.prev-step', function() {
+                const $current = $(this).closest('.ai-form-step');
+                const stepNum = parseInt($current.data('step'));
+                self.goToStep(stepNum - 1);
+            });
+
             // Handle initial suggestion request
             $(document).on('submit', '#artitechcore-ai-request-form', function (e) {
                 e.preventDefault();
@@ -39,23 +61,59 @@
             });
         },
 
+        goToStep: function(num) {
+            $('.ai-form-step').removeClass('active');
+            $(`.ai-form-step[data-step="${num}"]`).addClass('active');
+
+            // Update indicators
+            $('.ai-step').removeClass('active completed');
+            $(`.ai-step[data-step="${num}"]`).addClass('active');
+            
+            // Mark previous steps as completed
+            for (let i = 1; i < num; i++) {
+                $(`.ai-step[data-step="${i}"]`).addClass('completed');
+            }
+
+            // Smooth scroll to top of form
+            $('html, body').animate({
+                scrollTop: $('.ai-steps-indicator').offset().top - 150
+            }, 300);
+        },
+
         generateSuggestions: function ($form) {
             const self = this;
             const $results = $('#artitechcore-ai-results');
-            const $btn = $form.find('button[type="submit"]');
+            const $overlay = $('#ai-loading-overlay');
+            const $status = $('#ai-status-message');
+            const $bar = $('.progress-bar-fill');
 
             const formData = new FormData($form[0]);
             formData.append('action', 'artitechcore_ai_generate_suggestions');
 
-            // Show loading state
-            $btn.prop('disabled', true).addClass('loading').html('<span class="dg10-spinner"></span> Generating...');
-            $results.html(`
-                <div class="artitechcore-ai-loading">
-                    <div class="artitechcore-ai-loader"></div>
-                    <h3>Creating your custom business strategy...</h3>
-                    <p>Our AI is analyzing your industry and target audience. This may take up to 2 minutes.</p>
-                </div>
-            `);
+            // Show premium loading state
+            $overlay.removeClass('hidden').hide().fadeIn(400);
+            
+            const messages = [
+                'Interpreting business signals...',
+                'Analyzing market competition...',
+                'Defining neural post type architecture...',
+                'Mapping SEO semantic relationships...',
+                'Structuring custom field schemas...',
+                'Finalizing ecosystem blueprint...'
+            ];
+            
+            let msgIdx = 0;
+            let progress = 0;
+            const messageInterval = setInterval(() => {
+                msgIdx = (msgIdx + 1) % messages.length;
+                $status.fadeOut(300, function() {
+                    $(this).text(messages[msgIdx]).fadeIn(300);
+                });
+                
+                progress += Math.random() * 15;
+                if (progress > 95) progress = 95;
+                $bar.css('width', progress + '%');
+            }, 3500);
 
             $.ajax({
                 url: artitechcore_ai_data.ajaxurl,
@@ -63,15 +121,20 @@
                 data: formData,
                 processData: false,
                 contentType: false,
-                timeout: 600000, // 600s timeout (10 minutes) for heavy analysis
+                timeout: 300000, 
                 success: function (response) {
+                    clearInterval(messageInterval);
+                    $bar.css('width', '100%');
+                    
                     if (response.success) {
-                        $results.html(response.data.html);
-                        // Smooth scroll to results
-                        $('html, body').animate({
-                            scrollTop: $results.offset().top - 100
-                        }, 500);
+                        $overlay.fadeOut(400, function() {
+                            $results.hide().html(response.data.html).fadeIn(600);
+                            $('html, body').animate({
+                                scrollTop: $results.offset().top - 50
+                            }, 500);
+                        });
                     } else {
+                        $overlay.fadeOut(400);
                         $results.html(`
                             <div class="notice notice-error dg10-notice-error">
                                 <p>${response.data.message || 'An error occurred during generation.'}</p>
@@ -80,74 +143,52 @@
                     }
                 },
                 error: function (jqXHR, textStatus) {
-                    let msg = 'Network error occurred. Please check your connection and try again.';
-                    if (textStatus === 'timeout') {
-                        msg = 'Request timed out (120s). The server or AI provider took too long. Please try again or check your API key quotas.';
-                    }
+                    clearInterval(messageInterval);
+                    $overlay.fadeOut(400);
+                    let msg = 'Network error occurred. Please check your connection.';
+                    if (textStatus === 'timeout') msg = 'Request timed out. The AI took too long to respond.';
+                    
                     $results.html(`
                         <div class="notice notice-error dg10-notice-error">
                             <p>${msg}</p>
                         </div>
                     `);
-                },
-                complete: function () {
-                    $btn.prop('disabled', false).removeClass('loading').text('Generate Suggestions');
                 }
             });
         },
 
         createContent: function ($form) {
             const self = this;
-            const $btn = $form.find('button[type="submit"]');
-
-            // Ensure results container exists
-            if ($form.find('.artitechcore-creation-status').length === 0) {
-                $form.append('<div class="artitechcore-creation-status"></div>');
-            }
-            const $results = $form.find('.artitechcore-creation-status');
-
-            // Scroll to bottom
-            $('html, body').animate({
-                scrollTop: $results.offset().top - 100
-            }, 500);
+            const $overlay = $('#ai-loading-overlay');
+            const $status = $('#ai-status-message');
+            const $bar = $('.progress-bar-fill');
+            const $results = $('#artitechcore-ai-results');
 
             const formData = new FormData($form[0]);
             formData.append('action', 'artitechcore_ai_create_content');
 
-            $btn.prop('disabled', true).addClass('loading').text('Creating Content...');
-
-            // Progress steps simulation
+            // Show premium loading state
+            $overlay.removeClass('hidden').hide().fadeIn(400);
+            $bar.css('width', '0%');
+            
             const steps = [
-                'Initializing content generation...',
-                'Creating page structure and drafts...',
-                'Configuring Custom Post Types...',
-                ' registering Taxonomies and Categories...',
-                'Generating AI Featured Images (This may take 60s+)...',
-                'Finalizing ecosystem setup...'
+                'Initializing content deployment...',
+                'Building page hierarchy...',
+                'Architecting custom post types...',
+                'Registering meta-field schemas...',
+                'Creating taxonomic bridges...',
+                'Deploying AI Featured Assets...',
+                'Finalizing structural integrity...'
             ];
 
             let currentStep = 0;
-
-            // Show overlay with progress
-            $results.show().html(`
-                <div class="artitechcore-progress-box" style="margin-top: 20px; padding: 30px; background: #fff; border: 1px solid #ccd0d4; border-left: 4px solid #2271b1; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <span class="dashicons dashicons-update spin" style="font-size: 30px; width: 30px; height: 30px; margin-right: 15px; color: #2271b1;"></span>
-                        <h3 id="ai-progress-text" style="margin: 0; font-size: 16px;">${steps[0]}</h3>
-                    </div>
-                    <div class="dg10-progress-bar" style="height: 10px; background: #f0f0f1; border-radius: 5px; overflow: hidden;">
-                        <div class="dg10-progress-inner" style="width: 10%; height: 100%; background: #2271b1; transition: width 0.5s;"></div>
-                    </div>
-                    <p style="margin-top: 10px; color: #646970; font-style: italic;">Please do not close this tab.</p>
-                </div>
-            `);
-
-            // Cycle messages
-            const interval = setInterval(function () {
+            const stepInterval = setInterval(function () {
                 currentStep++;
                 if (currentStep < steps.length) {
-                    $('#ai-progress-text').text(steps[currentStep]);
-                    $('.dg10-progress-inner').css('width', Math.min((currentStep + 1) * 18, 95) + '%');
+                    $status.fadeOut(300, function() {
+                        $(this).text(steps[currentStep]).fadeIn(300);
+                    });
+                    $bar.css('width', Math.min((currentStep + 1) * 14, 95) + '%');
                 }
             }, 5000);
 
@@ -157,57 +198,46 @@
                 data: formData,
                 processData: false,
                 contentType: false,
-                timeout: 600000, // 10 minutes
+                timeout: 600000, 
                 success: function (response) {
-                    clearInterval(interval);
+                    clearInterval(stepInterval);
+                    $bar.css('width', '100%');
+                    
                     if (response.success) {
-                        $('.dg10-progress-inner').css('width', '100%');
-                        setTimeout(function () {
-                            $form.html(`
-                                <div class="artitechcore-success-state" style="text-align: center; padding: 40px; background: #fff; border: 1px solid #c3c4c7;">
-                                    <div class="artitechcore-success-icon" style="font-size: 48px; margin-bottom: 20px; color: #46b450;">✅</div>
-                                    <h2 style="margin-top: 0;">Deployment Complete!</h2>
-                                    <p style="font-size: 16px; margin-bottom: 30px;">${response.data.message || 'Your content ecosystem has been created successfully.'}</p>
-                                    <div class="dg10-action-links" style="display: flex; gap: 15px; justify-content: center;">
-                                        <a href="edit.php?post_type=page" class="button button-primary button-hero">View Created Pages</a>
-                                        <a href="admin.php?page=artitechcore_cpt_manager" class="button button-secondary button-hero">Manage Taxonomies & CPTs</a>
+                        $overlay.fadeOut(400, function() {
+                            $results.html(`
+                                <div class="artitechcore-success-state" style="text-align: center; padding: 60px; background: #fff; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+                                    <div style="font-size: 64px; margin-bottom: 24px; animation: float 2s ease-in-out infinite;">✨</div>
+                                    <h2 style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #B47CFD, #FF7FC2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem;">Architecture Deployed!</h2>
+                                    <p style="font-size: 1.25rem; color: #6B7280; margin-bottom: 3rem;">${response.data.message || 'Your custom AI ecosystem is live and ready for production.'}</p>
+                                    <div class="dg10-action-links" style="display: flex; gap: 20px; justify-content: center;">
+                                        <a href="edit.php?post_type=page" class="dg10-btn dg10-btn-primary">Explore Pages</a>
+                                        <a href="admin.php?page=artitechcore_cpt_manager" class="dg10-btn dg10-btn-outline">Architectural Oversight</a>
                                     </div>
                                 </div>
-                            `);
-                        }, 500);
+                            `).fadeIn(600);
+                            
+                            $('html, body').animate({
+                                scrollTop: $results.offset().top - 50
+                            }, 500);
+                        });
                     } else {
-                        $results.html(`
-                            <div class="notice notice-error dg10-notice-error inline">
-                                <p><strong>Error:</strong> ${response.data.message || 'An error occurred during creation.'}</p>
+                        $overlay.fadeOut(400);
+                        $results.append(`
+                            <div class="notice notice-error dg10-notice-error">
+                                <p><strong>Deployment Error:</strong> ${response.data.message || 'An error occurred.'}</p>
                             </div>
                         `);
-                        $btn.prop('disabled', false).text('Try Again');
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    clearInterval(interval);
-                    console.error('AI Generation Error:', textStatus, errorThrown, jqXHR);
-
-                    let msg = 'Network error. Please check your connection.';
-                    let isWarning = false;
-
-                    if (textStatus === 'timeout') {
-                        msg = 'The operation timed out, but content is likely still generating in the background. Please wait 1 minute and refresh.';
-                        isWarning = true;
-                    } else if (jqXHR.status === 200 && textStatus === 'parsererror') {
-                        msg = 'The operation completed but returned an unexpected response. Please check "Pages" and "Custom Post Types" - it likely succeeded.';
-                        isWarning = true;
-                    }
-
-                    const noticeClass = isWarning ? 'notice-warning' : 'notice-error';
-
-                    $results.html(`
-                        <div class="notice ${noticeClass} inline">
-                            <p><strong>${isWarning ? 'Note:' : 'Error:'}</strong> ${msg}</p>
-                            ${!isWarning ? '<p><small>Details: ' + textStatus + ' - ' + errorThrown + '</small></p>' : ''}
+                error: function (jqXHR, textStatus) {
+                    clearInterval(stepInterval);
+                    $overlay.fadeOut(400);
+                    $results.append(`
+                        <div class="notice notice-error dg10-notice-error">
+                            <p>Network failure during deployment. Please verify created pages before retrying.</p>
                         </div>
                     `);
-                    $btn.prop('disabled', false).text('Retry Deployment');
                 }
             });
         },

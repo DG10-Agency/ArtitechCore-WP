@@ -28,7 +28,6 @@ function artitechcore_ce_init() {
     if (is_admin()) {
         add_action('add_meta_boxes', 'artitechcore_ce_add_meta_box');
         add_action('save_post', 'artitechcore_ce_save_meta_box');
-        add_action('admin_enqueue_scripts', 'artitechcore_ce_admin_scripts');
         
         // AJAX
         add_action('wp_ajax_artitechcore_ce_generate', 'artitechcore_ce_ajax_handler');
@@ -61,25 +60,6 @@ function artitechcore_ce_add_meta_box() {
             'normal',
             'high'
         );
-    }
-}
-
-function artitechcore_ce_admin_scripts($hook) {
-    global $post;
-    if ($hook == 'post-new.php' || $hook == 'post.php') {
-        $supported_types = get_option('artitechcore_ce_post_types', ['post']);
-        if ($post && is_array($supported_types) && in_array($post->post_type, $supported_types)) {
-            wp_add_inline_style('wp-admin', '
-                .artitechcore-ce-panel { background: #fff; border: 1px solid #ccd0d4; padding: 15px; border-radius: 4px; }
-                .artitechcore-ce-field { margin-bottom: 20px; }
-                .artitechcore-ce-field label { font-weight: bold; display: block; margin-bottom: 5px; }
-                .artitechcore-ce-field textarea { width: 100%; min-height: 100px; }
-                .artitechcore-ce-field input[type="text"] { width: 100%; }
-                .artitechcore-ce-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-                .artitechcore-ce-badge { background: #b47cfd; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-                .artitechcore-ce-warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 15px; margin-bottom: 15px; font-size: 13px; }
-            ');
-        }
     }
 }
 
@@ -222,7 +202,7 @@ function artitechcore_ce_meta_box_html($post) {
                 type: 'POST',
                 data: {
                     action: 'artitechcore_ce_generate',
-                    nonce: '<?php echo wp_create_nonce("artitechcore_ce_ajax"); ?>',
+                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>',
                     post_id: postId,
                     content: editorContent,
                     generate_type: genType
@@ -335,7 +315,7 @@ function artitechcore_ce_save_meta_box($post_id) {
  * AJAX Handler with server-side rate limiting
  */
 function artitechcore_ce_ajax_handler() {
-    check_ajax_referer('artitechcore_ce_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
     if ($post_id && !current_user_can('edit_post', $post_id)) {
         wp_send_json_error('Unauthorized to edit this post.');
@@ -450,11 +430,11 @@ function artitechcore_ce_call_openai($prompt, $api_key) {
         'temperature' => 0.5,
     ]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
-        'body' => $body, 'timeout' => 60
-    ]);
-    if (is_wp_error($response)) throw new Exception('OpenAI: ' . $response->get_error_message());
+        'body' => $body, 'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120
+    ], 'openai');
+    if (is_wp_error($response)) throw new Exception($response->get_error_message());
     
     $status_code = wp_remote_retrieve_response_code($response);
     $body = wp_remote_retrieve_body($response);
@@ -477,11 +457,11 @@ function artitechcore_ce_call_gemini($prompt, $api_key) {
     $prompt .= "\n\nYou must return a bare JSON object matching the requested keys.";
     $body = json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => ['Content-Type' => 'application/json'],
-        'body' => $body, 'timeout' => 60
-    ]);
-    if (is_wp_error($response)) throw new Exception('Gemini: ' . $response->get_error_message());
+        'body' => $body, 'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120
+    ], 'gemini');
+    if (is_wp_error($response)) throw new Exception($response->get_error_message());
     
     $status_code = wp_remote_retrieve_response_code($response);
     $body = wp_remote_retrieve_body($response);
@@ -510,11 +490,11 @@ function artitechcore_ce_call_deepseek($prompt, $api_key) {
         'temperature' => 0.5,
     ]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
-        'body' => $body, 'timeout' => 60
-    ]);
-    if (is_wp_error($response)) throw new Exception('DeepSeek: ' . $response->get_error_message());
+        'body' => $body, 'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120
+    ], 'deepseek');
+    if (is_wp_error($response)) throw new Exception($response->get_error_message());
     
     $status_code = wp_remote_retrieve_response_code($response);
     $body = wp_remote_retrieve_body($response);
@@ -1422,7 +1402,9 @@ function artitechcore_ce_generate_for_post($post_id, $generate_type = 'all') {
 
         return true;
     } catch (Exception $e) {
-        error_log('ArtitechCore CE Error (Post ' . $post_id . '): ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore CE Error (Post ' . $post_id . '): ' . $e->getMessage());
+        }
         return false;
     }
 }
@@ -1437,7 +1419,7 @@ function artitechcore_ce_render_native_form($post_id) {
     ob_start();
     ?>
     <form class="artitechcore-ce-native-form" id="ce-native-form-<?php echo esc_attr($post_id); ?>" method="post" action="">
-        <?php wp_nonce_field('artitechcore_ce_submit_cta', '_ce_nonce'); ?>
+        <?php wp_nonce_field('artitechcore_ajax_nonce', 'nonce'); ?>
         <input type="hidden" name="post_id" value="<?php echo esc_attr($post_id); ?>">
         <input type="hidden" name="action" value="artitechcore_ce_submit_cta">
         
@@ -1465,7 +1447,7 @@ function artitechcore_ce_render_native_form($post_id) {
  * Handle Native CTA AJAX Submission
  */
 function artitechcore_ce_native_cta_ajax_handler() {
-    check_ajax_referer('artitechcore_ce_submit_cta', '_ce_nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
     

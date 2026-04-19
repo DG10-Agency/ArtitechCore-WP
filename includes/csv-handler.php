@@ -97,8 +97,10 @@ function artitechcore_create_pages_from_csv($file) {
         }
 
     } catch (Exception $e) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore CSV File Validation Error: ' . $e->getMessage());
+        }
         echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('An error occurred during file validation. Please try again.', 'artitechcore') . '</p></div>';
-        error_log('ArtitechCore CSV File Validation Error: ' . $e->getMessage());
         return;
     }
 

@@ -3,9 +3,6 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-// Load Brand Kit functionality
-require_once ARTITECHCORE_PLUGIN_PATH . 'includes/brand-kit.php';
-
 function artitechcore_extract_first_email($text) {
     if (!is_string($text) || $text === '') {
         return '';
@@ -279,7 +276,7 @@ function artitechcore_auto_detect_business_info() {
  * AJAX handler for re-scanning website
  */
 function artitechcore_ajax_rescan_business_info() {
-    check_ajax_referer('artitechcore_rescan_nonce', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(['message' => 'Unauthorized']);
@@ -288,14 +285,15 @@ function artitechcore_ajax_rescan_business_info() {
     $detected = artitechcore_auto_detect_business_info();
     
     // Save detected values to options
-    update_option('artitechcore_business_name', $detected['name']);
-    update_option('artitechcore_business_description', $detected['description']);
-    update_option('artitechcore_business_address', $detected['address']);
-    update_option('artitechcore_business_phone', $detected['phone']);
-    update_option('artitechcore_business_email', $detected['email']);
-    update_option('artitechcore_business_social_facebook', $detected['facebook']);
-    update_option('artitechcore_business_social_twitter', $detected['twitter']);
-    update_option('artitechcore_business_social_linkedin', $detected['linkedin']);
+    // Save detected values to options with sanitization
+    update_option('artitechcore_business_name', sanitize_text_field($detected['name']));
+    update_option('artitechcore_business_description', sanitize_textarea_field($detected['description']));
+    update_option('artitechcore_business_address', sanitize_text_field($detected['address']));
+    update_option('artitechcore_business_phone', sanitize_text_field($detected['phone']));
+    update_option('artitechcore_business_email', sanitize_email($detected['email']));
+    update_option('artitechcore_business_social_facebook', esc_url_raw($detected['facebook']));
+    update_option('artitechcore_business_social_twitter', esc_url_raw($detected['twitter']));
+    update_option('artitechcore_business_social_linkedin', esc_url_raw($detected['linkedin']));
     
     wp_send_json_success([
         'message' => __('Business information detected and saved!', 'artitechcore'),
@@ -305,6 +303,90 @@ function artitechcore_ajax_rescan_business_info() {
 add_action('wp_ajax_artitechcore_rescan_business_info', 'artitechcore_ajax_rescan_business_info');
 
 /**
+ * Handle manual database cleanup AJAX
+ */
+function artitechcore_ajax_manual_db_cleanup() {
+    check_ajax_referer('artitechcore_maintenance_nonce', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => __('Insufficient permissions.', 'artitechcore')]);
+    }
+
+    global $wpdb;
+    
+    // 1. Delete all rate limit transients
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_artitechcore_ai_rate_limit_%'");
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_artitechcore_ai_rate_limit_%'");
+    
+    // 2. Delete stale generation statuses
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_artitechcore_task_status_%'");
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_artitechcore_task_status_%'");
+    
+    wp_send_json_success(['message' => __('Database hygiene routine completed successfully.', 'artitechcore')]);
+}
+add_action('wp_ajax_artitechcore_manual_db_cleanup', 'artitechcore_ajax_manual_db_cleanup');
+
+/**
+ * Handle AI Connection Test AJAX
+ */
+function artitechcore_ajax_test_ai_connection() {
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => __('Insufficient permissions.', 'artitechcore')]);
+    }
+
+    $provider = isset($_POST['provider']) ? sanitize_key($_POST['provider']) : '';
+    $api_key = '';
+
+    switch ($provider) {
+        case 'openai':
+            $api_key = get_option('artitechcore_openai_api_key');
+            $url = 'https://api.openai.com/v1/models';
+            break;
+        case 'gemini':
+            $api_key = get_option('artitechcore_gemini_api_key');
+            $url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' . $api_key;
+            break;
+        case 'deepseek':
+            $api_key = get_option('artitechcore_deepseek_api_key');
+            $url = 'https://api.deepseek.com/models';
+            break;
+        default:
+            wp_send_json_error(['message' => __('Invalid provider.', 'artitechcore')]);
+    }
+
+    if (empty($api_key)) {
+        wp_send_json_error(['message' => __('API key is missing.', 'artitechcore')]);
+    }
+
+    $args = [
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+        'headers' => [
+            'Authorization' => 'Bearer ' . $api_key,
+        ]
+    ];
+    
+    if ($provider === 'gemini') {
+        $args['headers'] = []; // Gemini uses API key in URL
+    }
+
+    $response = artitechcore_safe_ai_remote_get($url, $args, $provider);
+
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => $response->get_error_message()]);
+    }
+
+    $code = wp_remote_retrieve_response_code($response);
+    if ($code === 200) {
+        wp_send_json_success(['message' => __('Connection Successful!', 'artitechcore')]);
+    } else {
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $msg = isset($body['error']['message']) ? $body['error']['message'] : wp_remote_retrieve_response_message($response);
+        wp_send_json_error(['message' => sprintf(__('Error %d: %s', 'artitechcore'), $code, $msg)]);
+    }
+}
+add_action('wp_ajax_artitechcore_test_ai_connection', 'artitechcore_ajax_test_ai_connection');
+
+/**
  * Auto-detect on plugin activation (if settings are empty)
  */
 function artitechcore_maybe_auto_detect_on_load() {
@@ -312,30 +394,30 @@ function artitechcore_maybe_auto_detect_on_load() {
     if (empty(get_option('artitechcore_business_name', ''))) {
         $detected = artitechcore_auto_detect_business_info();
         
-        // Only save if we actually detected something
+        // Only save if we actually detected something (with sanitization)
         if (!empty($detected['name'])) {
-            update_option('artitechcore_business_name', $detected['name']);
+            update_option('artitechcore_business_name', sanitize_text_field($detected['name']));
         }
         if (!empty($detected['description'])) {
-            update_option('artitechcore_business_description', $detected['description']);
+            update_option('artitechcore_business_description', sanitize_textarea_field($detected['description']));
         }
         if (!empty($detected['address'])) {
-            update_option('artitechcore_business_address', $detected['address']);
+            update_option('artitechcore_business_address', sanitize_text_field($detected['address']));
         }
         if (!empty($detected['phone'])) {
-            update_option('artitechcore_business_phone', $detected['phone']);
+            update_option('artitechcore_business_phone', sanitize_text_field($detected['phone']));
         }
         if (!empty($detected['email'])) {
-            update_option('artitechcore_business_email', $detected['email']);
+            update_option('artitechcore_business_email', sanitize_email($detected['email']));
         }
         if (!empty($detected['facebook'])) {
-            update_option('artitechcore_business_social_facebook', $detected['facebook']);
+            update_option('artitechcore_business_social_facebook', esc_url_raw($detected['facebook']));
         }
         if (!empty($detected['twitter'])) {
-            update_option('artitechcore_business_social_twitter', $detected['twitter']);
+            update_option('artitechcore_business_social_twitter', esc_url_raw($detected['twitter']));
         }
         if (!empty($detected['linkedin'])) {
-            update_option('artitechcore_business_social_linkedin', $detected['linkedin']);
+            update_option('artitechcore_business_social_linkedin', esc_url_raw($detected['linkedin']));
         }
     }
 }
@@ -350,6 +432,7 @@ function artitechcore_register_settings() {
     register_setting('artitechcore_settings_group', 'artitechcore_deepseek_api_key', 'sanitize_text_field');
     register_setting('artitechcore_settings_group', 'artitechcore_brand_color', 'sanitize_hex_color');
     register_setting('artitechcore_settings_group', 'artitechcore_sitemap_url', 'esc_url_raw');
+    register_setting('artitechcore_settings_group', 'artitechcore_ai_rate_limit', 'absint');
     register_setting('artitechcore_settings_group', 'artitechcore_auto_schema_generation', 'absint');
     register_setting('artitechcore_settings_group', 'artitechcore_persist_on_uninstall', 'absint');
     
@@ -430,6 +513,14 @@ function artitechcore_settings_init() {
         'artitechcore_deepseek_api_key',
         __('DeepSeek API Key', 'artitechcore'),
         'artitechcore_deepseek_api_key_callback',
+        'artitechcore-main',
+        'artitechcore_settings_section'
+    );
+
+    add_settings_field(
+        'artitechcore_ai_rate_limit',
+        __('AI Rate Limit', 'artitechcore'),
+        'artitechcore_ai_rate_limit_callback',
         'artitechcore-main',
         'artitechcore_settings_section'
     );
@@ -554,6 +645,22 @@ function artitechcore_settings_init() {
         'artitechcore_schema_settings_section'
     );
 
+    // Maintenance Section
+    add_settings_section(
+        'artitechcore_maintenance_section',
+        __('Maintenance & Production Hardening', 'artitechcore'),
+        'artitechcore_maintenance_section_callback',
+        'artitechcore-main'
+    );
+
+    add_settings_field(
+        'artitechcore_db_maintenance',
+        __('Database Hygiene', 'artitechcore'),
+        'artitechcore_db_maintenance_callback',
+        'artitechcore-main',
+        'artitechcore_maintenance_section'
+    );
+
     // Business Information Section
     add_settings_section(
         'artitechcore_business_settings_section',
@@ -595,7 +702,7 @@ function artitechcore_sanitize_array($input) {
 
 // Section callback
 function artitechcore_settings_section_callback() {
-    echo '<p>' . __('Select your preferred AI provider and enter the corresponding API key. Set your brand color for AI-generated featured images and configure the sitemap URL for menu generation.', 'artitechcore') . '</p>';
+    echo '<p>' . esc_html__('Select your preferred AI provider and enter the corresponding API key. Set your brand color for AI-generated featured images and configure the sitemap URL for menu generation.', 'artitechcore') . '</p>';
 }
 
 // AI Provider field callback
@@ -615,18 +722,31 @@ function artitechcore_ai_provider_callback() {
 function artitechcore_openai_api_key_callback() {
     $api_key = get_option('artitechcore_openai_api_key');
     echo '<input type="password" name="artitechcore_openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text" autocomplete="off">';
+    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="openai">' . __('Test OpenAI', 'artitechcore') . '</button>';
 }
 
 // Gemini API Key field callback
 function artitechcore_gemini_api_key_callback() {
     $api_key = get_option('artitechcore_gemini_api_key');
     echo '<input type="password" name="artitechcore_gemini_api_key" value="' . esc_attr($api_key) . '" class="regular-text" autocomplete="off">';
+    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="gemini">' . __('Test Gemini', 'artitechcore') . '</button>';
 }
 
 // DeepSeek API Key field callback
 function artitechcore_deepseek_api_key_callback() {
     $api_key = get_option('artitechcore_deepseek_api_key');
     echo '<input type="password" name="artitechcore_deepseek_api_key" value="' . esc_attr($api_key) . '" class="regular-text" autocomplete="off">';
+    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="deepseek">' . __('Test DeepSeek', 'artitechcore') . '</button>';
+    echo '<div class="artitechcore-test-status" style="margin-top: 5px;"></div>';
+}
+
+// AI Rate Limit field callback
+function artitechcore_ai_rate_limit_callback() {
+    $value = get_option('artitechcore_ai_rate_limit', 20);
+    ?>
+    <input type="number" name="artitechcore_ai_rate_limit" value="<?php echo esc_attr($value); ?>" class="small-text" min="1" max="100">
+    <p class="description"><?php esc_html_e('Maximum number of AI requests allowed per minute per user. Helps prevent API abuse and unexpected costs.', 'artitechcore'); ?></p>
+    <?php
 }
 
 // Brand Color field callback
@@ -634,7 +754,7 @@ function artitechcore_brand_color_callback() {
     $brand_color = get_option('artitechcore_brand_color', '#b47cfd');
     ?>
     <input type="color" name="artitechcore_brand_color" value="<?php echo esc_attr($brand_color); ?>" class="regular-text">
-    <p class="description"><?php _e('Select your brand\'s primary color. This will be used for AI-generated featured images.', 'artitechcore'); ?></p>
+    <p class="description"><?php esc_html_e('Select your brand\'s primary color. This will be used for AI-generated featured images.', 'artitechcore'); ?></p>
     <?php
 }
 
@@ -678,7 +798,6 @@ function artitechcore_persist_on_uninstall_callback() {
 
 // Business Information Section Callback - with Re-Scan button
 function artitechcore_business_settings_section_callback() {
-    $nonce = wp_create_nonce('artitechcore_rescan_nonce');
     ?>
     <p><?php esc_html_e('Your business details are auto-detected from WordPress. This information is used to generate accurate, context-aware schema markup.', 'artitechcore'); ?></p>
     <p>
@@ -687,48 +806,6 @@ function artitechcore_business_settings_section_callback() {
         </button>
         <span id="artitechcore-rescan-status" style="margin-left: 10px;"></span>
     </p>
-    <script>
-    jQuery(document).ready(function($) {
-        $('#artitechcore-rescan-btn').on('click', function() {
-            var $btn = $(this);
-            var $status = $('#artitechcore-rescan-status');
-            
-            $btn.prop('disabled', true).text('⏳ Scanning...');
-            $status.text('');
-            
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'artitechcore_rescan_business_info',
-                    nonce: '<?php echo esc_js($nonce); ?>'
-                },
-                success: function(response) {
-                    $btn.prop('disabled', false).html('🔍 <?php echo esc_js(__('Re-Scan Website', 'artitechcore')); ?>');
-                    if (response.success) {
-                        $status.html('<span style="color: green;">✓ ' + response.data.message + '</span>');
-                        // Update form fields with detected values
-                        var data = response.data.data;
-                        $('input[name="artitechcore_business_name"]').val(data.name);
-                        $('textarea[name="artitechcore_business_description"]').val(data.description);
-                        $('textarea[name="artitechcore_business_address"]').val(data.address);
-                        $('input[name="artitechcore_business_phone"]').val(data.phone);
-                        $('input[name="artitechcore_business_email"]').val(data.email);
-                        $('input[name="artitechcore_business_social_facebook"]').val(data.facebook);
-                        $('input[name="artitechcore_business_social_twitter"]').val(data.twitter);
-                        $('input[name="artitechcore_business_social_linkedin"]').val(data.linkedin);
-                    } else {
-                        $status.html('<span style="color: red;">✗ Error: ' + response.data.message + '</span>');
-                    }
-                },
-                error: function() {
-                    $btn.prop('disabled', false).html('🔍 <?php echo esc_js(__('Re-Scan Website', 'artitechcore')); ?>');
-                    $status.html('<span style="color: red;">✗ <?php echo esc_js(__('Network error. Please try again.', 'artitechcore')); ?></span>');
-                }
-            });
-        });
-    });
-    </script>
     <?php
 }
 
@@ -846,39 +923,6 @@ function artitechcore_ce_conclusion_heading_callback() {
     echo '<input type="text" name="artitechcore_ce_conclusion_heading" value="' . esc_attr($val) . '" class="regular-text">';
 }
 
-function artitechcore_ce_cta_mode_callback() {
-    $mode = get_option('artitechcore_ce_cta_mode', 'shortcode');
-    ?>
-    <select name="artitechcore_ce_cta_mode" id="artitechcore_ce_cta_mode">
-        <option value="shortcode" <?php selected($mode, 'shortcode'); ?>><?php _e('Shortcode Mode (Use Elementor, CF7, etc.)', 'artitechcore'); ?></option>
-        <option value="native" <?php selected($mode, 'native'); ?>><?php _e('Native Mode (Built-in AJAX Form)', 'artitechcore'); ?></option>
-    </select>
-    <p class="description"><?php _e('Choose how the CTA form is rendered. Native mode is recommended if Elementor forms are not loading correctly.', 'artitechcore'); ?></p>
-    <script>
-    jQuery(document).ready(function($) {
-        function toggleCtaFields() {
-            var mode = $('#artitechcore_ce_cta_mode').val();
-            if (mode === 'native') {
-                $('.artitechcore-cta-shortcode-row').hide();
-                $('.artitechcore-cta-native-row').show();
-            } else {
-                $('.artitechcore-cta-shortcode-row').show();
-                $('.artitechcore-cta-native-row').hide();
-            }
-        }
-        $('#artitechcore_ce_cta_mode').on('change', toggleCtaFields);
-        toggleCtaFields();
-        
-        // Add classes to rows for toggling
-        $('#artitechcore_ce_cta_shortcode').closest('tr').addClass('artitechcore-cta-shortcode-row');
-        $('[name="artitechcore_ce_cta_native_email"]').closest('tr').addClass('artitechcore-cta-native-row');
-        // The native configuration field itself is in the next row usually
-        $('[name="artitechcore_ce_cta_native_button"]').closest('tr').addClass('artitechcore-cta-native-row');
-        $('.artitechcore-native-cta-config').closest('tr').addClass('artitechcore-cta-native-row');
-    });
-    </script>
-    <?php
-}
 
 function artitechcore_ce_cta_shortcode_callback() {
     $val = get_option('artitechcore_ce_cta_shortcode', '');
@@ -930,60 +974,36 @@ function artitechcore_ce_cta_native_callback() {
  * Brand Kit section description
  */
 function artitechcore_brand_kit_section_callback() {
-    echo '<p>Configure your brand identity for the AI Website Builder. These settings will be used to generate pages that match your brand\'s style, voice, and colors. You can also auto-detect this information from your existing site.</p>';
+    echo '<p>' . esc_html__('Configure your brand identity for the AI Website Builder. These settings will be used to generate pages that match your brand\'s style, voice, and colors. You can also auto-detect this information from your existing site.', 'artitechcore') . '</p>';
+}
+
+/**
+ * CTA Mode field callback
+ */
+function artitechcore_ce_cta_mode_callback() {
+    $mode = get_option('artitechcore_ce_cta_mode', 'shortcode');
+    ?>
+    <select name="artitechcore_ce_cta_mode" id="artitechcore_ce_cta_mode">
+        <option value="shortcode" <?php selected($mode, 'shortcode'); ?>><?php esc_html_e('Shortcode Mode (Use Elementor, CF7, etc.)', 'artitechcore'); ?></option>
+        <option value="native" <?php selected($mode, 'native'); ?>><?php esc_html_e('Native Mode (Built-in AJAX Form)', 'artitechcore'); ?></option>
+    </select>
+    <p class="description"><?php esc_html_e('Choose how the CTA form is rendered. Native mode is recommended if Elementor forms are not loading correctly.', 'artitechcore'); ?></p>
+    <?php
 }
 
 /**
  * Auto-detect brand kit button
  */
 function artitechcore_brand_kit_auto_detect_callback() {
-    $brand = artitechcore_get_brand_kit();
     ?>
     <div class="artitechcore-brand-auto-detect" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
         <p><strong><?php esc_html_e('Auto-Detect from Your Site', 'artitechcore'); ?></strong></p>
         <p style="margin-bottom: 10px;"><?php esc_html_e('Scan your WordPress site to automatically fill in brand information (business name, description, colors, etc.).', 'artitechcore'); ?></p>
         <button type="button" id="artitechcore-auto-detect-brand" class="button button-secondary">
-            <?php esc_html_e('Auto-Detect Brand Info', 'artitechcore'); ?>
+            <?php esc_html_e('Rescan Brand Identity', 'artitechcore'); ?>
         </button>
         <span id="artitechcore-brand-detect-status" style="margin-left: 10px; display: none;"></span>
     </div>
-
-    <script>
-    jQuery(document).ready(function($) {
-        $('#artitechcore-auto-detect-brand').on('click', function(e) {
-            e.preventDefault();
-            var btn = $(this);
-            var status = $('#artitechcore-brand-detect-status');
-
-            btn.prop('disabled', true).text('<?php esc_html_e('Detecting...', 'artitechcore'); ?>');
-            status.show().text('<?php esc_html_e('Scanning your site...', 'artitechcore'); ?>');
-
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'artitechcore_auto_detect_brand_kit',
-                    nonce: '<?php echo wp_create_nonce("artitechcore_brand_kit_nonce"); ?>'
-                },
-                success: function(res) {
-                    btn.prop('disabled', false).text('<?php esc_html_e('Auto-Detect Brand Info', 'artitechcore'); ?>');
-                    if (res.success) {
-                        status.text('<?php esc_html_e('✓ Detected! Refreshing...', 'artitechcore'); ?>');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        status.text('<?php esc_html_e('✗ Error', 'artitechcore'); ?>: ' + (res.data.message || 'Unknown error')).css('color', 'red');
-                    }
-                },
-                error: function() {
-                    btn.prop('disabled', false).text('<?php esc_html_e('Auto-Detect Brand Info', 'artitechcore'); ?>');
-                    status.text('<?php esc_html_e('✗ AJAX error', 'artitechcore'); ?>').css('color', 'red');
-                }
-            });
-        });
-    });
-    </script>
     <?php
 }
 
@@ -1038,7 +1058,7 @@ function artitechcore_brand_colors_callback() {
         <div style="flex: 1; min-width: 200px;">
             <label><strong><?php esc_html_e('Secondary Color', 'artitechcore'); ?></strong></label><br>
             <input type="text" name="artitechcore_brand_kit[secondary_color]" value="<?php echo esc_attr($brand['secondary_color']); ?>" class="artitechcore-color-picker" data-default-color="#6C63FF">
-            <pp class="description"><?php esc_html_e('Secondary brand color (accents, highlights).', 'artitechcore'); ?></p>
+            <p class="description"><?php esc_html_e('Secondary brand color (accents, highlights).', 'artitechcore'); ?></p>
         </div>
         <div style="flex: 1; min-width: 200px;">
             <label><strong><?php esc_html_e('Accent Color', 'artitechcore'); ?></strong></label><br>
@@ -1105,12 +1125,12 @@ function artitechcore_brand_typography_callback() {
 function artitechcore_brand_voice_callback() {
     $brand = artitechcore_get_brand_kit();
     $voices = [
-        'professional' => 'Professional (authoritative, polished)',
-        'casual' => 'Casual (friendly, conversational)',
-        'innovative' => 'Innovative (cutting-edge, modern)',
-        'trustworthy' => 'Trustworthy (reliable, reassuring)',
-        'friendly' => 'Friendly (warm, approachable)',
-        'luxury' => 'Luxury (exclusive, premium)',
+        'professional' => __('Professional (authoritative, polished)', 'artitechcore'),
+        'casual' => __('Casual (friendly, conversational)', 'artitechcore'),
+        'innovative' => __('Innovative (cutting-edge, modern)', 'artitechcore'),
+        'trustworthy' => __('Trustworthy (reliable, reassuring)', 'artitechcore'),
+        'friendly' => __('Friendly (warm, approachable)', 'artitechcore'),
+        'luxury' => __('Luxury (exclusive, premium)', 'artitechcore'),
     ];
     ?>
     <select name="artitechcore_brand_kit[brand_voice]" style="width: 100%; max-width: 300px;">
@@ -1130,12 +1150,12 @@ function artitechcore_brand_voice_callback() {
 function artitechcore_design_aesthetic_callback() {
     $brand = artitechcore_get_brand_kit();
     $aesthetics = [
-        'minimal' => 'Minimal (lots of white space, clean)',
-        'bold' => 'Bold (high contrast, impactful)',
-        'corporate' => 'Corporate (traditional, professional)',
-        'playful' => 'Playful (colorful, fun, energetic)',
-        'luxury' => 'Luxury (elegant, sophisticated)',
-        'modern' => 'Modern (contemporary, clean)',
+        'minimal' => __('Minimal (lots of white space, clean)', 'artitechcore'),
+        'bold' => __('Bold (high contrast, impactful)', 'artitechcore'),
+        'corporate' => __('Corporate (traditional, professional)', 'artitechcore'),
+        'playful' => __('Playful (colorful, fun, energetic)', 'artitechcore'),
+        'luxury' => __('Luxury (elegant, sophisticated)', 'artitechcore'),
+        'modern' => __('Modern (contemporary, clean)', 'artitechcore'),
     ];
     ?>
     <select name="artitechcore_brand_kit[design_aesthetic]" style="width: 100%; max-width: 300px;">
@@ -1155,9 +1175,9 @@ function artitechcore_design_aesthetic_callback() {
 function artitechcore_image_style_callback() {
     $brand = artitechcore_get_brand_kit();
     $styles = [
-        'photorealistic' => 'Photorealistic (real photos, lifelike)',
-        'illustrated' => 'Illustrated (artistic, drawn imagery)',
-        'mixed' => 'Mixed (combination of both)',
+        'photorealistic' => __('Photorealistic (real photos, lifelike)', 'artitechcore'),
+        'illustrated' => __('Illustrated (artistic, drawn imagery)', 'artitechcore'),
+        'mixed' => __('Mixed (combination of both)', 'artitechcore'),
     ];
     ?>
     <select name="artitechcore_brand_kit[image_style]" style="width: 100%; max-width: 300px;">
@@ -1171,23 +1191,69 @@ function artitechcore_image_style_callback() {
     <?php
 }
 
-// Enqueue color picker for Brand Kit
-function artitechcore_brand_kit_enqueue_scripts($hook) {
-    // Only load on ArtitechCore settings page
-    if (strpos($hook, 'artitechcore') === false) {
-        return;
-    }
-
-    // WordPress color picker
-    wp_enqueue_style('wp-color-picker');
-    wp_enqueue_script('wp-color-picker');
-    wp_enqueue_script('jquery');
-
-    // Initialize color pickers
-    wp_add_inline_script('wp-color-picker', "
-        jQuery(document).ready(function($) {
-            $('.artitechcore-color-picker').wpColorPicker();
-        });
-    ");
+/**
+ * Maintenance Section Callback
+ */
+function artitechcore_maintenance_section_callback() {
+    echo '<p>' . esc_html__('Manage database health and production-level settings to keep ArtitechCore running efficiently.', 'artitechcore') . '</p>';
 }
-add_action('admin_enqueue_scripts', 'artitechcore_brand_kit_enqueue_scripts');
+
+/**
+ * DB Maintenance Callback
+ */
+function artitechcore_db_maintenance_callback() {
+    ?>
+    <div class="artitechcore-maintenance-tools">
+        <button type="button" id="artitechcore-cleanup-db" class="button button-secondary">
+            🧹 <?php esc_html_e('Prune AI Transients & Logs', 'artitechcore'); ?>
+        </button>
+        <p class="description"><?php esc_html_e('Removes expired rate-limit data and stale AI generation transients. Recommended monthly or if the database grows large.', 'artitechcore'); ?></p>
+        <div id="artitechcore-cleanup-status" style="margin-top: 10px;"></div>
+    </div>
+    <script>
+    jQuery(document).ready(function($) {
+        // DB Cleanup
+        $('#artitechcore-cleanup-db').on('click', function() {
+            var btn = $(this);
+            btn.prop('disabled', true).text('<?php esc_html_e('Cleaning...', 'artitechcore'); ?>');
+            
+            $.post(ajaxurl, {
+                action: 'artitechcore_manual_db_cleanup',
+                nonce: '<?php echo wp_create_nonce("artitechcore_maintenance_nonce"); ?>'
+            }, function(response) {
+                if (response.success) {
+                    $('#artitechcore-cleanup-status').html('<span style="color: green;">✅ ' + response.data.message + '</span>');
+                } else {
+                    $('#artitechcore-cleanup-status').html('<span style="color: red;">❌ ' + response.data.message + '</span>');
+                }
+                btn.prop('disabled', false).text('🧹 <?php esc_html_e("Prune AI Transients & Logs", "artitechcore"); ?>');
+            });
+        });
+
+        // Test Connection
+        $('.artitechcore-test-conn').on('click', function() {
+            var btn = $(this);
+            var provider = btn.data('provider');
+            var statusDiv = $('.artitechcore-test-status');
+
+            btn.prop('disabled', true).addClass('updating-message');
+            statusDiv.html('<i>' + provider.charAt(0).toUpperCase() + provider.slice(1) + ': Checking...</i>');
+
+            $.post(ajaxurl, {
+                action: 'artitechcore_test_ai_connection',
+                provider: provider,
+                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+            }, function(response) {
+                if (response.success) {
+                    statusDiv.html('<span style="color: green;">✅ ' + provider.charAt(0).toUpperCase() + provider.slice(1) + ': ' + response.data.message + '</span>');
+                } else {
+                    statusDiv.html('<span style="color: red;">❌ ' + provider.charAt(0).toUpperCase() + provider.slice(1) + ': ' + response.data.message + '</span>');
+                }
+                btn.prop('disabled', false).removeClass('updating-message');
+            });
+        });
+    });
+    </script>
+    <?php
+}
+

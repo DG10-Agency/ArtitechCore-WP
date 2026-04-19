@@ -32,6 +32,17 @@ define('ARTITECHCORE_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ARTITECHCORE_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ARTITECHCORE_GITHUB_URL', 'https://github.com/DG10-Agency/ArtitechCore-WP');
 
+// AI Settings & Constants
+if (!defined('ARTITECHCORE_API_TIMEOUT')) {
+    define('ARTITECHCORE_API_TIMEOUT', 120);
+}
+if (!defined('ARTITECHCORE_AI_TEMPERATURE')) {
+    define('ARTITECHCORE_AI_TEMPERATURE', 0.7);
+}
+if (!defined('ARTITECHCORE_AI_MAX_TOKENS')) {
+    define('ARTITECHCORE_AI_MAX_TOKENS', 4000);
+}
+
 /**
  * Plugin activation hook
  * Sets up default options and initializes plugin data
@@ -39,7 +50,7 @@ define('ARTITECHCORE_GITHUB_URL', 'https://github.com/DG10-Agency/ArtitechCore-W
 function artitechcore_activate() {
     // Set default plugin options
     $default_options = array(
-        'artitechcore_version' => '1.0',
+        'artitechcore_version' => '1.1.2',
         'artitechcore_ai_provider' => 'openai',
         'artitechcore_openai_api_key' => '',
         'artitechcore_gemini_api_key' => '',
@@ -50,10 +61,11 @@ function artitechcore_activate() {
         'artitechcore_enable_image_generation' => true,
         'artitechcore_image_quality' => 'standard',
         'artitechcore_image_size' => '1024x1024',
-        'artitechcore_max_tokens' => 400,
+        'artitechcore_max_tokens' => 1000,
         'artitechcore_temperature' => 0.5,
         'artitechcore_seo_intensity' => 'high',
-        'artitechcore_api_timeout' => 30,
+        'artitechcore_api_timeout' => 120,
+        'artitechcore_ai_rate_limit' => 20,
         'artitechcore_batch_size' => 10,
         'artitechcore_activation_date' => current_time('mysql'),
         'artitechcore_first_activation' => true
@@ -82,7 +94,9 @@ function artitechcore_activate() {
     update_option('artitechcore_plugin_activated', true);
     
     // Log activation
-    error_log('ArtitechCore Plugin Activated - DB Version ' . ARTITECHCORE_DB_VERSION);
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('ArtitechCore Plugin Activated - DB Version ' . ARTITECHCORE_DB_VERSION);
+    }
 
     // Schedule background queue cleanup if builder files are present
     if (!wp_next_scheduled('artitechcore_cleanup_old_builder_jobs')) {
@@ -91,10 +105,33 @@ function artitechcore_activate() {
 }
 
 /**
+ * Initialize plugin components
+ */
+function artitechcore_init() {
+    // Initialize brand kit if empty or not yet scanned (Init Shield protected)
+    $brand_kit = get_option('artitechcore_brand_kit');
+    $scan_completed = get_option('artitechcore_initial_scan_completed');
+    
+    if (empty($brand_kit) && !$scan_completed) {
+        update_option('artitechcore_brand_kit', artitechcore_auto_detect_brand_kit());
+    }
+}
+add_action('init', 'artitechcore_init');
+
+/**
  * Plugin deactivation hook
  * Performs cleanup tasks when plugin is deactivated
  */
 function artitechcore_deactivate() {
+    // Check if user wants to persist data via bridge
+    $persist_schema = get_option('artitechcore_persist_on_uninstall', 0);
+    $persist_ce = get_option('artitechcore_ce_persist_features', []);
+    
+    // Create the bridge if anything is to be persisted
+    if ($persist_schema || !empty($persist_ce)) {
+        artitechcore_create_persistence_bridge($persist_schema, $persist_ce);
+    }
+
     // Clear scheduled events
     wp_clear_scheduled_hook('artitechcore_cleanup_temporary_data');
     wp_clear_scheduled_hook('artitechcore_cleanup_old_builder_jobs');
@@ -110,98 +147,16 @@ function artitechcore_deactivate() {
     error_log('ArtitechCore Plugin Deactivated');
 }
 
-/**
- * Plugin uninstall hook
- * Removes all plugin data when plugin is deleted
- */
-function artitechcore_uninstall() {
-    // Only run if user has proper permissions
-    if (!current_user_can('delete_plugins')) {
-        return;
-    }
-
-    // Check what we should persist
-    $persist_schema = get_option('artitechcore_persist_on_uninstall', 0);
-    $persist_ce = get_option('artitechcore_ce_persist_features', []);
-    if (!is_array($persist_ce)) $persist_ce = [];
-    
-    $mu_dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (ABSPATH . 'wp-content/mu-plugins');
-    
-    if ($persist_schema || !empty($persist_ce)) {
-        // Create MU-Plugin bridge to keep features functional
-        artitechcore_create_persistence_bridge($persist_schema, $persist_ce);
-    } else {
-        // FIX #6: Clean up any old bridge files from prior installs
-        @unlink($mu_dir . '/artitechcore-schema-bridge.php');
-        @unlink($mu_dir . '/artitechcore-persistence-bridge.php');
-    }
-
-    // Remove all plugin options (FIX #3: always include persist_on_uninstall)
-    $options_to_remove = array(
-        'artitechcore_version',
-        'artitechcore_ai_provider',
-        'artitechcore_openai_api_key',
-        'artitechcore_gemini_api_key',
-        'artitechcore_deepseek_api_key',
-        'artitechcore_brand_color',
-        'artitechcore_default_status',
-        'artitechcore_auto_schema_generation',
-        'artitechcore_enable_image_generation',
-        'artitechcore_image_quality',
-        'artitechcore_image_size',
-        'artitechcore_max_tokens',
-        'artitechcore_temperature',
-        'artitechcore_seo_intensity',
-        'artitechcore_api_timeout',
-        'artitechcore_batch_size',
-        'artitechcore_activation_date',
-        'artitechcore_first_activation',
-        'artitechcore_plugin_activated',
-        'artitechcore_plugin_deactivated',
-        'artitechcore_deactivation_date',
-        'artitechcore_ce_enabled',
-        'artitechcore_ce_post_types',
-        'artitechcore_ce_kt_heading',
-        'artitechcore_ce_conclusion_heading',
-        'artitechcore_ce_cta_shortcode',
-        'artitechcore_ce_cta_mode',
-        'artitechcore_ce_cta_native_fields',
-        'artitechcore_ce_cta_native_email',
-        'artitechcore_ce_cta_native_button',
-        'artitechcore_ce_persist_features',
-        'artitechcore_persist_on_uninstall',
-    );
-    
-    if (!$persist_schema) {
-        $options_to_remove[] = 'artitechcore_business_name';
-        $options_to_remove[] = 'artitechcore_business_description';
-        $options_to_remove[] = 'artitechcore_business_address';
-        $options_to_remove[] = 'artitechcore_business_phone';
-        $options_to_remove[] = 'artitechcore_business_email';
-        $options_to_remove[] = 'artitechcore_business_social_facebook';
-        $options_to_remove[] = 'artitechcore_business_social_twitter';
-        $options_to_remove[] = 'artitechcore_business_social_linkedin';
-        
-        // Remove custom database tables ONLY if not persisting
-        artitechcore_drop_database_tables();
-    }
-    
-    foreach ($options_to_remove as $option) {
-        delete_option($option);
-    }
-    
-    // Clear any cached data
-    wp_cache_flush();
-    
-    // Log uninstall
-    error_log('ArtitechCore Plugin Uninstalled');
-}
 
 /**
  * Creates a small MU-Plugin to keep schema/CE functional after uninstallation
  */
 function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
-    $mu_dir = WPMU_PLUGIN_DIR;
+    if (!$persist_schema && empty($persist_ce)) {
+        return false;
+    }
+
+    $mu_dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (ABSPATH . 'wp-content/mu-plugins');
     if (!is_dir($mu_dir)) {
         if (!wp_is_writable(dirname($mu_dir)) || !@mkdir($mu_dir, 0755, true)) {
             error_log('ArtitechCore Error: Could not create mu-plugins directory.');
@@ -217,240 +172,121 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
     $bridge_code = "<?php\n";
     $bridge_code .= "/**\n";
     $bridge_code .= " * Plugin Name: ArtitechCore Persistence Bridge\n";
-    $bridge_code .= " * Description: Automatically created by ArtitechCore to keep your SEO schemas and/or AI Enhancements functional after plugin removal.\n";
-    $bridge_code .= " * Version: 1.2\n";
+    $bridge_code .= " * Description: Keep SEO schemas and Content Enhancements functional after uninstallation.\n";
+    $bridge_code .= " * Version: 1.6\n";
     $bridge_code .= " * Author: ArtitechCore\n";
     $bridge_code .= " */\n\n";
     $bridge_code .= "if (!defined('ABSPATH')) exit;\n\n";
-    $bridge_code .= "// Do not run if the main ArtitechCore plugin is active (prevents redeclaration crashes)\n";
+    $bridge_code .= "// Do not run if the main plugin is active\n";
     $bridge_code .= "if (defined('ARTITECHCORE_VERSION')) return;\n\n";
 
     if ($persist_schema) {
         $bridge_code .= "/** Schema Injection */\n";
         $bridge_code .= "add_action('wp_head', function() {\n";
         $bridge_code .= "    global \$wpdb;\n";
-        $bridge_code .= "    \$object_id = null;\n";
-        $bridge_code .= "    \$object_type = 'post';\n";
-        $bridge_code .= "    if (is_singular()) \$object_id = get_the_ID();\n";
-        $bridge_code .= "    elseif (is_front_page()) \$object_id = get_option('page_on_front');\n";
-        $bridge_code .= "    elseif (is_category() || is_tag() || is_tax()) {\n";
+        $bridge_code .= "    \$obj_id = is_singular() ? get_the_ID() : (is_front_page() ? get_option('page_on_front') : null);\n";
+        $bridge_code .= "    \$obj_type = 'post';\n";
+        $bridge_code .= "    if (!\$obj_id && (is_category() || is_tag() || is_tax())) {\n";
         $bridge_code .= "        \$term = get_queried_object();\n";
         $bridge_code .= "        if (\$term && isset(\$term->term_id)) {\n";
-        $bridge_code .= "            \$object_id = \$term->term_id;\n";
-        $bridge_code .= "            \$object_type = 'term';\n";
+        $bridge_code .= "            \$obj_id = \$term->term_id;\n";
+        $bridge_code .= "            \$obj_type = 'term';\n";
         $bridge_code .= "        }\n";
         $bridge_code .= "    }\n";
-        $bridge_code .= "    if (!\$object_id) return;\n";
-        $bridge_code .= "    \$table_name = \$wpdb->prefix . 'artitechcore_schema_data';\n";
-        $bridge_code .= "    // Check if table exists before querying\n";
-        $bridge_code .= "    if (\$wpdb->get_var(\"SHOW TABLES LIKE '\$table_name'\") !== \$table_name) return;\n";
-        $bridge_code .= "    \$row = \$wpdb->get_row(\$wpdb->prepare(\"SELECT schema_data FROM \$table_name WHERE object_id = %d AND object_type = %s\", \$object_id, \$object_type));\n";
-        $bridge_code .= "    if (!empty(\$row->schema_data)) {\n";
-        $bridge_code .= "        \$schema_array = json_decode(\$row->schema_data, true);\n";
-        $bridge_code .= "        if (is_array(\$schema_array) && !empty(\$schema_array)) {\n";
-        $bridge_code .= "            echo \"\\n<!-- ArtitechCore Schema Bridge -->\\n\";\n";
-        $bridge_code .= "            echo '<script type=\"application/ld+json\" class=\"artitech-schema-bridge\">' . wp_json_encode(\$schema_array) . \"</script>\\n\";\n";
-        $bridge_code .= "        }\n";
+        $bridge_code .= "    if (!\$obj_id) return;\n";
+        $bridge_code .= "    \$table = \$wpdb->prefix . 'artitechcore_schema_data';\n";
+        $bridge_code .= "    if (\$wpdb->get_var(\$wpdb->prepare(\"SHOW TABLES LIKE %s\", \$table)) !== \$table) return;\n";
+        $bridge_code .= "    \$data = \$wpdb->get_var(\$wpdb->prepare(\"SELECT schema_data FROM \$table WHERE object_id = %d AND object_type = %s\", \$obj_id, \$obj_type));\n";
+        $bridge_code .= "    if (!empty(\$data)) {\n";
+        $bridge_code .= "        echo \"\\n<!-- ArtitechCore Bridge Schema -->\\n<script type='application/ld+json'>\" . \$data . \"</script>\\n\";\n";
         $bridge_code .= "    }\n";
         $bridge_code .= "}, 30);\n\n";
     }
 
     if (!empty($persist_ce)) {
-        // Fetch global options before they are deleted to hardcode them into the bridge
-        $theme_color = get_option('artitechcore_brand_color', '#b47cfd');
-        $kt_head = get_option('artitechcore_ce_kt_heading', 'Key Takeaways');
-        $conc_head = get_option('artitechcore_ce_conclusion_heading', 'Conclusion');
-        $cta_mode = get_option('artitechcore_ce_cta_mode', 'shortcode');
-        $cta_shortcode = get_option('artitechcore_ce_cta_shortcode', '');
-        $cta_native_fields = get_option('artitechcore_ce_cta_native_fields', ['name', 'email', 'message']);
-        $cta_native_email = get_option('artitechcore_ce_cta_native_email', get_option('admin_email'));
-        $cta_native_button = get_option('artitechcore_ce_cta_native_button', 'Send Message');
+        $color = get_option('artitechcore_brand_color', '#b47cfd');
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $color = '#b47cfd';
+        $r = hexdec(substr($color, 1, 2)); $g = hexdec(substr($color, 3, 2)); $b = hexdec(substr($color, 5, 2));
+        
+        $kt_h = get_option('artitechcore_ce_kt_heading', 'Key Takeaways');
+        $conc_h = get_option('artitechcore_ce_conclusion_heading', 'Conclusion');
+        
+        $css = "<style>
+            .artitech-bridge-ce { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen-Sans, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif; }
+            .artitech-bridge-kt { background:#fff; border-left:4px solid $color; padding:20px; margin:30px 0; border-radius:0 12px 12px 0; box-shadow:0 4px 20px rgba($r,$g,$b,0.08); }
+            .artitech-bridge-kt h3 { margin:0 0 15px 0; font-weight:800; font-size:1.25em; color:#121322; }
+            .artitech-bridge-conc { margin:40px 0 20px 0; padding:25px; background:rgba($r,$g,$b,0.03); border-radius:12px; border-left:4px solid $color; }
+            .artitech-bridge-conc h3 { margin:0 0 15px 0; font-weight:800; font-size:1.4em; color:#121322; }
+            .artitech-bridge-faq { margin:40px 0; padding:25px; background:#fff; border:1px solid #e2e8f0; border-radius:16px; }
+            .artitech-bridge-faq h3 { margin:0 0 20px 0; font-weight:800; }
+            .artitech-bridge-faq-item { margin-bottom:20px; }
+            .artitech-bridge-faq-q { font-weight:700; color:#1e293b; margin-bottom:5px; }
+            .artitech-bridge-faq-a { color:#475569; line-height:1.6; }
+            .artitech-bridge-cta-box { background:#fff; border:2px solid $color; padding:25px; margin:35px 0; border-radius:16px; box-shadow:0 10px 40px rgba($r,$g,$b,0.12); border-left-width:6px; }
+            .artitech-bridge-cta-h { font-size:1.4em; font-weight:900; margin:0 0 8px 0; color:#121322; }
+            .artitech-bridge-cta-d { color:#475569; }
+        </style>";
 
-        // FIX #2: Validate hex color with regex fallback
-        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $theme_color)) {
-            $theme_color = '#b47cfd';
-        }
-
-        // Pre-convert theme color to rgba for shadows
-        $r = hexdec(substr($theme_color, 1, 2));
-        $g = hexdec(substr($theme_color, 3, 2));
-        $b = hexdec(substr($theme_color, 5, 2));
-        $rgba_shadow = "rgba($r,$g,$b,0.15)";
-
-        // Generate hardcoded CE CSS (NEW: Compact & Horizontal)
-        // Generate hardcoded CE CSS (Matched with main plugin for brand consistency)
-        $css_block  = "    .artitechcore-ce-kt { background: #ffffff; border-left: 4px solid {$theme_color}; padding: 20px 25px; margin: 30px 0; border-radius: 0 12px 12px 0; box-shadow: 0 4px 20px rgba({$r},{$g},{$b},0.08); }\n";
-        $css_block .= "    .artitechcore-ce-kt-title { margin-top:0; color:#121322; font-size:1.25em; font-weight:800; margin-bottom:15px; }\n";
-        $css_block .= "    .artitechcore-ce-kt ul { margin:0; padding-left:20px; list-style:disc; }\n";
-        $css_block .= "    .artitechcore-ce-kt li { margin-bottom:8px; line-height:1.6; color:#334155; }\n";
-        $css_block .= "    .artitechcore-ce-conclusion { margin:40px 0 20px 0; padding:25px; background:rgba({$r},{$g},{$b},0.03); border-radius:12px; border-left:4px solid {$theme_color}; }\n";
-        $css_block .= "    .artitechcore-ce-conclusion h3 { font-size:1.5em; font-weight:800; margin:0 0 15px 0; color:#121322; }\n";
-        $css_block .= "    .artitechcore-ce-cta-wrapper { background:#ffffff; border:2px solid {$theme_color}; padding:25px; margin:35px 0; border-radius:16px; box-shadow:0 10px 40px rgba({$r},{$g},{$b},0.12); text-align:left; position:relative; overflow:hidden; }\n";
-        $css_block .= "    .artitechcore-ce-cta-wrapper::before { content:''; position:absolute; top:0; left:0; bottom:0; width:6px; background:{$theme_color}; }\n";
-        $css_block .= "    .artitechcore-ce-cta-head { font-size:1.4em; font-weight:900; margin:0 0 8px 0; color:#121322; line-height:1.2; }\n";
-        $css_block .= "    .artitechcore-ce-cta-desc { font-size:1.05em; color:#475569; margin:0 0 20px 0; line-height:1.5; }\n";
-        $css_block .= "    .artitechcore-ce-native-form { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start; }\n";
-        $css_block .= "    .artitechcore-ce-form-field { flex:1; min-width:180px; }\n";
-        $css_block .= "    .artitechcore-ce-form-field.field-message { flex-basis:100%; }\n";
-        $css_block .= "    .artitechcore-ce-form-field input, .artitechcore-ce-form-field textarea { width:100%; padding:12px 14px; border:1px solid rgba({$r},{$g},{$b},0.2); border-radius:8px; font-size:14px; box-sizing:border-box; background:#fff; color:#0f172a; transition:all 0.2s; }\n";
-        $css_block .= "    .artitechcore-ce-form-field input:focus, .artitechcore-ce-form-field textarea:focus { border-color:{$theme_color}; box-shadow:0 0 0 3px rgba({$r},{$g},{$b},0.1); outline:none; }\n";
-        $css_block .= "    .artitechcore-ce-submit-btn { background-color:{$theme_color}; color:#ffffff !important; border:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:800; cursor:pointer; transition:all 0.2s; white-space:nowrap; box-shadow:0 4px 12px rgba({$r},{$g},{$b},0.2); display:inline-flex; align-items:center; justify-content:center; min-height:44px; }\n";
-        $css_block .= "    .artitechcore-ce-submit-btn:hover { background-color:#ffffff !important; color:{$theme_color} !important; border:1px solid {$theme_color}; transform:translateY(-2px); box-shadow:0 8px 25px rgba({$r},{$g},{$b},0.25); }\n";
-        $css_block .= "    .artitechcore-ce-submit-btn:disabled { opacity:0.6; cursor:not-allowed; }\n";
-        $css_block .= "    .artitechcore-ce-submit-btn.loading, .artitechcore-ce-submit-btn.loading:hover { background-color:{$theme_color} !important; color:transparent !important; cursor:wait; }\n";
-        $css_block .= "    .artitechcore-ce-submit-btn.loading::after { content:''; position:absolute; width:18px; height:18px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:ce-spinner 0.6s linear infinite; }\n";
-        $css_block .= "    @keyframes ce-spinner { to { transform:rotate(360deg); } }\n";
-        $css_block .= "    .artitechcore-ce-form-response { flex-basis:100%; padding:12px; border-radius:8px; font-size:13px; margin-top:8px; display:none; font-weight:600; }\n";
-        $css_block .= "    .artitechcore-ce-form-response.success { background:rgba(34,197,94,0.1); color:#15803d; border:1px solid rgba(34,197,94,0.2); }\n";
-        $css_block .= "    .artitechcore-ce-form-response.error { background:rgba(239,68,68,0.1); color:#b91c1c; border:1px solid rgba(239,68,68,0.2); }\n";
-        $css_block .= "    .artitechcore-ce-faq { margin:40px 0; padding:30px; background:#ffffff; border:1px solid rgba({$r},{$g},{$b},0.15); border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.03); }\n";
-        $css_block .= "    .artitechcore-ce-faq-title { margin-top:0; margin-bottom:25px; font-size:1.6em; font-weight:900; color:#0f172a; border-bottom:3px solid {$theme_color}; display:inline-block; padding-bottom:5px; }\n";
-        $css_block .= "    .artitechcore-ce-faq-item { margin-bottom:25px; border-bottom:1px solid #f1f5f9; padding-bottom:20px; }\n";
-        $css_block .= "    .artitechcore-ce-faq-item:last-child { margin-bottom:0; border-bottom:none; padding-bottom:0; }\n";
-        $css_block .= "    .artitechcore-ce-faq-q { font-weight:800; color:{$theme_color}; margin-bottom:10px; font-size:1.15em; display:flex; gap:12px; }\n";
-        $css_block .= "    .artitechcore-ce-faq-q::before { content:'Q.'; opacity:0.5; font-weight:400; }\n";
-        $css_block .= "    .artitechcore-ce-faq-a { color:#334155; line-height:1.7; font-size:1em; display:flex; gap:12px; }\n";
-        $css_block .= "    .artitechcore-ce-faq-a::before { content:'A.'; opacity:0.5; font-weight:400; }\n";
-        $css_block .= "    @media (max-width: 600px) { .artitechcore-ce-native-form { flex-direction:column; } .artitechcore-ce-form-field { width:100%; flex:none; } .artitechcore-ce-submit-btn { width:100%; } .artitechcore-ce-faq { padding:20px; } }\n";
-
-        // FIX #5: CSS is now a static variable echoed inside the_content filter, not on every page
-        // We write the CSS as a heredoc constant so it's only echoed when content is injected
-        $bridge_code .= "/** Content Enhancer CSS (loaded only when enhancements exist) */\n";
-        $bridge_code .= "define('ARTITECHCORE_BRIDGE_CSS', '<style>\n" . $css_block . "</style>');\n\n";
-
-        // Generate content filter (FIX #7: use priority 99 to match original plugin)
-        $bridge_code .= "/** Content Enhancer Injection */\n";
+        $bridge_code .= "/** Content Enhancements Injection */\n";
         $bridge_code .= "add_filter('the_content', function(\$content) {\n";
         $bridge_code .= "    if (!is_singular() || !in_the_loop() || !is_main_query()) return \$content;\n";
-        $bridge_code .= "    \$post_id = get_the_ID();\n";
-        $bridge_code .= "    \$enhanced_content = \$content;\n";
-        $bridge_code .= "    \$_has_ce = false;\n";
+        $bridge_code .= "    \$pid = get_the_ID(); \$added = false; \$html_top = ''; \$html_bottom = '';\n";
         
         if (in_array('key_takeaways', $persist_ce)) {
-            // FIX #1: Use strpos+substr instead of preg_replace to avoid backreference corruption
-            $bridge_code .= "    \$kt = get_post_meta(\$post_id, '_artitechcore_ce_key_takeaways', true);\n";
-            $bridge_code .= "    if (!empty(\$kt) && is_array(\$kt)) {\n";
-            $bridge_code .= "        \$_has_ce = true;\n";
-            $bridge_code .= "        \$kt_html = '<div class=\"artitechcore-ce-kt\"><h3 class=\"artitechcore-ce-kt-title\">" . esc_html($kt_head) . "</h3><ul>';\n";
-            $bridge_code .= "        foreach (\$kt as \$point) \$kt_html .= '<li>' . esc_html(\$point) . '</li>';\n";
-            $bridge_code .= "        \$kt_html .= '</ul></div>';\n";
-            $bridge_code .= "        \$enhanced_content = \$kt_html . \"\\n\" . \$enhanced_content;\n";
+            $bridge_code .= "    \$kt = get_post_meta(\$pid, '_artitechcore_ce_key_takeaways', true);\n";
+            $bridge_code .= "    if (!empty(\$kt)) {\n";
+            $bridge_code .= "        \$added = true; \$html_top .= '<div class=\"artitech-bridge-ce artitech-bridge-kt\"><h3>" . esc_html($kt_h) . "</h3><ul>';\n";
+            $bridge_code .= "        foreach ((array)\$kt as \$p) \$html_top .= '<li>' . esc_html(\$p) . '</li>';\n";
+            $bridge_code .= "        \$html_top .= '</ul></div>';\n";
             $bridge_code .= "    }\n";
         }
 
-        if (in_array('cta', $persist_ce) && ($cta_mode === 'native' || !empty($cta_shortcode))) {
-            $bridge_code .= "    \$cta_head = get_post_meta(\$post_id, '_artitechcore_ce_cta_heading', true);\n";
-            $bridge_code .= "    \$cta_desc = get_post_meta(\$post_id, '_artitechcore_ce_cta_desc', true);\n";
-            $bridge_code .= "    if (!empty(\$cta_head)) {\n";
-            $bridge_code .= "        \$_has_ce = true;\n";
-            $bridge_code .= "        \$cta_html = '<div class=\"artitechcore-ce-cta-wrapper\">'; \n";
-            $bridge_code .= "        \$cta_html .= '<h3 class=\"artitechcore-ce-cta-head\">' . esc_html(\$cta_head) . '</h3>';\n";
-            $bridge_code .= "        if (!empty(\$cta_desc)) \$cta_html .= '<p class=\"artitechcore-ce-cta-desc\">' . esc_html(\$cta_desc) . '</p>';\n";
-            $bridge_code .= "        \$cta_html .= '<div class=\"artitechcore-ce-cta-form-container\">';\n";
-
-            if ($cta_mode === 'native') {
-                $fields_export = var_export($cta_native_fields, true);
-                $bridge_code .= "        \$fields = " . $fields_export . ";\n";
-                $bridge_code .= "        \$cta_html .= '<form class=\"artitechcore-ce-native-form\" id=\"ce-bridge-form-' . esc_attr(\$post_id) . '\" method=\"post\" action=\"\">';\n";
-                $bridge_code .= "        \$cta_html .= wp_nonce_field('artitechcore_ce_submit_cta', '_ce_nonce', true, false);\n";
-                $bridge_code .= "        \$cta_html .= '<input type=\"hidden\" name=\"post_id\" value=\"' . esc_attr(\$post_id) . '\">';\n";
-                $bridge_code .= "        \$cta_html .= '<input type=\"hidden\" name=\"action\" value=\"artitechcore_ce_submit_cta\">';\n";
-                $bridge_code .= "        foreach (\$fields as \$field) {\n";
-                $bridge_code .= "            \$placeholder = ucfirst(\$field);\n";
-                $bridge_code .= "            \$type = (\$field === 'email') ? 'email' : ((\$field === 'phone') ? 'tel' : 'text');\n";
-                $bridge_code .= "            \$cta_html .= '<div class=\"artitechcore-ce-form-field field-' . esc_attr(\$field) . '\">';\n";
-                $bridge_code .= "            if (\$field === 'message') \$cta_html .= '<textarea name=\"' . esc_attr(\$field) . '\" placeholder=\"' . esc_attr(\$placeholder) . '\" required rows=\"1\"></textarea>';\n";
-                $bridge_code .= "            else \$cta_html .= '<input type=\"' . esc_attr(\$type) . '\" name=\"' . esc_attr(\$field) . '\" placeholder=\"' . esc_attr(\$placeholder) . '\" required>';\n";
-                $bridge_code .= "            \$cta_html .= '</div>';\n";
-                $bridge_code .= "        }\n";
-                $bridge_code .= "        \$cta_html .= '<button type=\"submit\" class=\"artitechcore-ce-submit-btn\">' . esc_html(" . var_export($cta_native_button, true) . ") . '</button><div class=\"artitechcore-ce-form-response\"></div></form>';\n";
-            } else {
-                $bridge_code .= "        \$cta_html .= do_shortcode('" . addslashes(wp_kses_post($cta_shortcode)) . "');\n";
-            }
-
-            $bridge_code .= "        \$cta_html .= '</div></div>';\n";
-            $bridge_code .= "        \$h2_count = preg_match_all('/<h2[^>]*>.*?<\/h2>/i', \$enhanced_content, \$matches);\n";
-            $bridge_code .= "        if (\$h2_count >= 3) {\n";
-            $bridge_code .= "            \$parts = preg_split('/(<\/h2>)/i', \$enhanced_content, -1, PREG_SPLIT_DELIM_CAPTURE);\n";
-            $bridge_code .= "            for (\$i = 5; \$i < count(\$parts); \$i += 6) {\n";
-            $bridge_code .= "                if (isset(\$parts[\$i])) \$parts[\$i] .= \"\\n\" . \$cta_html;\n";
-            $bridge_code .= "            }\n";
-            $bridge_code .= "            \$enhanced_content = implode('', \$parts);\n";
+        if (in_array('cta', $persist_ce)) {
+            $bridge_code .= "    \$ctah = get_post_meta(\$pid, '_artitechcore_ce_cta_heading', true);\n";
+            $bridge_code .= "    \$ctad = get_post_meta(\$pid, '_artitechcore_ce_cta_desc', true);\n";
+            $bridge_code .= "    if (!empty(\$ctah)) {\n";
+            $bridge_code .= "        \$added = true;\n";
+            $bridge_code .= "        \$cta_html = '<div class=\"artitech-bridge-ce artitech-bridge-cta-box\"><div class=\"artitech-bridge-cta-h\">' . esc_html(\$ctah) . '</div>';\n";
+            $bridge_code .= "        if (\$ctad) \$cta_html .= '<div class=\"artitech-bridge-cta-d\">' . esc_html(\$ctad) . '</div>';\n";
+            $bridge_code .= "        \$cta_html .= '</div>';\n";
+            $bridge_code .= "        // Insert CTA in the middle of content if possible\n";
+            $bridge_code .= "        \$paragraphs = explode('</p>', \$content);\n";
+            $bridge_code .= "        if (count(\$paragraphs) > 4) {\n";
+            $bridge_code .= "            \$middle = floor(count(\$paragraphs) / 2);\n";
+            $bridge_code .= "            \$paragraphs[\$middle] .= \$cta_html;\n";
+            $bridge_code .= "            \$content = implode('</p>', \$paragraphs);\n";
             $bridge_code .= "        } else {\n";
-            $bridge_code .= "            \$paragraphs = explode('</p>', \$enhanced_content);\n";
-            $bridge_code .= "            \$para_count = count(\$paragraphs);\n";
-            $bridge_code .= "            if (\$para_count > 4) {\n";
-            $bridge_code .= "                \$mid = floor(\$para_count / 2);\n";
-            $bridge_code .= "                if (isset(\$paragraphs[\$mid])) \$paragraphs[\$mid] .= \"\\n\" . \$cta_html;\n";
-            $bridge_code .= "                \$enhanced_content = implode('</p>', \$paragraphs);\n";
-            $bridge_code .= "            } else {\n";
-            $bridge_code .= "                \$enhanced_content .= \"\\n\" . \$cta_html;\n";
-            $bridge_code .= "            }\n";
+            $bridge_code .= "            \$html_bottom .= \$cta_html;\n";
             $bridge_code .= "        }\n";
+            $bridge_code .= "    }\n";
+        }
+        
+        if (in_array('faq', $persist_ce)) {
+            $bridge_code .= "    \$faq = get_post_meta(\$pid, '_artitechcore_ce_faq', true);\n";
+            $bridge_code .= "    if (!empty(\$faq) && is_array(\$faq)) {\n";
+            $bridge_code .= "        \$added = true; \$faq_html = '<div class=\"artitech-bridge-ce artitech-bridge-faq\"><h3>Frequently Asked Questions</h3>';\n";
+            $bridge_code .= "        \$schema = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => []];\n";
+            $bridge_code .= "        foreach (\$faq as \$f) {\n";
+            $bridge_code .= "            if (empty(\$f['q']) || empty(\$f['a'])) continue;\n";
+            $bridge_code .= "            \$faq_html .= '<div class=\"artitech-bridge-faq-item\"><div class=\"artitech-bridge-faq-q\">' . esc_html(\$f['q']) . '</div><div class=\"artitech-bridge-faq-a\">' . nl2br(esc_html(\$f['a'])) . '</div></div>';\n";
+            $bridge_code .= "            \$schema['mainEntity'][] = ['@type' => 'Question', 'name' => \$f['q'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => \$f['a']]];\n";
+            $bridge_code .= "        }\n";
+            $bridge_code .= "        \$faq_html .= '</div><script type=\"application/ld+json\">' . json_encode(\$schema) . '</script>';\n";
+            $bridge_code .= "        \$html_bottom .= \$faq_html;\n";
             $bridge_code .= "    }\n";
         }
 
         if (in_array('conclusion', $persist_ce)) {
-            $bridge_code .= "    \$conc = get_post_meta(\$post_id, '_artitechcore_ce_conclusion', true);\n";
-            $bridge_code .= "    if (!empty(\$conc)) {\n";
-            $bridge_code .= "        \$_has_ce = true;\n";
-            $bridge_code .= "        \$enhanced_content .= '<div class=\"artitechcore-ce-conclusion\"><h3 class=\"artitechcore-ce-conclusion-title\">" . esc_html($conc_head) . "</h3>';\n";
-            $bridge_code .= "        \$enhanced_content .= '<p>' . nl2br(esc_html(\$conc)) . '</p></div>';\n";
+            $bridge_code .= "    \$cn = get_post_meta(\$pid, '_artitechcore_ce_conclusion', true);\n";
+            $bridge_code .= "    if (!empty(\$cn)) {\n";
+            $bridge_code .= "        \$added = true; \$html_bottom .= '<div class=\"artitech-bridge-ce artitech-bridge-conc\"><h3>" . esc_html($conc_h) . "</h3><p>' . nl2br(esc_html(\$cn)) . '</p></div>';\n";
             $bridge_code .= "    }\n";
         }
 
-        if (in_array('faq', $persist_ce)) {
-            $bridge_code .= "    \$faq = get_post_meta(\$post_id, '_artitechcore_ce_faq', true);\n";
-            $bridge_code .= "    if (!empty(\$faq) && is_array(\$faq)) {\n";
-            $bridge_code .= "        \$_has_ce = true;\n";
-            $bridge_code .= "        \$faq_html = '<div class=\"artitechcore-ce-faq\"><h3 class=\"artitechcore-ce-faq-title\">Frequently Asked Questions</h3>';\n";
-            $bridge_code .= "        foreach (\$faq as \$item) {\n";
-            $bridge_code .= "            if (!empty(\$item['q']) && !empty(\$item['a'])) {\n";
-            $bridge_code .= "                \$faq_html .= '<div class=\"artitechcore-ce-faq-item\">';\n";
-            $bridge_code .= "                \$faq_html .= '<div class=\"artitechcore-ce-faq-q\">' . esc_html(\$item['q']) . '</div>';\n";
-            $bridge_code .= "                \$faq_html .= '<div class=\"artitechcore-ce-faq-a\">' . wpautop(esc_html(\$item['a'])) . '</div>';\n";
-            $bridge_code .= "                \$faq_html .= '</div>';\n";
-            $bridge_code .= "            }\n";
-            $bridge_code .= "        }\n";
-            $bridge_code .= "        \$faq_html .= '</div>';\n";
-            $bridge_code .= "        \$enhanced_content .= \$faq_html;\n";
-            $bridge_code .= "    }\n";
-        }
-
-        $bridge_code .= "    if (\$_has_ce) {\n";
-        $bridge_code .= "        \$enhanced_content = ARTITECHCORE_BRIDGE_CSS . \"\\n\" . \$enhanced_content;\n";
-        $bridge_code .= "        \$enhanced_content .= '<script>if(!window._artitech_bridge_js){window._artitech_bridge_js=true;document.addEventListener(\"submit\",function(e){if(e.target&&e.target.classList.contains(\"artitechcore-ce-native-form\")){e.preventDefault();var f=e.target,b=f.querySelector(\".artitechcore-ce-submit-btn\"),r=f.querySelector(\".artitechcore-ce-form-response\");if(b.classList.contains(\"loading\"))return;b.disabled=true;b.classList.add(\"loading\");if(r){r.style.display=\"none\";r.className=\"artitechcore-ce-form-response\";}fetch(\"'.admin_url('admin-ajax.php').'\",{method:\"POST\",body:new FormData(f)}).then(res=>res.json()).then(res=>{if(res.success){if(r){r.className=\"artitechcore-ce-form-response success\";r.textContent=res.data;r.style.display=\"block\";}f.reset();}else{if(r){r.className=\"artitechcore-ce-form-response error\";r.textContent=res.data||\"Error occurred\";r.style.display=\"block\";}}}).catch(()=>{if(r){r.className=\"artitechcore-ce-form-response error\";r.textContent=\"Connection error. Please try again.\";r.style.display=\"block\";}}).finally(()=>{b.disabled=false;b.classList.remove(\"loading\");});}});}</script>';\n";
-        $bridge_code .= "    }\n";
-        $bridge_code .= "    return \$enhanced_content;\n";
-        $bridge_code .= "}, 99);\n\n";
-
-        if (in_array('cta', $persist_ce) && $cta_mode === 'native') {
-            $bridge_code .= "add_action('wp_ajax_artitechcore_ce_submit_cta', 'artitechcore_bridge_cta_handler');\n";
-            $bridge_code .= "add_action('wp_ajax_nopriv_artitechcore_ce_submit_cta', 'artitechcore_bridge_cta_handler');\n\n";
-            $bridge_code .= "if (!function_exists('artitechcore_bridge_cta_handler')) {\n";
-            $bridge_code .= "    function artitechcore_bridge_cta_handler() {\n";
-            $bridge_code .= "        check_ajax_referer('artitechcore_ce_submit_cta', '_ce_nonce');\n";
-            $bridge_code .= "    \$ip = \$_SERVER['REMOTE_ADDR'];\n";
-            $bridge_code .= "    \$transient_key = 'ce_cta_limit_' . md5(\$ip);\n";
-            $bridge_code .= "    if (get_transient(\$transient_key)) wp_send_json_error('Please wait a few seconds before submitting again.');\n";
-            $bridge_code .= "    set_transient(\$transient_key, 1, 5);\n\n";
-            $bridge_code .= "    \$post_id = isset(\$_POST['post_id']) ? absint(\$_POST['post_id']) : 0;\n";
-            $bridge_code .= "    \$to = " . var_export($cta_native_email, true) . ";\n";
-            $bridge_code .= "    \$subject = '[Lead] CTA Submission: ' . get_the_title(\$post_id);\n";
-            $bridge_code .= "    \$body = \"New CTA Lead\\n\\nURL: \" . get_permalink(\$post_id) . \"\\n\\n\";\n";
-            $bridge_code .= "    foreach (['name','email','phone','message'] as \$f) {\n";
-            $bridge_code .= "        if (isset(\$_POST[\$f])) {\n";
-            $bridge_code .= "            \$val = (\$f === 'message') ? sanitize_textarea_field(\$_POST[\$f]) : sanitize_text_field(\$_POST[\$f]);\n";
-            $bridge_code .= "            \$body .= strtoupper(\$f) . ': ' . \$val . \"\\n\";\n";
-            $bridge_code .= "        }\n";
-            $bridge_code .= "    }\n";
-            $bridge_code .= "    wp_mail(\$to, \$subject, \$body);\n";
-            $bridge_code .= "    wp_send_json_success('Thank you! Your submission has been received.');\n";
-            $bridge_code .= "}\n";
-        }
+        $bridge_code .= "    return \$added ? " . var_export($css, true) . " . \$html_top . \$content . \$html_bottom : \$content;\n";
+        $bridge_code .= "}, 99);\n";
     }
 
-    // Replace the old schema bridge with the new unified bridge
     @unlink($mu_dir . '/artitechcore-schema-bridge.php');
     return @file_put_contents($mu_dir . '/artitechcore-persistence-bridge.php', $bridge_code);
 }
@@ -508,58 +344,124 @@ function artitechcore_create_database_tables() {
 /**
  * Migration: Move schema data from meta to custom table (v1)
  */
-function artitechcore_migrate_schema_data_v1() {
+function artitechcore_migrate_schema_data_v1($batch_limit = 500) {
     global $wpdb;
+    
+    // 1. Concurrency Lock: Prevent multiple simultaneous migrations
+    if (get_transient('artitechcore_migrating_schema')) {
+        return false;
+    }
+    set_transient('artitechcore_migrating_schema', true, 300); // 5 minute lock
+
     $table_name = $wpdb->prefix . 'artitechcore_schema_data';
+    $legacy_keys = array('_artitechcore_schema_type', '_artitechcore_schema_data', '_artitechcore_schema_markup', '_artitechcore_schema_origin', '_artitechcore_schema_locked');
+    $keys_in = "'" . implode("','", $legacy_keys) . "'";
 
-    $post_meta_type   = $wpdb->get_results("SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_artitechcore_schema_type' AND meta_value != ''");
-    $post_meta_data   = $wpdb->get_results("SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_artitechcore_schema_data' AND meta_value != ''");
-    $post_meta_origin = $wpdb->get_results("SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_artitechcore_schema_origin' AND meta_value != ''");
-    $post_meta_locked = $wpdb->get_results("SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_artitechcore_schema_locked' AND meta_value != ''");
-    
-    $data_map = [];
-    foreach ($post_meta_type as $row)   $data_map[$row->post_id]['type']   = $row->meta_value;
-    foreach ($post_meta_data as $row)   $data_map[$row->post_id]['data']   = $row->meta_value;
-    foreach ($post_meta_origin as $row) $data_map[$row->post_id]['origin'] = $row->meta_value;
-    foreach ($post_meta_locked as $row) $data_map[$row->post_id]['locked'] = $row->meta_value;
+    // --- PART A: POST META ---
+    $post_ids = $wpdb->get_col($wpdb->prepare("
+        SELECT DISTINCT post_id FROM {$wpdb->postmeta} 
+        WHERE meta_key IN ($keys_in) 
+        AND meta_value != ''
+        LIMIT %d", $batch_limit));
 
-    foreach ($data_map as $post_id => $vals) {
-        if (!empty($vals['type']) && !empty($vals['data'])) {
-            $wpdb->replace($table_name, [
-                'object_id'   => $post_id,
-                'object_type' => 'post',
-                'schema_type' => $vals['type'],
-                'schema_data' => $vals['data'],
-                'origin'      => $vals['origin'] ?? 'generated',
-                'is_locked'   => !empty($vals['locked']) ? 1 : 0
-            ]);
+    $processed_posts = 0;
+    foreach ($post_ids as $post_id) {
+        $metas = $wpdb->get_results($wpdb->prepare("
+            SELECT meta_key, meta_value 
+            FROM {$wpdb->postmeta} 
+            WHERE post_id = %d 
+            AND meta_key IN ($keys_in)
+        ", $post_id));
+
+        if (empty($metas)) continue;
+
+        $vals = array();
+        foreach ($metas as $m) {
+            $key = str_replace('_artitechcore_schema_', '', $m->meta_key);
+            // Handle 'markup' as 'data' alias for consistency
+            if ($key === 'markup') $key = 'data';
+            $vals[$key] = $m->meta_value;
+        }
+
+        if (!empty($vals['data'])) {
+            $inserted = $wpdb->replace($table_name, array(
+                'object_id'    => $post_id,
+                'object_type'  => 'post',
+                'schema_type'  => !empty($vals['type']) ? $vals['type'] : 'webpage',
+                'schema_data'  => $vals['data'],
+                'origin'       => isset($vals['origin']) ? $vals['origin'] : 'generated',
+                'is_locked'    => !empty($vals['locked']) ? 1 : 0,
+                'created_date' => current_time('mysql'),
+                'updated_date' => current_time('mysql')
+            ));
+
+            if ($inserted !== false) {
+                // Verified move: safe to delete specific legacy meta for this ID
+                $wpdb->query($wpdb->prepare("
+                    DELETE FROM {$wpdb->postmeta} 
+                    WHERE post_id = %d 
+                    AND meta_key IN ($keys_in)
+                ", $post_id));
+                $processed_posts++;
+            }
         }
     }
 
-    // 2. Migrate Term Meta
-    $term_meta_type   = $wpdb->get_results("SELECT term_id, meta_value FROM {$wpdb->termmeta} WHERE meta_key = '_artitechcore_schema_type' AND meta_value != ''");
-    $term_meta_data   = $wpdb->get_results("SELECT term_id, meta_value FROM {$wpdb->termmeta} WHERE meta_key = '_artitechcore_schema_data' AND meta_value != ''");
-    $term_meta_origin = $wpdb->get_results("SELECT term_id, meta_value FROM {$wpdb->termmeta} WHERE meta_key = '_artitechcore_schema_origin' AND meta_value != ''");
-    $term_meta_locked = $wpdb->get_results("SELECT term_id, meta_value FROM {$wpdb->termmeta} WHERE meta_key = '_artitechcore_schema_locked' AND meta_value != ''");
-    
-    $term_map = [];
-    foreach ($term_meta_type as $row)   $term_map[$row->term_id]['type']   = $row->meta_value;
-    foreach ($term_meta_data as $row)   $term_map[$row->term_id]['data']   = $row->meta_value;
-    foreach ($term_meta_origin as $row) $term_map[$row->term_id]['origin'] = $row->meta_value;
-    foreach ($term_meta_locked as $row) $term_map[$row->term_id]['locked'] = $row->meta_value;
+    // --- PART B: TERM META (if post batch didn't use up the limit) ---
+    $remaining_limit = $batch_limit - count($post_ids);
+    $processed_terms = 0;
+    if ($remaining_limit > 0) {
+        $term_ids = $wpdb->get_col($wpdb->prepare("
+            SELECT DISTINCT term_id FROM {$wpdb->termmeta} 
+            WHERE meta_key IN ($keys_in) 
+            AND meta_value != ''
+            LIMIT %d", $remaining_limit));
 
-    foreach ($term_map as $term_id => $vals) {
-        if (!empty($vals['type']) && !empty($vals['data'])) {
-            $wpdb->replace($table_name, [
-                'object_id'   => $term_id,
-                'object_type' => 'term',
-                'schema_type' => $vals['type'],
-                'schema_data' => $vals['data'],
-                'origin'      => $vals['origin'] ?? 'generated',
-                'is_locked'   => !empty($vals['locked']) ? 1 : 0
-            ]);
+        foreach ($term_ids as $term_id) {
+            $metas = $wpdb->get_results($wpdb->prepare("
+                SELECT meta_key, meta_value 
+                FROM {$wpdb->termmeta} 
+                WHERE term_id = %d 
+                AND meta_key IN ($keys_in)
+            ", $term_id));
+
+            if (empty($metas)) continue;
+
+            $vals = array();
+            foreach ($metas as $m) {
+                $key = str_replace('_artitechcore_schema_', '', $m->meta_key);
+                if ($key === 'markup') $key = 'data';
+                $vals[$key] = $m->meta_value;
+            }
+
+            if (!empty($vals['data'])) {
+                $inserted = $wpdb->replace($table_name, array(
+                    'object_id'    => $term_id,
+                    'object_type'  => 'term',
+                    'schema_type'  => !empty($vals['type']) ? $vals['type'] : 'webpage',
+                    'schema_data'  => $vals['data'],
+                    'origin'       => isset($vals['origin']) ? $vals['origin'] : 'generated',
+                    'is_locked'    => !empty($vals['locked']) ? 1 : 0,
+                    'created_date' => current_time('mysql'),
+                    'updated_date' => current_time('mysql')
+                ));
+
+                if ($inserted !== false) {
+                    $wpdb->query($wpdb->prepare("
+                        DELETE FROM {$wpdb->termmeta} 
+                        WHERE term_id = %d 
+                        AND meta_key IN ($keys_in)
+                    ", $term_id));
+                    $processed_terms++;
+                }
+            }
         }
     }
+
+    delete_transient('artitechcore_migrating_schema');
+    
+    // Return true if more data potentially remains in this category
+    return (count($post_ids) >= $batch_limit || (isset($term_ids) && count($term_ids) >= $remaining_limit));
 }
 
 /**
@@ -581,7 +483,7 @@ function artitechcore_drop_database_tables() {
 // Register activation, deactivation, and uninstall hooks
 register_activation_hook(__FILE__, 'artitechcore_activate');
 register_deactivation_hook(__FILE__, 'artitechcore_deactivate');
-register_uninstall_hook(__FILE__, 'artitechcore_uninstall');
+// No register_uninstall_hook needed; uninstall.php is used instead.
 
 /**
  * Load plugin textdomain for internationalization
@@ -597,11 +499,15 @@ add_action('plugins_loaded', 'artitechcore_load_textdomain');
 
 // Output schema markup in wp_head is now handled in includes/schema-generator.php
 
-// Include necessary files
+// Include necessary files — load order matters.
+// brand-kit.php must load before settings-page.php (settings UI renders the brand kit form)
+// and before website-generator.php (builder uses artitechcore_get_brand_kit()).
+require_once ARTITECHCORE_PLUGIN_PATH . 'includes/brand-kit.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/admin-menu.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/page-creation.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/csv-handler.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/settings-page.php';
+require_once ARTITECHCORE_PLUGIN_PATH . 'includes/api-utils.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/ai-generator.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/custom-post-type-manager.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/hierarchy-manager.php';
@@ -609,12 +515,17 @@ require_once ARTITECHCORE_PLUGIN_PATH . 'includes/menu-generator.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/schema-generator.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/keyword-analyzer.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/content-enhancer.php';
+require_once ARTITECHCORE_PLUGIN_PATH . 'includes/website-generator.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/website-generator-queue.php';
 
 // Output schema markup in wp_head is now handled in includes/schema-generator.php
 
 // Enqueue scripts and styles
-function artitechcore_enqueue_assets() {
+function artitechcore_admin_scripts($hook) {
+    global $post; // Required to access current post object in post/page editing context
+    $current_screen = get_current_screen();
+    if (!$current_screen) return;
+
     // Enqueue brand CSS first (Variables & Base)
     wp_enqueue_style('artitechcore-dg10-brand', ARTITECHCORE_PLUGIN_URL . 'assets/css/dg10-brand.css', array(), '1.0');
     
@@ -622,67 +533,137 @@ function artitechcore_enqueue_assets() {
     wp_enqueue_style('artitechcore-admin-ui', ARTITECHCORE_PLUGIN_URL . 'assets/css/admin-ui.css', array('artitechcore-dg10-brand'), filemtime(ARTITECHCORE_PLUGIN_PATH . 'assets/css/admin-ui.css'));
 
     // Enqueue Schema Column Styles (Specific for Pages/Posts lists)
-    $screen = get_current_screen();
-    if ($screen && ($screen->base === 'edit' || $screen->base === 'upload')) {
+    if ($current_screen->base === 'edit' || $current_screen->base === 'upload') {
         wp_enqueue_style('artitechcore-schema-column', ARTITECHCORE_PLUGIN_URL . 'assets/css/schema-column.css', array(), filemtime(ARTITECHCORE_PLUGIN_PATH . 'assets/css/schema-column.css'));
     }
 
     // Enqueue CPT Management CSS
     wp_enqueue_style('artitechcore-cpt-management', ARTITECHCORE_PLUGIN_URL . 'assets/css/cpt-management.css', array('artitechcore-admin-ui'), '1.0');
 
-    // Enqueue Scripts
-    $current_screen = get_current_screen();
+    // --- SCRIPTS ---
 
-    // CPT Management Scripts (only on CPT tab)
-    if ($current_screen && strpos($current_screen->id, 'artitechcore-') !== false && isset($_GET['tab']) && $_GET['tab'] === 'cpt') {
-        wp_enqueue_script('artitechcore-cpt-management', ARTITECHCORE_PLUGIN_URL . 'assets/js/cpt-management.js', array('jquery'), '1.0', true);
-        
-        // Localize CPT management script
-        wp_localize_script('artitechcore-cpt-management', 'artitechcore_cpt_data', array(
-            'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('artitechcore_cpt_ajax'),
-            'plugin_url' => ARTITECHCORE_PLUGIN_URL,
-            'strings' => array(
-                'loading' => __('Loading...', 'artitechcore'),
-                'success' => __('Success!', 'artitechcore'),
-                'error' => __('An error occurred.', 'artitechcore'),
-                'network_error' => __('Network error occurred. Please try again.', 'artitechcore')
-            )
-        ));
-    }
-
-    // AI Generator Scripts (only on AI tab)
-    if ($current_screen && strpos($current_screen->id, 'artitechcore-') !== false && isset($_GET['tab']) && $_GET['tab'] === 'ai') {
-        wp_enqueue_script('artitechcore-ai-generator', ARTITECHCORE_PLUGIN_URL . 'assets/js/ai-generator.js', array('jquery'), '1.0', true);
-        
-        // Share CPT data for ajaxurl and nonce consistency if needed, 
-        // or localize specifically for AI
-        wp_localize_script('artitechcore-ai-generator', 'artitechcore_ai_data', array(
-            'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('artitechcore_ai_ajax')
-        ));
-    }
+    // 1. External dependencies (shared)
+    wp_enqueue_script('jquery');
     
-    // Main Admin Scripts
+    // 2. Hierarchy Dependencies (only where needed)
+    if (strpos($current_screen->id, 'artitechcore-') !== false && isset($_GET['tab']) && $_GET['tab'] === 'hierarchy') {
+        wp_enqueue_style('jstree', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/jstree/themes/default/style.min.css');
+        wp_enqueue_script('jstree', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/jstree/jstree.min.js', array('jquery'), '3.3.15', true);
+        wp_enqueue_script('d3', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/d3/d3.v7.min.js', array(), '7.0.0', true);
+        wp_enqueue_style('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/css/hierarchy.css');
+        wp_enqueue_script('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/js/hierarchy.js', array('jquery', 'jstree', 'd3'), ARTITECHCORE_VERSION, true);
+    }
+
+    // 3. Post/Page Editing Context (Content Enhancer)
+    if ($hook === 'post-new.php' || $hook === 'post.php') {
+        $supported_types = get_option('artitechcore_ce_post_types', ['post']);
+        if ($post && is_array($supported_types) && in_array($post->post_type, $supported_types)) {
+            wp_add_inline_style('artitechcore-admin-ui', '
+                .artitechcore-ce-panel { background: #fff; border: 1px solid #ccd0d4; padding: 15px; border-radius: 4px; }
+                .artitechcore-ce-field { margin-bottom: 20px; }
+                .artitechcore-ce-field label { font-weight: bold; display: block; margin-bottom: 5px; }
+                .artitechcore-ce-field textarea { width: 100%; min-height: 100px; }
+                .artitechcore-ce-field input[type="text"] { width: 100%; }
+                .artitechcore-ce-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+                .artitechcore-ce-badge { background: #b47cfd; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+                .artitechcore-ce-warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 15px; margin-bottom: 15px; font-size: 13px; }
+            ');
+        }
+    }
+
+    // 3. Plugin Page Scripts
+    if (strpos($current_screen->id, 'artitechcore-') !== false) {
+        $tab = isset($_GET['tab']) ? $_GET['tab'] : 'general';
+
+        if ($tab === 'cpt') {
+            wp_enqueue_script('artitechcore-cpt-management', ARTITECHCORE_PLUGIN_URL . 'assets/js/cpt-management.js', array('jquery'), '1.0', true);
+        }
+
+        if ($tab === 'ai') {
+            wp_enqueue_script('artitechcore-ai-generator', ARTITECHCORE_PLUGIN_URL . 'assets/js/ai-generator.js', array('jquery'), '1.0', true);
+        }
+
+        if ($tab === 'website' || $tab === 'website-builder') {
+            // JS for website generator is output inline in website-generator.php
+        }
+
+        if ($tab === 'hierarchy') {
+            wp_enqueue_script('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/js/hierarchy.js', array('jquery'), filemtime(ARTITECHCORE_PLUGIN_PATH . 'assets/js/hierarchy.js'), true);
+        }
+
+        // Always load schema generator on plugin pages for preview
+        wp_enqueue_script('artitechcore-schema-generator', ARTITECHCORE_PLUGIN_URL . 'assets/js/schema-generator.js', array('jquery'), filemtime(ARTITECHCORE_PLUGIN_PATH . 'assets/js/schema-generator.js'), true);
+    }
+
+    // 4. Global Admin Context Scripts
     wp_enqueue_script('artitechcore-scripts', ARTITECHCORE_PLUGIN_URL . 'assets/js/scripts.js', array('jquery'), '1.0', true);
-    
-    // Keyword Analyzer Scripts
     wp_enqueue_script('artitechcore-keyword-analyzer', ARTITECHCORE_PLUGIN_URL . 'assets/js/keyword-analyzer.js', array('jquery'), '1.0', true);
+
+
+    // 5. Settings Specific (Color Picker)
+    if (strpos($current_screen->id, 'artitechcore-') !== false) {
+        wp_enqueue_script('wp-color-picker');
+        wp_enqueue_style('wp-color-picker');
+    }
+
+    // --- LOCALIZATION (Unified) ---
+    wp_localize_script('artitechcore-scripts', 'artitechcore_data', array(
+        'ajaxurl'    => admin_url('admin-ajax.php'),
+        'plugin_url' => ARTITECHCORE_PLUGIN_URL,
+        'post_id'    => $post ? $post->ID : 0,
+        'nonces'     => array(
+            'ajax'     => wp_create_nonce('artitechcore_ajax_nonce'),
+            'main'     => wp_create_nonce('artitechcore_nonce'),
+        ),
+        'strings'    => array(
+            'processing'    => esc_html__('Processing...', 'artitechcore'),
+            'success'       => esc_html__('Action completed successfully.', 'artitechcore'),
+            'error'         => esc_html__('An unexpected error occurred.', 'artitechcore'),
+            'network_error' => esc_html__('Network failure. Please check your connection.', 'artitechcore')
+        )
+    ));
+
+    // Also localize for the keyword analyzer specifically since it uses its own variable name
     wp_localize_script('artitechcore-keyword-analyzer', 'artitechcore_keyword_data', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('artitechcore_keyword_analysis')
+        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
     ));
 
-    // Schema Generator Scripts
-    wp_enqueue_script('artitechcore-schema-generator', ARTITECHCORE_PLUGIN_URL . 'assets/js/schema-generator.js', array('jquery'), filemtime(ARTITECHCORE_PLUGIN_PATH . 'assets/js/schema-generator.js'), true);
+    // Localize for Hierarchy
+    wp_localize_script('artitechcore-hierarchy', 'artitechcoreHierarchy', array(
+        'rest_url' => esc_url_raw(rest_url('artitechcore/v1/')),
+        'nonce'    => wp_create_nonce('wp_rest')
+    ));
+
+    // Localize for CPT Management
+    wp_localize_script('artitechcore-cpt-management', 'artitechcore_cpt_data', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+    ));
+
+    // Localize for AI Generator
+    wp_localize_script('artitechcore-ai-generator', 'artitechcore_ai_data', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+    ));
+
+    // Localize for Schema Generator
     wp_localize_script('artitechcore-schema-generator', 'artitechcore_schema_data', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('artitechcore_schema_preview')
-    ));
-
-    // Localize script with plugin URL
-    wp_localize_script('artitechcore-scripts', 'artitechcore_plugin_data', array(
-        'plugin_url' => ARTITECHCORE_PLUGIN_URL
+        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
     ));
 }
-add_action('admin_enqueue_scripts', 'artitechcore_enqueue_assets');
+add_action('admin_enqueue_scripts', 'artitechcore_admin_scripts');
+
+/**
+ * Enqueue Frontend Scripts
+ */
+function artitechcore_frontend_scripts() {
+    wp_enqueue_script('artitechcore-frontend', ARTITECHCORE_PLUGIN_URL . 'assets/js/frontend.js', array(), ARTITECHCORE_VERSION, true);
+    
+    wp_localize_script('artitechcore-frontend', 'artitechcore_frontend_data', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+    ));
+}
+add_action('wp_enqueue_scripts', 'artitechcore_frontend_scripts');

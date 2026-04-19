@@ -329,4 +329,83 @@ jQuery(document).ready(function ($) {
             }, 3000);
         }
     });
+    // ===== COLOR PICKER INITIALIZATION =====
+    if ($.isFunction($.fn.wpColorPicker)) {
+        $('.artitechcore-color-picker').wpColorPicker();
+    }
+
+    // ===== BRAND KIT AUTO-DETECTION =====
+    $('#artitechcore-auto-detect-brand').on('click', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var $status = $('#artitechcore-brand-detect-status');
+
+        $btn.prop('disabled', true).text('Detecting...');
+        $status.show().text('Scanning your site...').css('color', 'inherit');
+
+        $.ajax({
+            url: artitechcore_data.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'artitechcore_auto_detect_brand_kit',
+                nonce: artitechcore_data.nonces.ajax // Using unified nonce
+            },
+            success: function (res) {
+                $btn.prop('disabled', false).text('Auto-Detect Brand Info');
+                if (res.success) {
+                    $status.text('✓ Detected! Refreshing...').css('color', 'green');
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    $status.text('✗ Error: ' + (res.data.message || 'Unknown error')).css('color', 'red');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('Auto-Detect Brand Info');
+                $status.text('✗ Network error. Please try again.').css('color', 'red');
+            }
+        });
+    });
+
+    // ===== BUSINESS INFO RE-SCAN =====
+    $('#artitechcore-rescan-btn').on('click', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var $status = $('#artitechcore-rescan-status');
+
+        $btn.prop('disabled', true).text('⏳ Scanning...');
+        $status.text('').css('color', 'inherit');
+
+        $.ajax({
+            url: artitechcore_data.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'artitechcore_rescan_business_info',
+                nonce: artitechcore_data.nonces.ajax // Using unified ajax nonce
+            },
+            success: function (response) {
+                $btn.prop('disabled', false).html('🔍 Re-Scan Website');
+                if (response.success) {
+                    $status.html('<span style="color: green;">✓ ' + response.data.message + '</span>');
+                    // Update form fields with detected values
+                    var data = response.data.data;
+                    $('input[name="artitechcore_business_name"]').val(data.name);
+                    $('textarea[name="artitechcore_business_description"]').val(data.description);
+                    $('textarea[name="artitechcore_business_address"]').val(data.address);
+                    $('input[name="artitechcore_business_phone"]').val(data.phone);
+                    $('input[name="artitechcore_business_email"]').val(data.email);
+                    $('input[name="artitechcore_business_social_facebook"]').val(data.facebook);
+                    $('input[name="artitechcore_business_social_twitter"]').val(data.twitter);
+                    $('input[name="artitechcore_business_social_linkedin"]').val(data.linkedin);
+                } else {
+                    $status.html('<span style="color: red;">✗ Error: ' + response.data.message + '</span>');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).html('🔍 Re-Scan Website');
+                $status.html('<span style="color: red;">✗ Network error. Please try again.</span>');
+            }
+        });
+    });
 });

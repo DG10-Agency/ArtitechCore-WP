@@ -339,16 +339,16 @@ IMPORTANT: Return ONLY a valid JSON object. Do not include any explanations, mar
 
 // OpenAI JSON extraction helper
 function artitechcore_ai_call_openai_json($prompt, $api_key) {
-    $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
+    $response = artitechcore_safe_ai_remote_post('https://api.openai.com/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
         'body' => json_encode([
-            'model' => 'gpt-3.5-turbo',
+            'model' => 'gpt-4o-mini',
             'messages' => [['role' => 'user', 'content' => $prompt]],
             'temperature' => 0.2,
             'max_tokens' => 500,
         ]),
-        'timeout' => 30,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'openai');
     if (is_wp_error($response)) return false;
     $body = json_decode(wp_remote_retrieve_body($response), true);
     if (isset($body['choices'][0]['message']['content'])) {
@@ -361,12 +361,12 @@ function artitechcore_ai_call_openai_json($prompt, $api_key) {
 
 // Gemini JSON extraction helper
 function artitechcore_ai_call_gemini_json($prompt, $api_key) {
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $api_key;
-    $response = wp_remote_post($url, [
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key;
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => ['Content-Type' => 'application/json'],
         'body' => json_encode(['contents' => [['parts' => [['text' => $prompt]]]], 'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 500]]),
-        'timeout' => 30,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'gemini');
     if (is_wp_error($response)) return false;
     $body = json_decode(wp_remote_retrieve_body($response), true);
     if (isset($body['candidates'][0]['content']['parts'][0]['text'])) {
@@ -381,7 +381,7 @@ function artitechcore_ai_call_gemini_json($prompt, $api_key) {
 
 // DeepSeek JSON extraction helper
 function artitechcore_ai_call_deepseek_json($prompt, $api_key) {
-    $response = wp_remote_post('https://api.deepseek.com/v1/chat/completions', [
+    $response = artitechcore_safe_ai_remote_post('https://api.deepseek.com/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
         'body' => json_encode([
             'model' => 'deepseek-chat',
@@ -389,8 +389,8 @@ function artitechcore_ai_call_deepseek_json($prompt, $api_key) {
             'temperature' => 0.2,
             'max_tokens' => 500,
         ]),
-        'timeout' => 30,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'deepseek');
     if (is_wp_error($response)) return false;
     $body = json_decode(wp_remote_retrieve_body($response), true);
     if (isset($body['choices'][0]['message']['content'])) {
@@ -485,20 +485,20 @@ Consider the content structure, purpose, and user intent. Return ONLY the most a
 Return only the schema type name, nothing else.";
 
     $body = json_encode([
-        'model' => 'gpt-3.5-turbo',
+        'model' => 'gpt-4o-mini',
         'messages' => [['role' => 'user', 'content' => $prompt]],
         'temperature' => 0.3,
         'max_tokens' => 50,
     ]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => [
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $api_key,
         ],
         'body' => $body,
-        'timeout' => 15,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'openai');
 
     if (is_wp_error($response)) {
         return false;
@@ -517,7 +517,7 @@ Return only the schema type name, nothing else.";
 
 // Gemini content analysis for schema
 function artitechcore_ai_analyze_content_gemini($title, $content, $excerpt, $post_type, $api_key, $valid_schema_types) {
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $api_key;
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key;
     
     $post_type_hint = '';
     $pt_lower = strtolower((string)$post_type);
@@ -564,11 +564,11 @@ Return only the schema type name, nothing else.";
         ]
     ]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => ['Content-Type' => 'application/json'],
         'body' => $body,
-        'timeout' => 15,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'gemini');
 
     if (is_wp_error($response)) {
         return false;
@@ -633,14 +633,14 @@ Return only the schema type name, nothing else.";
         'max_tokens' => 50,
     ]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => [
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $api_key,
         ],
         'body' => $body,
-        'timeout' => 15,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'deepseek');
 
     if (is_wp_error($response)) {
         return false;
@@ -2545,6 +2545,45 @@ function artitechcore_schema_management_dashboard() {
     }
     ?>
     <div class="wrap artitechcore-schema-dashboard">
+        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+        
+        <?php
+        // Check for legacy data
+        $has_legacy_postmeta = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key IN ('_artitechcore_schema_data', '_artitechcore_schema_markup') AND meta_value != ''");
+        $has_legacy_termmeta = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->termmeta} WHERE meta_key IN ('_artitechcore_schema_data', '_artitechcore_schema_markup') AND meta_value != ''");
+        
+        if ($has_legacy_postmeta > 0 || $has_legacy_termmeta > 0) {
+            $migration_url = wp_nonce_url(admin_url('admin-post.php?action=artitechcore_run_legacy_migration'), 'artitechcore_legacy_migration');
+            ?>
+            <div class="notice notice-warning artitechcore-migration-notice" style="margin-top: 20px; border-left-color: #ffb900; padding: 15px;">
+                <p style="margin-top: 0;">
+                    <span class="dashicons dashicons-warning" style="color: #ffb900; margin-right: 5px;"></span>
+                    <strong><?php esc_html_e('Legacy Schema Data Detected', 'artitechcore'); ?></strong>
+                </p>
+                <p>
+                    <?php printf(
+                        esc_html__('We found %d items in your legacy database format that haven\'t been synchronized to the new high-performance table yet. Syncing will move these items so they appear in your reports and remain functional.', 'artitechcore'),
+                        ($has_legacy_postmeta + $has_legacy_termmeta)
+                    ); ?>
+                </p>
+                <p style="margin-bottom: 0;">
+                    <a href="<?php echo esc_url($migration_url); ?>" class="button button-primary">
+                        <?php (isset($_GET['migration']) && $_GET['migration'] === 'partial') ? esc_html_e('Continue Syncing', 'artitechcore') : esc_html_e('Sync Legacy Data Now', 'artitechcore'); ?>
+                    </a>
+                </p>
+            </div>
+            <?php
+        }
+
+        if (isset($_GET['migration'])) {
+            if ($_GET['migration'] === 'success') {
+                echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Legacy schema data synchronized successfully!', 'artitechcore') . '</p></div>';
+            } elseif ($_GET['migration'] === 'partial') {
+                echo '<div class="notice notice-info is-dismissible"><p>' . esc_html__('Batch processed successfully. Some legacy data still remains, please click Sync again to continue.', 'artitechcore') . '</p></div>';
+            }
+        }
+        ?>
+
         <p>Manage structured data (schema.org) markup for your pages to improve SEO and search visibility.</p>
 
         <!-- Export -->
@@ -2966,7 +3005,7 @@ function artitechcore_schema_management_dashboard() {
 
 // AJAX handler for schema preview
 function artitechcore_ajax_get_schema_preview() {
-    check_ajax_referer('artitechcore_schema_preview', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
 
     $page_id = isset($_POST['page_id']) ? absint($_POST['page_id']) : 0;
     if (!$page_id) {
@@ -3003,7 +3042,7 @@ add_action('wp_ajax_artitechcore_get_schema_preview', 'artitechcore_ajax_get_sch
 
 // AJAX handler for term schema preview
 function artitechcore_ajax_get_term_schema_preview() {
-    check_ajax_referer('artitechcore_schema_preview', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
 
     if (!current_user_can('manage_categories')) {
         wp_send_json_error(['message' => esc_html__('Unauthorized', 'artitechcore')], 403);
@@ -3046,7 +3085,7 @@ add_action('wp_ajax_artitechcore_get_term_schema_preview', 'artitechcore_ajax_ge
 
 // AJAX handler to save edited schema JSON-LD to post meta
 function artitechcore_ajax_save_schema_override() {
-    check_ajax_referer('artitechcore_schema_preview', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
 
     $page_id = isset($_POST['page_id']) ? absint($_POST['page_id']) : 0;
     if (!$page_id) {
@@ -3088,7 +3127,7 @@ function artitechcore_ajax_save_schema_override() {
 add_action('wp_ajax_artitechcore_save_schema_override', 'artitechcore_ajax_save_schema_override');
 
 function artitechcore_ajax_save_term_schema_override() {
-    check_ajax_referer('artitechcore_schema_preview', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
 
     if (!current_user_can('manage_categories')) {
         wp_send_json_error(['message' => esc_html__('Unauthorized', 'artitechcore')], 403);
@@ -3341,3 +3380,31 @@ function artitechcore_build_postal_address($address_str) {
 
     return $address;
 }
+
+/**
+ * Handler for manual legacy schema migration from the dashboard
+ */
+function artitechcore_handle_legacy_migration() {
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'artitechcore'));
+    }
+
+    check_admin_referer('artitechcore_legacy_migration');
+
+    $more_remains = false;
+    if (function_exists('artitechcore_migrate_schema_data_v1')) {
+        // Run a batch of 500
+        $more_remains = artitechcore_migrate_schema_data_v1(500);
+    }
+
+    $redirect_url = admin_url('admin.php?page=artitechcore-schema');
+    if ($more_remains) {
+        $redirect_url = add_query_arg('migration', 'partial', $redirect_url);
+    } else {
+        $redirect_url = add_query_arg('migration', 'success', $redirect_url);
+    }
+
+    wp_safe_redirect($redirect_url);
+    exit;
+}
+add_action('admin_post_artitechcore_run_legacy_migration', 'artitechcore_handle_legacy_migration');

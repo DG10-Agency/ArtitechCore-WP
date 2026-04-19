@@ -164,7 +164,8 @@ if (!function_exists('artitechcore_set_featured_image')) {
     }
 
     // Use WordPress HTTP API to fetch the image
-    $response = wp_remote_get($image_url, ['timeout' => 30]);
+    $timeout = defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 30; // Use global timeout constants
+    $response = wp_remote_get($image_url, ['timeout' => $timeout]);
     if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
         return; // Failed to download image
     }

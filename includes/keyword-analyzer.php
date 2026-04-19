@@ -29,7 +29,7 @@ class ArtitechCore_Keyword_Analyzer {
      */
     public function get_pages_ajax() {
         // Verify nonce for security
-        if (!check_ajax_referer('artitechcore_keyword_analysis', 'nonce', false)) {
+        if (!check_ajax_referer('artitechcore_ajax_nonce', 'nonce', false)) {
             wp_send_json_error(__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
         }
         
@@ -64,7 +64,7 @@ class ArtitechCore_Keyword_Analyzer {
      */
     public function analyze_keywords_ajax() {
         // Verify nonce for security
-        if (!check_ajax_referer('artitechcore_keyword_analysis', 'nonce', false)) {
+        if (!check_ajax_referer('artitechcore_ajax_nonce', 'nonce', false)) {
             wp_send_json_error(__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
         }
         
@@ -145,7 +145,7 @@ class ArtitechCore_Keyword_Analyzer {
      */
     public function ai_expand_keywords_ajax() {
         // Verify nonce for security
-        if (!check_ajax_referer('artitechcore_keyword_analysis', 'nonce', false)) {
+        if (!check_ajax_referer('artitechcore_ajax_nonce', 'nonce', false)) {
             wp_send_json_error(__('Security check failed.', 'artitechcore'));
         }
         
@@ -227,7 +227,7 @@ class ArtitechCore_Keyword_Analyzer {
      */
     public function export_analysis_ajax() {
         // Verify nonce for security
-        if (!check_ajax_referer('artitechcore_keyword_analysis', 'nonce', false)) {
+        if (!check_ajax_referer('artitechcore_ajax_nonce', 'nonce', false)) {
             wp_send_json_error(__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
         }
         
@@ -1285,22 +1285,17 @@ class ArtitechCore_Keyword_Analyzer {
      * AI Provider Callers (Reused from schema generator pattern)
      */
     private function call_gemini_json($prompt, $api_key) {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $api_key;
-        $response = wp_remote_post($url, [
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key;
+        $response = artitechcore_safe_ai_remote_post($url, [
             'headers' => ['Content-Type' => 'application/json'],
             'body' => json_encode([
                 'contents' => [['parts' => [['text' => $prompt]]]],
                 'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 800]
             ]),
-            'timeout' => 30,
-        ]);
-                if (is_wp_error($response)) {
+            'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+        ], 'gemini');
+        if (is_wp_error($response)) {
             error_log('ArtitechCore Gemini Error: ' . $response->get_error_message());
-            return false;
-        }
-        $status_code = wp_remote_retrieve_response_code($response);
-        if ($status_code !== 200) {
-            error_log('ArtitechCore Gemini HTTP Error: ' . $status_code . ' - ' . wp_remote_retrieve_body($response));
             return false;
         }
 
@@ -1314,7 +1309,7 @@ class ArtitechCore_Keyword_Analyzer {
     }
 
     private function call_openai_json($prompt, $api_key) {
-        $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
+        $response = artitechcore_safe_ai_remote_post('https://api.openai.com/v1/chat/completions', [
             'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
             'body' => json_encode([
                 'model' => 'gpt-4o',
@@ -1322,15 +1317,10 @@ class ArtitechCore_Keyword_Analyzer {
                 'response_format' => ['type' => 'json_object'],
                 'temperature' => 0.2
             ]),
-            'timeout' => 30,
-        ]);
-                if (is_wp_error($response)) {
+            'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+        ], 'openai');
+        if (is_wp_error($response)) {
             error_log('ArtitechCore OpenAI Error: ' . $response->get_error_message());
-            return false;
-        }
-        $status_code = wp_remote_retrieve_response_code($response);
-        if ($status_code !== 200) {
-            error_log('ArtitechCore OpenAI HTTP Error: ' . $status_code . ' - ' . wp_remote_retrieve_body($response));
             return false;
         }
 
@@ -1342,22 +1332,17 @@ class ArtitechCore_Keyword_Analyzer {
     }
 
     private function call_deepseek_json($prompt, $api_key) {
-        $response = wp_remote_post('https://api.deepseek.com/v1/chat/completions', [
+        $response = artitechcore_safe_ai_remote_post('https://api.deepseek.com/v1/chat/completions', [
             'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
             'body' => json_encode([
                 'model' => 'deepseek-chat',
                 'messages' => [['role' => 'user', 'content' => $prompt]],
                 'temperature' => 0.2
             ]),
-            'timeout' => 30,
-        ]);
-                if (is_wp_error($response)) {
+            'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+        ], 'deepseek');
+        if (is_wp_error($response)) {
             error_log('ArtitechCore DeepSeek Error: ' . $response->get_error_message());
-            return false;
-        }
-        $status_code = wp_remote_retrieve_response_code($response);
-        if ($status_code !== 200) {
-            error_log('ArtitechCore DeepSeek HTTP Error: ' . $status_code . ' - ' . wp_remote_retrieve_body($response));
             return false;
         }
 

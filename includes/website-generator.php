@@ -7,10 +7,17 @@ if (!defined('ABSPATH')) {
 // ARTITECHCORE WEBSITE BUILDER - CONSTANTS
 // ============================================
 // Generation Limits
-const ARTITECHCORE_MAX_PAGES_PER_BATCH = 50;         // Absolute max pages per generation
-const ARTITECHCORE_MAX_PAGES_PER_TYPE = 20;          // Max per page type in one go
-const ARTITECHCORE_API_TIMEOUT = 120;                // Seconds
-const ARTITECHCORE_QUEUE_EXPIRY = 48 * HOUR_IN_SECONDS;
+// Generation Limits
+if (!defined('ARTITECHCORE_MAX_PAGES_PER_BATCH')) {
+    define('ARTITECHCORE_MAX_PAGES_PER_BATCH', 50);
+}
+if (!defined('ARTITECHCORE_MAX_PAGES_PER_TYPE')) {
+    define('ARTITECHCORE_MAX_PAGES_PER_TYPE', 20);
+}
+// ARTITECHCORE_API_TIMEOUT is now in main file
+if (!defined('ARTITECHCORE_QUEUE_EXPIRY')) {
+    define('ARTITECHCORE_QUEUE_EXPIRY', 48 * HOUR_IN_SECONDS);
+}
 
 // AI Provider Costs (in USD per unit)
 const ARTITECHCORE_COST = [
@@ -47,101 +54,101 @@ const ARTITECHCORE_IMAGE_SIZE = '1024x1024';
 function artitechcore_get_website_blueprints() {
     return [
         'dental' => [
-            'name' => 'Dental Clinic',
+            'name' => __('Dental Clinic', 'artitechcore'),
             'icon' => '🦷',
-            'description' => 'Perfect for dental practices, orthodontists, and oral health clinics.',
+            'description' => __('Perfect for dental practices, orthodontists, and oral health clinics.', 'artitechcore'),
             'pages' => [
-                ['type' => 'home', 'title' => 'Home'],
-                ['type' => 'about', 'title' => 'About Us'],
-                ['type' => 'services', 'title' => 'Dental Services', 'count' => 5],
-                ['type' => 'contact', 'title' => 'Contact'],
-                ['type' => 'testimonials', 'title' => 'Patient Testimonials'],
-                ['type' => 'faq', 'title' => 'FAQs'],
-                ['type' => 'blog', 'title' => 'Blog'],
+                ['type' => 'home', 'title' => __('Home', 'artitechcore')],
+                ['type' => 'about', 'title' => __('About Us', 'artitechcore')],
+                ['type' => 'services', 'title' => __('Dental Services', 'artitechcore'), 'count' => 5],
+                ['type' => 'contact', 'title' => __('Contact', 'artitechcore')],
+                ['type' => 'testimonials', 'title' => __('Patient Testimonials', 'artitechcore')],
+                ['type' => 'faq', 'title' => __('FAQs', 'artitechcore')],
+                ['type' => 'blog', 'title' => __('Blog', 'artitechcore')],
             ]
         ],
         'law_firm' => [
-            'name' => 'Law Firm',
+            'name' => __('Law Firm', 'artitechcore'),
             'icon' => '⚖️',
-            'description' => 'Ideal for law firms, attorneys, and legal practices.',
+            'description' => __('Ideal for law firms, attorneys, and legal practices.', 'artitechcore'),
             'pages' => [
-                ['type' => 'home', 'title' => 'Home'],
-                ['type' => 'practice_areas', 'title' => 'Practice Areas', 'count' => 3],
-                ['type' => 'attorneys', 'title' => 'Our Attorneys', 'count' => 3],
-                ['type' => 'contact', 'title' => 'Contact'],
-                ['type' => 'resources', 'title' => 'Legal Resources'],
-                ['type' => 'blog', 'title' => 'Legal Insights'],
+                ['type' => 'home', 'title' => __('Home', 'artitechcore')],
+                ['type' => 'practice_areas', 'title' => __('Practice Areas', 'artitechcore'), 'count' => 3],
+                ['type' => 'attorneys', 'title' => __('Our Attorneys', 'artitechcore'), 'count' => 3],
+                ['type' => 'contact', 'title' => __('Contact', 'artitechcore')],
+                ['type' => 'resources', 'title' => __('Legal Resources', 'artitechcore')],
+                ['type' => 'blog', 'title' => __('Legal Insights', 'artitechcore')],
             ]
         ],
         'restaurant' => [
-            'name' => 'Restaurant',
+            'name' => __('Restaurant', 'artitechcore'),
             'icon' => '🍽️',
-            'description' => 'For restaurants, cafes, bistros, and food service businesses.',
+            'description' => __('For restaurants, cafes, bistros, and food service businesses.', 'artitechcore'),
             'pages' => [
-                ['type' => 'home', 'title' => 'Home'],
-                ['type' => 'menu', 'title' => 'Menu'],
-                ['type' => 'about', 'title' => 'About Us'],
-                ['type' => 'reservations', 'title' => 'Reservations'],
-                ['type' => 'gallery', 'title' => 'Gallery'],
-                ['type' => 'contact', 'title' => 'Contact & Hours'],
+                ['type' => 'home', 'title' => __('Home', 'artitechcore')],
+                ['type' => 'menu', 'title' => __('Menu', 'artitechcore')],
+                ['type' => 'about', 'title' => __('About Us', 'artitechcore')],
+                ['type' => 'reservations', 'title' => __('Reservations', 'artitechcore')],
+                ['type' => 'gallery', 'title' => __('Gallery', 'artitechcore')],
+                ['type' => 'contact', 'title' => __('Contact & Hours', 'artitechcore')],
             ]
         ],
         'ecommerce' => [
-            'name' => 'E-commerce Store',
+            'name' => __('E-commerce Store', 'artitechcore'),
             'icon' => '🛒',
-            'description' => 'For online stores, retail businesses, and product vendors.',
+            'description' => __('For online stores, retail businesses, and product vendors.', 'artitechcore'),
             'pages' => [
-                ['type' => 'home', 'title' => 'Home'],
-                ['type' => 'shop', 'title' => 'Shop'],
-                ['type' => 'product_categories', 'title' => 'Product Categories', 'count' => 3],
-                ['type' => 'about', 'title' => 'About Us'],
-                ['type' => 'contact', 'title' => 'Contact'],
-                ['type' => 'faq', 'title' => 'FAQ & Shipping'],
-                ['type' => 'blog', 'title' => 'Blog'],
+                ['type' => 'home', 'title' => __('Home', 'artitechcore')],
+                ['type' => 'shop', 'title' => __('Shop', 'artitechcore')],
+                ['type' => 'product_categories', 'title' => __('Product Categories', 'artitechcore'), 'count' => 3],
+                ['type' => 'about', 'title' => __('About Us', 'artitechcore')],
+                ['type' => 'contact', 'title' => __('Contact', 'artitechcore')],
+                ['type' => 'faq', 'title' => __('FAQ & Shipping', 'artitechcore')],
+                ['type' => 'blog', 'title' => __('Blog', 'artitechcore')],
             ]
         ],
         'service_business' => [
-            'name' => 'Service Business',
+            'name' => __('Service Business', 'artitechcore'),
             'icon' => '💼',
-            'description' => 'For agencies, consultants, freelancers, and service providers.',
+            'description' => __('For agencies, consultants, freelancers, and service providers.', 'artitechcore'),
             'pages' => [
-                ['type' => 'home', 'title' => 'Home'],
-                ['type' => 'services', 'title' => 'Services', 'count' => 3],
-                ['type' => 'about', 'title' => 'About'],
-                ['type' => 'case_studies', 'title' => 'Case Studies', 'count' => 2],
-                ['type' => 'contact', 'title' => 'Contact'],
-                ['type' => 'blog', 'title' => 'Blog'],
+                ['type' => 'home', 'title' => __('Home', 'artitechcore')],
+                ['type' => 'services', 'title' => __('Services', 'artitechcore'), 'count' => 3],
+                ['type' => 'about', 'title' => __('About', 'artitechcore')],
+                ['type' => 'case_studies', 'title' => __('Case Studies', 'artitechcore'), 'count' => 2],
+                ['type' => 'contact', 'title' => __('Contact', 'artitechcore')],
+                ['type' => 'blog', 'title' => __('Blog', 'artitechcore')],
             ]
         ],
         'portfolio' => [
-            'name' => 'Portfolio / Personal',
+            'name' => __('Portfolio / Personal', 'artitechcore'),
             'icon' => '🎨',
-            'description' => 'For creatives, designers, photographers, and personal branding.',
+            'description' => __('For creatives, designers, photographers, and personal branding.', 'artitechcore'),
             'pages' => [
-                ['type' => 'home', 'title' => 'Home'],
-                ['type' => 'portfolio', 'title' => 'Portfolio', 'count' => 6],
-                ['type' => 'about', 'title' => 'About Me'],
-                ['type' => 'contact', 'title' => 'Contact'],
-                ['type' => 'resume', 'title' => 'Resume / CV'],
+                ['type' => 'home', 'title' => __('Home', 'artitechcore')],
+                ['type' => 'portfolio', 'title' => __('Portfolio', 'artitechcore'), 'count' => 6],
+                ['type' => 'about', 'title' => __('About Me', 'artitechcore')],
+                ['type' => 'contact', 'title' => __('Contact', 'artitechcore')],
+                ['type' => 'resume', 'title' => __('Resume / CV', 'artitechcore')],
             ]
         ],
         'corporate' => [
-            'name' => 'Corporate',
+            'name' => __('Corporate', 'artitechcore'),
             'icon' => '🏢',
-            'description' => 'For corporations, enterprises, and B2B organizations.',
+            'description' => __('For corporations, enterprises, and B2B organizations.', 'artitechcore'),
             'pages' => [
-                ['type' => 'home', 'title' => 'Home'],
-                ['type' => 'about', 'title' => 'About Us'],
-                ['type' => 'solutions', 'title' => 'Solutions', 'count' => 3],
-                ['type' => 'investors', 'title' => 'Investors'],
-                ['type' => 'contact', 'title' => 'Contact'],
-                ['type' => 'news', 'title' => 'News & Press'],
+                ['type' => 'home', 'title' => __('Home', 'artitechcore')],
+                ['type' => 'about', 'title' => __('About Us', 'artitechcore')],
+                ['type' => 'solutions', 'title' => __('Solutions', 'artitechcore'), 'count' => 3],
+                ['type' => 'investors', 'title' => __('Investors', 'artitechcore')],
+                ['type' => 'contact', 'title' => __('Contact', 'artitechcore')],
+                ['type' => 'news', 'title' => __('News & Press', 'artitechcore')],
             ]
         ],
         'custom' => [
-            'name' => 'Custom Build',
+            'name' => __('Custom Build', 'artitechcore'),
             'icon' => '🔧',
-            'description' => 'Build from scratch - you define every page manually.',
+            'description' => __('Build from scratch - you define every page manually.', 'artitechcore'),
             'pages' => [], // User will define
         ]
     ];
@@ -151,37 +158,58 @@ function artitechcore_get_website_blueprints() {
  * Main Website Builder Tab
  */
 function artitechcore_website_builder_tab() {
-    // Check if brand kit is configured
-    $brand_kit = artitechcore_get_brand_kit();
-    $has_brand = !empty($brand_kit['brand_name']) || !empty($brand_kit['description']);
+    // Check if brand kit is explicitly configured before rendering the builder.
+    $saved_brand_kit      = get_option( 'artitechcore_brand_kit', [] );
+    $brand_kit_configured = ! empty( $saved_brand_kit['brand_name'] ) || ! empty( $saved_brand_kit['description'] );
 
-    // Get selected blueprint from session or default
-    $selected_blueprint = isset($_GET['blueprint']) ? sanitize_key($_GET['blueprint']) : '';
+    // Get selected blueprint from GET params
+    $selected_blueprint = isset( $_GET['blueprint'] ) ? sanitize_key( $_GET['blueprint'] ) : '';
 
     // Get custom pages if blueprint is custom
     $custom_pages = [];
-    if ($selected_blueprint === 'custom') {
-        $custom_pages = isset($_GET['custom_pages']) ? explode("\n", sanitize_textarea_field($_GET['custom_pages'])) : [];
-        $custom_pages = array_filter(array_map('trim', $custom_pages));
+    if ( $selected_blueprint === 'custom' ) {
+        $raw          = isset( $_GET['custom_pages'] ) ? sanitize_textarea_field( $_GET['custom_pages'] ) : '';
+        $custom_pages = array_filter( array_map( 'trim', explode( "\n", $raw ) ) );
     }
-
     ?>
     <div class="wrap artitechcore-website-builder dg10-brand">
-        <h1><?php esc_html_e('AI Website Builder', 'artitechcore'); ?></h1>
-        <p class="description"><?php esc_html_e('Generate a complete, brand-consistent website in minutes. Select a blueprint, customize your pages, and let AI build your site.', 'artitechcore'); ?></p>
+        <h1><?php esc_html_e( 'AI Website Builder', 'artitechcore' ); ?></h1>
+        <p class="description"><?php esc_html_e( 'Generate a complete, brand-consistent website in minutes. Select a blueprint, customize your pages, and let AI build your site.', 'artitechcore' ); ?></p>
 
-        <?php if (!$has_brand): ?>
-        <div class="notice notice-warning" style="margin: 20px 0;">
-            <p>
-                <strong><?php esc_html_e('Brand Kit Required', 'artitechcore'); ?></strong><br>
-                <?php esc_html_e('Please configure your Brand Kit first to ensure generated pages match your brand identity.', 'artitechcore'); ?>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=settings')); ?>" class="button button-primary" style="margin-left: 10px;">
-                    <?php esc_html_e('Go to Brand Kit', 'artitechcore'); ?>
-                </a>
-            </p>
+    <?php if ( ! $brand_kit_configured ) : ?>
+    <!-- === BRAND KIT REQUIRED — full setup screen (hard block) === -->
+    <div style="max-width:660px;margin:40px auto;text-align:center;background:#fff;border-radius:16px;padding:56px 44px;box-shadow:0 8px 40px rgba(74,144,226,.10),0 2px 8px rgba(0,0,0,.06);border:1px solid #e8edf3;">
+        <div style="font-size:60px;margin-bottom:18px;line-height:1;">🎨</div>
+        <h2 style="margin:0 0 14px;font-size:1.7em;color:#1e1e3f;font-weight:700;"><?php esc_html_e( 'Set Up Your Brand Kit First', 'artitechcore' ); ?></h2>
+        <p style="font-size:1.05em;color:#555;line-height:1.7;margin:0 0 8px;">
+            <?php esc_html_e( 'The AI Website Builder needs your brand identity to generate pages that look and sound like you — not a generic template.', 'artitechcore' ); ?>
+        </p>
+        <p style="font-size:.92em;color:#888;margin:0 0 32px;">
+            <?php esc_html_e( 'It only takes 2 minutes. Add your brand name, description, colors, and voice — then come back here to build.', 'artitechcore' ); ?>
+        </p>
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:36px;">
+            <?php
+            foreach ( [
+                [ '🏷️', __( 'Brand Name & Description', 'artitechcore' ) ],
+                [ '🎨', __( 'Colors & Fonts',            'artitechcore' ) ],
+                [ '🗣️', __( 'Brand Voice & Style',       'artitechcore' ) ],
+            ] as [$icon, $label] ) : ?>
+            <div style="background:#f5f7ff;border:1px solid #dde3ff;border-radius:10px;padding:14px 16px;min-width:130px;">
+                <div style="font-size:26px;margin-bottom:6px;"><?php echo esc_html( $icon ); ?></div>
+                <div style="font-size:.82em;color:#444;font-weight:600;"><?php echo esc_html( $label ); ?></div>
+            </div>
+            <?php endforeach; ?>
         </div>
-        <?php return; ?>
-        <?php endif; ?>
+        <a href="<?php echo esc_url( admin_url( 'admin.php?page=artitechcore-main&tab=settings' ) ); ?>"
+           style="display:inline-block;font-size:1em;font-weight:600;padding:12px 32px;background:linear-gradient(135deg,#4A90E2,#6C63FF);color:#fff;border-radius:8px;text-decoration:none;box-shadow:0 4px 14px rgba(108,99,255,.3);">
+            <?php esc_html_e( '⚡ Configure Brand Kit Now →', 'artitechcore' ); ?>
+        </a>
+    </div>
+    </div><!-- .wrap -->
+    <?php return; ?>
+    <?php endif; ?>
+    <!-- === END brand-kit gate === -->
+
 
         <div class="artitechcore-builder-container" style="display: flex; gap: 20px; flex-wrap: wrap;">
 
@@ -494,7 +522,7 @@ function artitechcore_website_builder_tab() {
                 type: 'POST',
                 data: {
                     action: 'artitechcore_build_website',
-                    nonce: '<?php echo wp_create_nonce("artitechcore_website_builder_nonce"); ?>',
+                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>',
                     blueprint: blueprintKey,
                     page_configs: JSON.stringify(pageConfigs),
                     generate_images: generateImages ? 1 : 0,
@@ -532,7 +560,7 @@ function artitechcore_website_builder_tab() {
                     data: {
                         action: 'artitechcore_builder_job_status',
                         job_id: jobId,
-                        nonce: '<?php echo wp_create_nonce("artitechcore_builder_status_nonce"); ?>'
+                        nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
                     },
                     success: function(res) {
                         if (res.success) {
@@ -684,7 +712,7 @@ function artitechcore_website_builder_tab() {
                 data: {
                     action: 'artitechcore_builder_cancel_job',
                     job_id: currentJobId,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_website_builder_nonce"); ?>'
+                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
                 },
                 success: function(res) {
                     if (res.success) {
@@ -729,7 +757,7 @@ function artitechcore_website_builder_tab() {
 // AJAX handler for website generation
 function artitechcore_ajax_build_website() {
     // Verify nonce first (security best practice)
-    if (!check_ajax_referer('artitechcore_website_builder_nonce', 'nonce', false)) {
+    if (!check_ajax_referer('artitechcore_ajax_nonce', 'nonce', false)) {
         wp_send_json_error(['message' => 'Security check failed. Please refresh the page and try again.']);
         return;
     }
@@ -878,7 +906,9 @@ function artitechcore_ajax_build_website() {
         wp_send_json_success($response_data);
 
     } catch (Exception $e) {
-        error_log('ArtitechCore Build Website Error: ' . $e->getMessage() . ' - Blueprint: ' . $blueprint . ' - Configs: ' . json_encode($page_configs));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore Build Website Error: ' . $e->getMessage() . ' - Blueprint: ' . $blueprint . ' - Configs: ' . json_encode($page_configs));
+        }
         wp_send_json_error([
             'message' => 'Failed to queue website generation: ' . $e->getMessage(),
             'error_type' => 'queue_failed'
@@ -950,7 +980,19 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                 ];
 
                 $page_id = false;
-                $existing_post = get_page_by_title($title, OBJECT, 'page');
+                // Replace deprecated get_page_by_title with WP_Query
+                $existing_posts = new WP_Query([
+                    'post_type'              => 'page',
+                    'title'                  => $title,
+                    'posts_per_page'         => 1,
+                    'no_found_rows'          => true,
+                    'ignore_sticky_posts'    => true,
+                    'update_post_term_cache' => false,
+                    'update_post_meta_cache' => false,
+                    'orderby'                => 'post_date',
+                    'order'                  => 'DESC',
+                ]);
+                $existing_post = !empty($existing_posts->posts) ? $existing_posts->posts[0] : null;
                 if ($existing_post && in_array($existing_post->post_status, ['publish', 'draft', 'pending', 'private'])) {
                     $page_id = $existing_post->ID;
                     $page_result['note'] = 'Skipped creation (already exists)';
@@ -985,7 +1027,9 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                                 $images_generated++;
                             }
                         } catch (Exception $e) {
-                            error_log('ArtitechCore: Image generation failed for page ' . $title . ': ' . $e->getMessage());
+                            if (defined('WP_DEBUG') && WP_DEBUG) {
+                                error_log('ArtitechCore: Image generation failed for page ' . $title . ': ' . $e->getMessage());
+                            }
                         }
                     }
                     $page_result['image_generated'] = $image_success;
@@ -995,7 +1039,9 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                         try {
                             artitechcore_generate_schema_markup($page_id);
                         } catch (Exception $e) {
-                            error_log('ArtitechCore: Schema generation failed for page ' . $title . ': ' . $e->getMessage());
+                            if (defined('WP_DEBUG') && WP_DEBUG) {
+                                error_log('ArtitechCore: Schema generation failed for page ' . $title . ': ' . $e->getMessage());
+                            }
                             // Don't fail the page for schema errors
                         }
                     }
@@ -1008,7 +1054,9 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                 $errors[] = $error_msg;
                 $page_result['status'] = 'failed';
                 $page_result['error'] = $e->getMessage();
-                error_log('ArtitechCore: Failed to generate page: ' . $error_msg);
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('ArtitechCore: Failed to generate page: ' . $error_msg);
+                }
             }
 
             $created_pages[] = $page_result;
@@ -1218,48 +1266,23 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
         throw new Exception(__('Failed to encode request data for OpenAI API.', 'artitechcore'));
     }
 
-    // API Retry Loop (P1-5)
-    $max_retries = 3;
-    $retry_count = 0;
-    $response = null;
-
-    while ($retry_count < $max_retries) {
-        $response = wp_remote_post($url, [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $api_key,
-            ],
-            'body' => $body,
-            'timeout' => ARTITECHCORE_API_TIMEOUT,
-        ]);
-
-        if (!is_wp_error($response)) {
-            $response_code = wp_remote_retrieve_response_code($response);
-            if ($response_code === 200) {
-                break; // Success
-            }
-            
-            // Only retry on rate limits (429) or server errors (5xx)
-            if ($response_code !== 429 && ($response_code < 500 || $response_code > 599)) {
-                break; // Fatal error, don't retry
-            }
-        }
-
-        $retry_count++;
-        if ($retry_count < $max_retries) {
-            // Exponential backoff: 2s, 4s
-            sleep(pow(2, $retry_count));
-        }
-    }
+    $response = artitechcore_safe_ai_remote_post($url, [
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $api_key,
+        ],
+        'body' => $body,
+        'timeout' => ARTITECHCORE_API_TIMEOUT,
+    ], 'openai');
 
     if (is_wp_error($response)) {
-        throw new Exception(sprintf(__('OpenAI API request failed after %d attempts: %s', 'artitechcore'), $max_retries, $response->get_error_message()));
+        throw new Exception(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message()));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
-        throw new Exception(sprintf(__('OpenAI API returned error %d after %d attempts: %s', 'artitechcore'), $response_code, $max_retries, $error_message));
+        throw new Exception(sprintf(__('OpenAI API returned error %d: %s', 'artitechcore'), $response_code, $error_message));
     }
 
     $response_body = wp_remote_retrieve_body($response);
@@ -1373,45 +1396,20 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
         throw new Exception(__('Failed to encode request data for Gemini API.', 'artitechcore'));
     }
 
-    // API Retry Loop (P1-5)
-    $max_retries = 3;
-    $retry_count = 0;
-    $response = null;
-
-    while ($retry_count < $max_retries) {
-        $response = wp_remote_post($url, [
-            'headers' => ['Content-Type' => 'application/json'],
-            'body' => $body,
-            'timeout' => ARTITECHCORE_API_TIMEOUT,
-        ]);
-
-        if (!is_wp_error($response)) {
-            $response_code = wp_remote_retrieve_response_code($response);
-            if ($response_code === 200) {
-                break; // Success
-            }
-            
-            // Only retry on rate limits (429) or server errors (5xx)
-            if ($response_code !== 429 && ($response_code < 500 || $response_code > 599)) {
-                break; // Fatal error, don't retry
-            }
-        }
-
-        $retry_count++;
-        if ($retry_count < $max_retries) {
-            // Exponential backoff: 2s, 4s
-            sleep(pow(2, $retry_count));
-        }
-    }
+    $response = artitechcore_safe_ai_remote_post($url, [
+        'headers' => ['Content-Type' => 'application/json'],
+        'body' => $body,
+        'timeout' => ARTITECHCORE_API_TIMEOUT,
+    ], 'gemini');
 
     if (is_wp_error($response)) {
-        throw new Exception(sprintf(__('Gemini API request failed after %d attempts: %s', 'artitechcore'), $max_retries, $response->get_error_message()));
+        throw new Exception(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message()));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
-        throw new Exception(sprintf(__('Gemini API returned error %d after %d attempts: %s', 'artitechcore'), $response_code, $max_retries, $error_message));
+        throw new Exception(sprintf(__('Gemini API returned error %d: %s', 'artitechcore'), $response_code, $error_message));
     }
 
     $response_body = wp_remote_retrieve_body($response);
@@ -1629,14 +1627,18 @@ Return a valid JSON object. DO NOT wrap it in markdown code blocks. The JSON mus
 function artitechcore_generate_and_set_featured_image_for_page($post_id, $page_title, $page_type, $brand_kit) {
     // Use the existing image generation from ai-generator.php with enhanced brand kit
     if (!function_exists('artitechcore_generate_and_set_featured_image')) {
-        error_log('ArtitechCore: Image generation function not available. Make sure ai-generator.php is loaded.');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore: Image generation function not available. Make sure ai-generator.php is loaded.');
+        }
         return false;
     }
 
     // Get OpenAI API key (required for DALL-E)
     $openai_key = get_option('artitechcore_openai_api_key');
     if (empty($openai_key)) {
-        error_log('ArtitechCore: OpenAI API key not set for image generation');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore: OpenAI API key not set for image generation');
+        }
         return false;
     }
 
@@ -1646,7 +1648,9 @@ function artitechcore_generate_and_set_featured_image_for_page($post_id, $page_t
         $result = artitechcore_generate_and_set_featured_image($post_id, $page_title, $brand_color);
         return $result;
     } catch (Exception $e) {
-        error_log('ArtitechCore: Image generation failed for page ' . $page_title . ': ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore: Image generation failed for page ' . $page_title . ': ' . $e->getMessage());
+        }
         return false;
     }
 }
@@ -1655,7 +1659,7 @@ function artitechcore_generate_and_set_featured_image_for_page($post_id, $page_t
  * AJAX handler: Get job status for async generation
  */
 function artitechcore_ajax_get_job_status() {
-    check_ajax_referer('artitechcore_builder_status_nonce', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
 
     if (!current_user_can('manage_options')) {
         wp_send_json_error(['message' => 'Unauthorized']);
@@ -1697,7 +1701,7 @@ add_action('wp_ajax_artitechcore_builder_job_status', 'artitechcore_ajax_get_job
  * AJAX handler: Cancel a running job
  */
 function artitechcore_ajax_cancel_job() {
-    check_ajax_referer('artitechcore_website_builder_nonce', 'nonce'); // Cancel still uses main nonce as it's a state change
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
 
     if (!current_user_can('manage_options')) {
         wp_send_json_error(['message' => 'Unauthorized']);

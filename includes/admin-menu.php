@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 // Add admin menu
 function artitechcore_add_admin_menu() {
     add_menu_page(
-        __('ArtitechCore WP', 'artitechcore'),
+        __('ArtitechCore AI Architect', 'artitechcore'),
         __('ArtitechCore', 'artitechcore'),
         'manage_options',
         'artitechcore-main',
@@ -36,8 +36,8 @@ function artitechcore_add_admin_menu() {
 
     add_submenu_page(
         'artitechcore-main',
-        __('AI Generation', 'artitechcore'),
-        __('AI Generation', 'artitechcore'),
+        __('AI Generator', 'artitechcore'),
+        __('AI Generator', 'artitechcore'),
         'manage_options',
         'artitechcore-ai-generator',
         'artitechcore_admin_page'
@@ -45,11 +45,11 @@ function artitechcore_add_admin_menu() {
 
     add_submenu_page(
         'artitechcore-main',
-        __('AI Website Builder', 'artitechcore'),
-        __('AI Website Builder', 'artitechcore'),
+        __('Website Builder', 'artitechcore'),
+        __('Website Builder', 'artitechcore'),
         'manage_options',
         'artitechcore-website-builder',
-        'artitechcore_website_builder_tab'
+        'artitechcore_admin_page'
     );
 
     add_submenu_page(
@@ -99,6 +99,15 @@ function artitechcore_add_admin_menu() {
 
     add_submenu_page(
         'artitechcore-main',
+        __('Post Templates', 'artitechcore'),
+        __('Post Templates', 'artitechcore'),
+        'manage_options',
+        'artitechcore-main&tab=templates',
+        'artitechcore_admin_page'
+    );
+
+    add_submenu_page(
+        'artitechcore-main',
         __('Content Enhancer', 'artitechcore'),
         __('Content Enhancer', 'artitechcore'),
         'manage_options',
@@ -131,6 +140,9 @@ function artitechcore_admin_page() {
             case 'artitechcore-ai-generator':
                 $active_tab = 'ai';
                 break;
+            case 'artitechcore-website-builder':
+                $active_tab = 'website-builder';
+                break;
             case 'artitechcore-schema-generator':
                 $active_tab = 'schema';
                 break;
@@ -161,70 +173,80 @@ function artitechcore_admin_page() {
     // Define menu items with their details
     $menu_items = array(
         'manual' => array(
-            'title' => __('Manual Page Creation', 'artitechcore'),
-            'icon' => '',
-            'description' => __('Create pages manually with custom hierarchy and attributes', 'artitechcore')
+            'title' => __('Add Pages', 'artitechcore'),
+            'icon' => '✍️',
+            'description' => __('Create pages manually with custom hierarchy', 'artitechcore')
         ),
         'csv' => array(
             'title' => __('CSV Upload', 'artitechcore'),
-            'icon' => '',
+            'icon' => '📂',
             'description' => __('Bulk import pages from CSV files', 'artitechcore')
         ),
         'ai' => array(
-            'title' => __('AI Generation', 'artitechcore'),
-            'icon' => '',
-            'description' => __('Generate pages with AI assistance', 'artitechcore')
+            'title' => __('AI Generator', 'artitechcore'),
+            'icon' => '🤖',
+            'description' => __('Generate page ecosystems and structures with AI', 'artitechcore')
+        ),
+        'website-builder' => array(
+            'title' => __('Website Builder', 'artitechcore'),
+            'icon' => '🏗️',
+            'description' => __('Build complete websites from industry blueprints', 'artitechcore')
         ),
         'schema' => array(
             'title' => __('Schema Generator', 'artitechcore'),
-            'icon' => '',
+            'icon' => '🧩',
             'description' => __('Create structured data markup', 'artitechcore')
         ),
         'menu' => array(
             'title' => __('Menu Generator', 'artitechcore'),
-            'icon' => '',
+            'icon' => '🗺️',
             'description' => __('Automatically generate WordPress menus', 'artitechcore')
         ),
         'hierarchy' => array(
             'title' => __('Page Hierarchy', 'artitechcore'),
-            'icon' => '',
+            'icon' => '🪜',
             'description' => __('Visualize and manage page structure', 'artitechcore')
         ),
         'keyword-analysis' => array(
             'title' => __('Keyword Analysis', 'artitechcore'),
-            'icon' => '',
+            'icon' => '📈',
             'description' => __('Analyze keyword density and SEO', 'artitechcore')
         ),
         'cpt' => array(
             'title' => __('Custom Post Types', 'artitechcore'),
-            'icon' => '',
-            'description' => __('Create and manage custom post types and fields', 'artitechcore')
+            'icon' => '📦',
+            'description' => __('Create and manage custom post types', 'artitechcore')
+        ),
+        'templates' => array(
+            'title' => __('Post Templates', 'artitechcore'),
+            'icon' => '📝',
+            'description' => __('Manage dynamic templates for post types', 'artitechcore')
         ),
         'enhancer' => array(
             'title' => __('Content Enhancer', 'artitechcore'),
-            'icon' => '',
-            'description' => __('Bulk generate AI Key Takeaways and CTAs', 'artitechcore')
+            'icon' => '🚀',
+            'description' => __('Generate AI Key Takeaways and CTAs', 'artitechcore')
         ),
         'settings' => array(
             'title' => __('Settings', 'artitechcore'),
-            'icon' => '',
+            'icon' => '⚙️',
             'description' => __('Configure plugin options', 'artitechcore')
         )
     );
     ?>
     <div class="wrap dg10-brand">
         <!-- Skip Link for Accessibility - Positioned at page level -->
-        <a href="#page-title" class="skip-link"><?php _e('Skip to main content', 'artitechcore'); ?></a>
+        <a href="#page-title" class="skip-link"><?php esc_html_e('Skip to main content', 'artitechcore'); ?></a>
         
         <div class="dg10-main-layout">
             <!-- Admin Sidebar -->
             <aside class="dg10-admin-sidebar" role="complementary" aria-label="<?php esc_attr_e('ArtitechCore Navigation Menu', 'artitechcore'); ?>">
                 <div class="dg10-sidebar-header">
                     <div class="dg10-sidebar-title">
-                        <img src="<?php echo ArtitechCore_PLUGIN_URL; ?>assets/images/logo.svg" alt="<?php esc_attr_e('ArtitechCore Plugin Logo', 'artitechcore'); ?>" class="dg10-logo-img" role="img">
-                        <span class="dg10-plugin-name"><?php _e('ArtitechCore', 'artitechcore'); ?></span>
+                        <img src="<?php echo esc_url(ARTITECHCORE_PLUGIN_URL); ?>assets/images/logo.svg" alt="<?php esc_attr_e('ArtitechCore Plugin Logo', 'artitechcore'); ?>" class="dg10-logo-img" role="img">
+                        <span class="dg10-plugin-name"><?php esc_html_e('ArtitechCore', 'artitechcore'); ?></span>
                     </div>
-                    <p class="dg10-sidebar-subtitle" role="text"><?php _e('', 'artitechcore'); ?></p>
+                    <p class="dg10-sidebar-subtitle" role="text"><?php esc_html_e('Advanced SEO Infrastructure', 'artitechcore'); ?></p>
                 </div>
                 
                 <nav class="dg10-sidebar-nav" role="navigation" aria-label="<?php esc_attr_e('Main Navigation', 'artitechcore'); ?>">
@@ -279,6 +301,10 @@ function artitechcore_admin_page() {
             artitechcore_render_csv_tab_content();
         } elseif ($active_tab == 'ai') {
             artitechcore_ai_generation_tab();
+        } elseif ($active_tab == 'website-builder') {
+            if (function_exists('artitechcore_website_builder_tab')) {
+                artitechcore_website_builder_tab();
+            }
         } elseif ($active_tab == 'schema') {
             artitechcore_schema_generator_tab();
         } elseif ($active_tab == 'menu') {
@@ -311,23 +337,23 @@ function artitechcore_admin_page() {
                     <footer class="dg10-card-footer" role="contentinfo" aria-label="<?php esc_attr_e('About DG10 Agency', 'artitechcore'); ?>">
                         <section class="dg10-promotion-section" role="region" aria-labelledby="about-us-heading">
                             <header class="dg10-promotion-header">
-                                <img src="<?php echo ArtitechCore_PLUGIN_URL; ?>assets/images/dg10-brand-logo.svg" alt="<?php esc_attr_e('DG10 Agency Logo', 'artitechcore'); ?>" class="dg10-promotion-logo" role="img">
-                                <h3 id="about-us-heading" role="heading" aria-level="3"><?php _e('About us', 'artitechcore'); ?></h3>
+                                <img src="<?php echo esc_url(ARTITECHCORE_PLUGIN_URL); ?>assets/images/dg10-brand-logo.svg" alt="<?php esc_attr_e('DG10 Agency Logo', 'artitechcore'); ?>" class="dg10-promotion-logo" role="img">
+                                <h3 id="about-us-heading" role="heading" aria-level="3"><?php esc_html_e('About us', 'artitechcore'); ?></h3>
                             </header>
                             <div class="dg10-promotion-content">
-                                <p role="text"><?php _e('We are the ultimate growth ecosystem for visionary entrepreneurs. Leveraging over a decade of expertise, we empower you to Build | Market | Analyze | Automate | Scale with our services, elite software products, and high-performance AI tools. We aren’t just an agency; we are your digital infrastructure powerhouse, providing the advanced technology and strategic edge you need to dominate your market.', 'artitechcore'); ?></p>
+                                <p role="text"><?php esc_html_e('We are the ultimate growth ecosystem for visionary entrepreneurs. Leveraging over a decade of expertise, we empower you to Build | Market | Analyze | Automate | Scale with our services, elite software products, and high-performance AI tools. We aren’t just an agency; we are your digital infrastructure powerhouse, providing the advanced technology and strategic edge you need to dominate your market.', 'artitechcore'); ?></p>
                                 <div class="dg10-promotion-buttons" role="group" aria-label="<?php esc_attr_e('Action Buttons', 'artitechcore'); ?>">
                                     <a href="https://www.dg10.agency" target="_blank" class="dg10-btn dg10-btn-primary" role="button" aria-label="<?php esc_attr_e('Visit DG10 Agency Website - Opens in new tab', 'artitechcore'); ?>">
-                                        <span class="btn-text"><?php _e('Visit Website', 'artitechcore'); ?></span>
+                                        <span class="btn-text"><?php esc_html_e('Visit Website', 'artitechcore'); ?></span>
                                         <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('External link icon'); ?>">→</span>
                                     </a>
                                     <a href="https://calendly.com/dg10-agency/30min" target="_blank" class="dg10-btn dg10-btn-outline" role="button" aria-label="<?php esc_attr_e('Book a Free Consultation - Opens in new tab', 'artitechcore'); ?>">
                                         <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Calendar icon'); ?>">📅</span>
-                                        <span class="btn-text"><?php _e('Book a Free Consultation', 'artitechcore'); ?></span>
+                                        <span class="btn-text"><?php esc_html_e('Book a Free Consultation', 'artitechcore'); ?></span>
                                     </a>
                                 </div>
                                 <p class="dg10-promotion-footer" role="text">
-                                    <?php printf(__('This is an open-source project - please %s.', 'artitechcore'), '<a href="' . esc_url(ArtitechCore_GITHUB_URL) . '" target="_blank" role="link" aria-label="' . esc_attr__('Star the repository on GitHub - Opens in new tab', 'artitechcore') . '">' . __('star the repo on GitHub', 'artitechcore') . '</a>'); ?>
+                                    <?php printf(__('This is an open-source project - please %s.', 'artitechcore'), '<a href="' . esc_url(ARTITECHCORE_GITHUB_URL) . '" target="_blank" role="link" aria-label="' . esc_attr__('Star the repository on GitHub - Opens in new tab', 'artitechcore') . '">' . __('star the repo on GitHub', 'artitechcore') . '</a>'); ?>
                                 </p>
                             </div>
                         </section>
@@ -434,9 +460,9 @@ function artitechcore_render_manual_tab_content() {
         <form method="post" action="" role="form" aria-label="<?php esc_attr_e('Manual Page Creation Form', 'artitechcore'); ?>">
                 <?php wp_nonce_field('artitechcore_manual_create_pages'); ?>
                 <fieldset class="dg10-form-group">
-                    <legend class="sr-only"><?php _e('Page Creation Settings', 'artitechcore'); ?></legend>
+                    <legend class="sr-only"><?php esc_html_e('Page Creation Settings', 'artitechcore'); ?></legend>
                     <div class="dg10-form-field">
-                        <label for="artitechcore_titles" class="dg10-form-label" id="titles-label"><?php _e('Page Titles', 'artitechcore'); ?></label>
+                        <label for="artitechcore_titles" class="dg10-form-label" id="titles-label"><?php esc_html_e('Page Titles', 'artitechcore'); ?></label>
                         <textarea name="artitechcore_titles" 
                                   id="artitechcore_titles" 
                                   rows="10" 
@@ -447,13 +473,13 @@ function artitechcore_render_manual_tab_content() {
                                   aria-required="true"
                                   role="textbox"></textarea>
                         <div id="syntax-guide" class="dg10-form-help" role="region" aria-label="<?php esc_attr_e('Syntax Guide', 'artitechcore'); ?>">
-                            <strong><?php _e('Syntax Guide:', 'artitechcore'); ?></strong><br>
-                            • <?php _e('Use', 'artitechcore'); ?> <code>-</code> <?php _e('for child pages (one hyphen per level)', 'artitechcore'); ?><br>
-                            • <?php _e('Use', 'artitechcore'); ?> <code>:+</code> <?php _e('for meta description', 'artitechcore'); ?><br>
-                            • <?php _e('Use', 'artitechcore'); ?> <code>:*</code> <?php _e('for featured image URL', 'artitechcore'); ?><br>
-                            • <?php _e('Use', 'artitechcore'); ?> <code>::template=template-name.php</code> <?php _e('for page template', 'artitechcore'); ?><br>
-                            • <?php _e('Use', 'artitechcore'); ?> <code>::status=draft</code> <?php _e('for post status', 'artitechcore'); ?><br>
-                            • <strong><?php _e('SEO slugs are automatically generated', 'artitechcore'); ?></strong> (<?php _e('max 72 chars', 'artitechcore'); ?>)
+                            <strong><?php esc_html_e('Syntax Guide:', 'artitechcore'); ?></strong><br>
+                            • <?php esc_html_e('Use', 'artitechcore'); ?> <code>-</code> <?php esc_html_e('for child pages (one hyphen per level)', 'artitechcore'); ?><br>
+                            • <?php esc_html_e('Use', 'artitechcore'); ?> <code>:+</code> <?php esc_html_e('for meta description', 'artitechcore'); ?><br>
+                            • <?php esc_html_e('Use', 'artitechcore'); ?> <code>:*</code> <?php esc_html_e('for featured image URL', 'artitechcore'); ?><br>
+                            • <?php esc_html_e('Use', 'artitechcore'); ?> <code>::template=template-name.php</code> <?php esc_html_e('for page template', 'artitechcore'); ?><br>
+                            • <?php esc_html_e('Use', 'artitechcore'); ?> <code>::status=draft</code> <?php esc_html_e('for post status', 'artitechcore'); ?><br>
+                            • <strong><?php esc_html_e('SEO slugs are automatically generated', 'artitechcore'); ?></strong> (<?php esc_html_e('max 72 chars', 'artitechcore'); ?>)
                         </div>
                     </div>
                 </fieldset>
@@ -464,7 +490,7 @@ function artitechcore_render_manual_tab_content() {
                             role="button"
                             aria-label="<?php esc_attr_e('Create Pages from Titles', 'artitechcore'); ?>">
                         <span class="btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Rocket icon'); ?>">🚀</span>
-                        <span class="btn-text"><?php _e('Create Pages', 'artitechcore'); ?></span>
+                        <span class="btn-text"><?php esc_html_e('Create Pages', 'artitechcore'); ?></span>
                 </button>
             </form>
     </div>
@@ -482,9 +508,9 @@ function artitechcore_render_csv_tab_content() {
             <form method="post" action="" enctype="multipart/form-data" role="form" aria-label="<?php esc_attr_e('CSV File Upload Form', 'artitechcore'); ?>">
                 <?php wp_nonce_field('artitechcore_csv_upload'); ?>
                 <fieldset class="dg10-form-group">
-                    <legend class="sr-only"><?php _e('CSV Upload Settings', 'artitechcore'); ?></legend>
+                    <legend class="sr-only"><?php esc_html_e('CSV Upload Settings', 'artitechcore'); ?></legend>
                     <div class="dg10-form-field">
-                        <label for="artitechcore_csv_file" class="dg10-form-label" id="csv-file-label"><?php _e('CSV File', 'artitechcore'); ?></label>
+                        <label for="artitechcore_csv_file" class="dg10-form-label" id="csv-file-label"><?php esc_html_e('CSV File', 'artitechcore'); ?></label>
                         <input type="file" 
                                name="artitechcore_csv_file" 
                                id="artitechcore_csv_file" 
@@ -518,7 +544,7 @@ function artitechcore_render_csv_tab_content() {
                             role="button"
                             aria-label="<?php esc_attr_e('Upload CSV File and Create Pages', 'artitechcore'); ?>">
                         <span class="btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Upload icon'); ?>">📤</span>
-                        <span class="btn-text"><?php _e('Upload and Create Pages', 'artitechcore'); ?></span>
+                        <span class="btn-text"><?php esc_html_e('Upload and Create Pages', 'artitechcore'); ?></span>
                     </button>
                 </div>
             </form>
@@ -528,7 +554,7 @@ function artitechcore_render_csv_tab_content() {
         if (isset($_FILES['artitechcore_csv_file']) && !empty($_FILES['artitechcore_csv_file']['tmp_name'])) {
             artitechcore_create_pages_from_csv($_FILES['artitechcore_csv_file']);
         } else {
-            echo '<div class="notice notice-error"><p>' . __('Please select a CSV file to upload.', 'artitechcore') . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html__('Please select a CSV file to upload.', 'artitechcore') . '</p></div>';
         }
     }
 }
@@ -537,7 +563,7 @@ function artitechcore_render_csv_tab_content() {
 function artitechcore_menu_generator_tab() {
     // Get registered nav menus for the dropdown
     $locations = get_registered_nav_menus();
-    $location_options = '<option value="">' . __('Auto-detect / None', 'artitechcore') . '</option>';
+    $location_options = '<option value="">' . esc_html__('Auto-detect / None', 'artitechcore') . '</option>';
     if (!empty($locations)) {
         foreach ($locations as $slug => $name) {
             $location_options .= '<option value="' . esc_attr($slug) . '">' . esc_html($name) . '</option>';
@@ -550,11 +576,11 @@ function artitechcore_menu_generator_tab() {
         <p style="margin-bottom: 10px;">
             <label style="font-weight: 500;">
                 <input type="checkbox" name="force_overwrite" value="1"> 
-                ' . __('Force Overwrite Existing Menu', 'artitechcore') . '
+                ' . esc_html__('Force Overwrite Existing Menu', 'artitechcore') . '
             </label>
         </p>
         <p style="margin: 0;">
-            <label for="menu_loc" style="display: block; margin-bottom: 4px;">' . __('Assign to Location (Optional):', 'artitechcore') . '</label>
+            <label for="menu_loc" style="display: block; margin-bottom: 4px;">' . esc_html__('Assign to Location (Optional):', 'artitechcore') . '</label>
             <select name="menu_location" style="width: 100%;">
                 ' . $location_options . '
             </select>
@@ -848,7 +874,7 @@ function artitechcore_keyword_analysis_tab() {
     <section class="dg10-card" role="region" aria-labelledby="keyword-analysis-heading">
         <div class="dg10-card-body">
             <form id="artitechcore-keyword-analysis-form">
-                <?php wp_nonce_field('artitechcore_keyword_analysis', 'artitechcore_keyword_nonce'); ?>
+                <?php wp_nonce_field('artitechcore_ajax_nonce', 'artitechcore_keyword_nonce'); ?>
                 
                 <div class="dg10-form-group">
                     <label for="artitechcore_page_select" class="dg10-form-label">Select Page to Analyze</label>

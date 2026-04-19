@@ -14,71 +14,158 @@ add_action('wp_ajax_artitechcore_ai_create_content', 'artitechcore_handle_ai_cre
  */
 function artitechcore_ai_generation_tab() {
     ?>
-    <div class="artitechcore-ai-tab dg10-form-container">
-        <div class="artitechcore-tab-header">
-            <h3>🤖 <?php esc_html_e('AI Page & Ecosystem Generator', 'artitechcore'); ?></h3>
-            <p><?php esc_html_e('Our advanced AI analyzes your business mission to suggest a complete website architecture, including pages and custom post types.', 'artitechcore'); ?></p>
+    <div class="artitechcore-premium-ai-generator dg10-brand">
+        <!-- AI Generator Header -->
+        <div class="dg10-premium-header">
+            <div class="header-content">
+                <div class="header-icon-wrap">
+                    <span class="header-icon">✨</span>
+                </div>
+                <div class="header-text">
+                    <h2><?php esc_html_e('AI Ecosystem Architect', 'artitechcore'); ?></h2>
+                    <p><?php esc_html_e('Transform your vision into a high-performance digital infrastructure using our advanced Neural Network strategy.', 'artitechcore'); ?></p>
+                </div>
+            </div>
+            <div class="header-badge">
+                <span class="premium-pill"><?php esc_html_e('Powered by DG10 AI', 'artitechcore'); ?></span>
+            </div>
         </div>
 
-        <form id="artitechcore-ai-request-form" class="dg10-form" method="post" enctype="multipart/form-data">
-            <?php wp_nonce_field('artitechcore_ai_ajax', 'nonce'); ?>
-            
-            <div class="dg10-form-section">
-                <div class="dg10-form-group">
-                    <label for="artitechcore_business_type" class="dg10-form-label"><?php esc_html_e('Business Type', 'artitechcore'); ?></label>
-                    <input type="text" name="artitechcore_business_type" id="artitechcore_business_type" class="dg10-form-input" 
-                           placeholder="<?php esc_attr_e('e.g., Digital Agency, Dental Clinic, Law Firm', 'artitechcore'); ?>" required>
-                    <div class="artitechcore-field-validation"></div>
-                </div>
+        <!-- Progress Steps -->
+        <div class="ai-steps-indicator">
+            <div class="ai-step active" data-step="1">
+                <span class="step-num">1</span>
+                <span class="step-label"><?php esc_html_e('Profile', 'artitechcore'); ?></span>
+            </div>
+            <div class="ai-step-divider"></div>
+            <div class="ai-step" data-step="2">
+                <span class="step-num">2</span>
+                <span class="step-label"><?php esc_html_e('Strategy', 'artitechcore'); ?></span>
+            </div>
+            <div class="ai-step-divider"></div>
+            <div class="ai-step" data-step="3">
+                <span class="step-num">3</span>
+                <span class="step-label"><?php esc_html_e('Architect', 'artitechcore'); ?></span>
+            </div>
+        </div>
 
-                <div class="dg10-form-group">
-                    <label for="artitechcore_business_details" class="dg10-form-label"><?php esc_html_e('Mission & Details', 'artitechcore'); ?></label>
-                    <textarea name="artitechcore_business_details" id="artitechcore_business_details" rows="4" class="dg10-form-textarea" 
-                              placeholder="<?php esc_attr_e('Briefly describe what your business does and what makes you unique...', 'artitechcore'); ?>" required></textarea>
-                </div>
-
-                <div class="dg10-form-grid" style="grid-template-columns: 1fr 1fr;">
-                    <div class="dg10-form-group">
-                        <label for="artitechcore_seo_keywords" class="dg10-form-label"><?php esc_html_e('Primary SEO Keywords', 'artitechcore'); ?></label>
-                        <input type="text" name="artitechcore_seo_keywords" id="artitechcore_seo_keywords" class="dg10-form-input" 
-                               placeholder="<?php esc_attr_e('e.g., low-cost dentistry, web design London', 'artitechcore'); ?>">
-                        <p class="dg10-form-help"><?php esc_html_e('Comma-separated list.', 'artitechcore'); ?></p>
+        <!-- Multi-Step Form Container -->
+        <div class="ai-form-glass-container">
+            <form id="artitechcore-ai-request-form" class="dg10-premium-form" method="post" enctype="multipart/form-data">
+                <?php wp_nonce_field('artitechcore_ajax_nonce', 'nonce'); ?>
+                
+                <!-- Step 1: Business Profile -->
+                <div class="ai-form-step active" data-step="1">
+                    <div class="step-header">
+                        <h3><?php esc_html_e('Define Your Mission', 'artitechcore'); ?></h3>
+                        <p><?php esc_html_e('The more detail you provide about your niche, the more targeted the architecture will be.', 'artitechcore'); ?></p>
+                    </div>
+                    
+                    <div class="dg10-form-row">
+                        <div class="dg10-form-group">
+                            <label for="artitechcore_business_type" class="dg10-form-label"><?php esc_html_e('Industry / Business Niche', 'artitechcore'); ?></label>
+                            <input type="text" name="artitechcore_business_type" id="artitechcore_business_type" class="dg10-form-input" 
+                                   placeholder="<?php esc_attr_e('e.g., Luxury Real Estate, Specialized Dental Surgery', 'artitechcore'); ?>" required>
+                        </div>
                     </div>
 
                     <div class="dg10-form-group">
-                        <label for="artitechcore_target_audience" class="dg10-form-label"><?php esc_html_e('Target Audience', 'artitechcore'); ?></label>
-                        <input type="text" name="artitechcore_target_audience" id="artitechcore_target_audience" class="dg10-form-input" 
-                               placeholder="<?php esc_attr_e('e.g., local businesses in Miami, pet owners', 'artitechcore'); ?>">
+                        <label for="artitechcore_business_details" class="dg10-form-label"><?php esc_html_e('Mission & CORE USP', 'artitechcore'); ?></label>
+                        <textarea name="artitechcore_business_details" id="artitechcore_business_details" rows="5" class="dg10-form-textarea" 
+                                  placeholder="<?php esc_attr_e('What truly distinguishes your brand from the competition? Describe your primary goals...', 'artitechcore'); ?>" required></textarea>
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="dg10-btn dg10-btn-primary next-step">
+                            <?php esc_html_e('Continue to Strategy', 'artitechcore'); ?>
+                            <span class="btn-icon">→</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="dg10-form-group">
-                    <label for="artitechcore_keywords_csv" class="dg10-form-label"><?php esc_html_e('Bulk Keywords Upload (CSV)', 'artitechcore'); ?></label>
-                    <input type="file" name="artitechcore_keywords_csv" id="artitechcore_keywords_csv" class="dg10-form-input" accept=".csv">
-                    <p class="dg10-form-help"><?php esc_html_e('Upload a CSV file for deep content analysis.', 'artitechcore'); ?></p>
+                <!-- Step 2: SEO Strategy -->
+                <div class="ai-form-step" data-step="2">
+                    <div class="step-header">
+                        <h3><?php esc_html_e('Targeting & SEO Signal', 'artitechcore'); ?></h3>
+                        <p><?php esc_html_e('Align your ecosystem with the specific search intent of your primary audience.', 'artitechcore'); ?></p>
+                    </div>
+
+                    <div class="dg10-form-grid">
+                        <div class="dg10-form-group">
+                            <label for="artitechcore_seo_keywords" class="dg10-form-label"><?php esc_html_e('Strategic Keywords', 'artitechcore'); ?></label>
+                            <input type="text" name="artitechcore_seo_keywords" id="artitechcore_seo_keywords" class="dg10-form-input" 
+                                   placeholder="<?php esc_attr_e('e.g., affordable luxury, high-conversion branding', 'artitechcore'); ?>">
+                            <p class="dg10-form-help"><?php esc_html_e('Enter terms that define your reach.', 'artitechcore'); ?></p>
+                        </div>
+
+                        <div class="dg10-form-group">
+                            <label for="artitechcore_target_audience" class="dg10-form-label"><?php esc_html_e('Target Persona', 'artitechcore'); ?></label>
+                            <input type="text" name="artitechcore_target_audience" id="artitechcore_target_audience" class="dg10-form-input" 
+                                   placeholder="<?php esc_attr_e('e.g., High-Net-Worth Individuals, Tech Startup CEOs', 'artitechcore'); ?>">
+                        </div>
+                    </div>
+
+                    <div class="dg10-form-group">
+                        <label for="artitechcore_keywords_csv" class="dg10-form-label"><?php esc_html_e('Contextual Deep-Dive (CSV)', 'artitechcore'); ?></label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" name="artitechcore_keywords_csv" id="artitechcore_keywords_csv" class="dg10-form-input" accept=".csv">
+                        </div>
+                        <p class="dg10-form-help"><?php esc_html_e('Upload raw data for AI to extrapolate complex patterns.', 'artitechcore'); ?></p>
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="dg10-btn dg10-btn-outline prev-step"><?php esc_html_e('Back', 'artitechcore'); ?></button>
+                        <button type="button" class="dg10-btn dg10-btn-primary next-step">
+                            <?php esc_html_e('Configure Architect', 'artitechcore'); ?>
+                            <span class="btn-icon">→</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="dg10-form-group">
-                    <label class="dg10-checkbox-label artitechcore-advanced-toggle">
-                        <input type="checkbox" name="artitechcore_advanced_mode" id="artitechcore_advanced_mode" value="1" checked>
-                        <span>
-                            <strong><?php esc_html_e('Advanced Mode', 'artitechcore'); ?></strong> - 
-                            <?php esc_html_e('Generate custom post types (CPTs) and dynamic fields specialized for your niche.', 'artitechcore'); ?>
-                        </span>
-                    </label>
+                <!-- Step 3: Architect Settings -->
+                <div class="ai-form-step" data-step="3">
+                    <div class="step-header">
+                        <h3><?php esc_html_e('Infrastructure Settings', 'artitechcore'); ?></h3>
+                        <p><?php esc_html_e('Choose how deep the AI analysis should penetrate your site structure.', 'artitechcore'); ?></p>
+                    </div>
+
+                    <div class="premium-toggle-card">
+                        <div class="toggle-info">
+                            <h4><?php esc_html_e('Advanced Niche Ecosystem', 'artitechcore'); ?></h4>
+                            <p><?php esc_html_e('AI will define custom post types, sophisticated taxonomies, and dynamic fields precisely for your industry.', 'artitechcore'); ?></p>
+                        </div>
+                        <label class="premium-switch">
+                            <input type="checkbox" name="artitechcore_advanced_mode" id="artitechcore_advanced_mode" value="1" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="dg10-btn dg10-btn-outline prev-step"><?php esc_html_e('Back', 'artitechcore'); ?></button>
+                        <button type="submit" class="dg10-btn dg10-btn-primary glow-btn">
+                            <span class="btn-text"><?php esc_html_e('Launch AI Architect', 'artitechcore'); ?></span>
+                            <span class="btn-icon">⚡</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Loading State Overlay -->
+            <div id="ai-loading-overlay" class="ai-overlay hidden">
+                <div class="ai-neural-loader">
+                    <div class="loader-ring"></div>
+                    <div class="loader-center">🤖</div>
+                </div>
+                <h3><?php esc_html_e('Analyzing Ecosystem Potential...', 'artitechcore'); ?></h3>
+                <p id="ai-status-message"><?php esc_html_e('Interpreting business signals and SEO signals.', 'artitechcore'); ?></p>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" style="width: 0%"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="dg10-form-actions">
-                <button type="submit" class="dg10-btn dg10-btn-primary">
-                    <span class="nav-icon">✨</span>
-                    <?php esc_html_e('Generate Page Suggestions', 'artitechcore'); ?>
-                </button>
-            </div>
-        </form>
-
-        <div id="artitechcore-ai-results" class="artitechcore-results-container">
-            <!-- Results will be loaded here via AJAX -->
+        <div id="artitechcore-ai-results" class="premium-results-container">
+            <!-- Results will be injected here -->
         </div>
     </div>
     <?php
@@ -91,7 +178,7 @@ function artitechcore_ai_generation_tab() {
  */
 function artitechcore_handle_ai_generate_suggestions_ajax() {
     // Verify nonce
-    if (!wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'artitechcore_ai_ajax')) {
+    if (!wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'artitechcore_ajax_nonce')) {
         wp_send_json_error(array('message' => __('Security check failed. Please refresh the page and try again.', 'artitechcore')));
         return;
     }
@@ -140,7 +227,7 @@ function artitechcore_handle_ai_generate_suggestions_ajax() {
  */
 function artitechcore_handle_ai_create_content_ajax() {
     // Check nonce
-    if (!wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'artitechcore_ai_ajax')) {
+    if (!wp_verify_nonce(isset($_POST['nonce']) ? $_POST['nonce'] : '', 'artitechcore_ajax_nonce')) {
         wp_send_json_error(array('message' => __('Security check failed. Please refresh the page and try again.', 'artitechcore')));
         return;
     }
@@ -251,7 +338,9 @@ function artitechcore_generate_pages_with_ai($business_type, $business_details, 
         // Log error
         artitechcore_log_ai_generation('page_suggestions', $provider ?? 'unknown', false, 0, $e->getMessage());
         echo '<div class="notice notice-error"><p>' . esc_html__('An error occurred during AI generation. Please try again.', 'artitechcore') . '</p></div>';
-        error_log('ArtitechCore AI Generation Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore AI Generation Error: ' . $e->getMessage());
+        }
         return;
     }
 
@@ -261,20 +350,19 @@ function artitechcore_generate_pages_with_ai($business_type, $business_details, 
     });
 
     echo '<div class="artitechcore-suggestions-results">';
-    echo '<h3>✨ ' . esc_html__('Suggested Pages:', 'artitechcore') . '</h3>';
+    echo '<div class="results-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">';
+    echo '<h3>✨ ' . esc_html__('AI-Architected Ecosystem:', 'artitechcore') . '</h3>';
+    echo '<div class="results-actions" style="display: flex; align-items: center; gap: 15px;">';
+    echo '<span style="font-size: 13px; color: var(--color-text-secondary);">' . esc_html__('Select all pages:', 'artitechcore') . '</span>';
+    echo '<input type="checkbox" id="select-all-pages" checked>';
+    echo '</div>';
+    echo '</div>';
+
     echo '<form id="artitechcore-ai-creation-form" method="post" action="">';
-    wp_nonce_field('artitechcore_create_suggested_pages', 'nonce');
+    wp_nonce_field('artitechcore_ajax_nonce', 'nonce');
     echo '<input type="hidden" name="action_type" value="simple">';
     
-    echo '<table class="dg10-table">';
-    echo '<thead>';
-    echo '<tr>';
-    echo '<th width="40px"><input type="checkbox" id="select-all-pages" checked></th>';
-    echo '<th>' . esc_html__('Page Title', 'artitechcore') . '</th>';
-    echo '<th>' . esc_html__('Meta Description', 'artitechcore') . '</th>';
-    echo '</tr>';
-    echo '</thead>';
-    echo '<tbody>';
+    echo '<div class="artitechcore-suggestion-grid">';
     
     foreach ($suggested_pages as $page_line) {
         $excerpt = '';
@@ -293,40 +381,61 @@ function artitechcore_generate_pages_with_ai($business_type, $business_details, 
         }
         $display_title = trim($display_title);
         
-        echo '<tr>';
-        echo '<td><input type="checkbox" name="artitechcore_selected_pages[]" value="' . esc_attr($page_line) . '" class="artitechcore-page-checkbox" checked></td>';
-        echo '<td>';
-        if ($depth > 0) {
-            echo str_repeat('<span class="dg10-indent"></span>', $depth);
-            echo '<span class="dg10-child-indicator">➥</span> ';
+        // Dynamic icons based on title keywords
+        $icon = '📄';
+        $lower_title = strtolower($display_title);
+        if (strpos($lower_title, 'service') !== false) $icon = '🛠️';
+        elseif (strpos($lower_title, 'about') !== false) $icon = '🏢';
+        elseif (strpos($lower_title, 'contact') !== false) $icon = '📧';
+        elseif (strpos($lower_title, 'blog') !== false || strpos($lower_title, 'news') !== false) $icon = '📰';
+        elseif (strpos($lower_title, 'portfolio') !== false || strpos($lower_title, 'work') !== false) $icon = '🎨';
+        elseif (strpos($lower_title, 'faq') !== false) $icon = '❓';
+        elseif (strpos($lower_title, 'home') !== false) $icon = '🏠';
+        elseif (strpos($lower_title, 'guide') !== false || strpos($lower_title, 'how') !== false) $icon = '📘';
+
+        $card_classes = 'artitechcore-suggestion-card is-selected';
+        if ($depth > 0) $card_classes .= ' is-child';
+        
+        echo '<div class="' . esc_attr($card_classes) . '" data-page="' . esc_attr($page_line) . '">';
+        echo '<div class="card-select-wrap"><input type="checkbox" name="artitechcore_selected_pages[]" value="' . esc_attr($page_line) . '" class="artitechcore-page-checkbox" checked></div>';
+        echo '<span class="card-icon">' . $icon . '</span>';
+        echo '<h4 class="card-title">' . esc_html($display_title) . '</h4>';
+        echo '<p class="card-excerpt">' . esc_html($excerpt) . '</p>';
+        echo '<div class="card-meta">';
+        echo '<span class="neural-pill">' . esc_html__('SEO Optimized', 'artitechcore') . '</span>';
+        if ($depth === 0) {
+            echo '<span class="neural-pill">' . esc_html__('Pillar Page', 'artitechcore') . '</span>';
         }
-        echo esc_html($display_title);
-        echo '</td>';
-        echo '<td>' . esc_html($excerpt) . '</td>';
-        echo '</tr>';
+        echo '</div>';
+        echo '</div>';
     }
     
-    echo '</tbody>';
-    echo '</table>';
+    echo '</div>';
     
     $provider = get_option('artitechcore_ai_provider', 'openai');
     $is_deepseek = $provider === 'deepseek';
     
-    echo '<div class="artitechcore-options dg10-card" style="margin-top: 24px; padding: 20px;">';
-    echo '<label class="dg10-checkbox-label">';
+    echo '<div class="artitechcore-options dg10-card" style="margin-top: 32px; padding: 24px; background: rgba(180, 124, 253, 0.03); border: 1px dashed var(--color-primary);">';
+    echo '<div style="display: flex; justify-content: space-between; align-items: center;">';
+    echo '<div>';
+    echo '<h4 style="margin: 0 0 4px 0;">🖼️ ' . esc_html__('Visual Enhancement', 'artitechcore') . '</h4>';
+    echo '<p style="margin: 0; font-size: 13px; color: var(--color-text-secondary);">' . esc_html__('Automatically generate high-converting featured images for each page.', 'artitechcore') . '</p>';
+    echo '</div>';
+    echo '<label class="premium-switch">';
     echo '<input type="checkbox" name="artitechcore_generate_images" id="artitechcore_generate_images" value="1" ' . checked(true, !$is_deepseek, false) . '>';
-    echo '<span>' . esc_html__('Generate premium featured images with AI', 'artitechcore') . '</span>';
+    echo '<span class="slider round"></span>';
     echo '</label>';
+    echo '</div>';
     
     if ($is_deepseek) {
-        echo '<p class="dg10-form-help dg10-text-danger">' . esc_html__('Note: Image generation is currently not supported with DeepSeek.', 'artitechcore') . '</p>';
+        echo '<p class="dg10-form-help dg10-text-danger" style="margin-top: 12px; font-weight: 600;">⚠️ ' . esc_html__('Note: Image generation is currently not supported with DeepSeek.', 'artitechcore') . '</p>';
     }
     echo '</div>';
     
-    echo '<div class="dg10-form-actions" style="margin-top: 24px;">';
-    echo '<button type="submit" class="dg10-btn dg10-btn-primary">';
-    echo '<span class="nav-icon">🚀</span>';
-    echo esc_html__('Create Selected Pages', 'artitechcore');
+    echo '<div class="dg10-form-actions" style="margin-top: 32px; position: sticky; bottom: 0; background: rgba(255,255,255,0.9); padding: 15px; border-radius: var(--radius-md); backdrop-filter: blur(5px); display: flex; justify-content: center;">';
+    echo '<button type="submit" class="dg10-btn dg10-btn-primary glow-btn" style="padding: 15px 40px; font-size: 16px;">';
+    echo '<span class="nav-icon">🚀</span> ';
+    echo esc_html__('Deploy Selected Strategy', 'artitechcore');
     echo '</button>';
     echo '</div>';
 
@@ -442,7 +551,7 @@ Focus on creating a website architecture that makes sense for THIS specific busi
 Focus on creating a complete website architecture that will rank well and convert visitors.";
 
         $body = json_encode([
-            'model' => 'gpt-3.5-turbo',
+            'model' => 'gpt-4o-mini',
             'messages' => [['role' => 'user', 'content' => $prompt]],
             'temperature' => 0.5,
             'max_tokens' => 1000,
@@ -452,23 +561,17 @@ Focus on creating a complete website architecture that will rank well and conver
             throw new Exception(__('Failed to encode request data for OpenAI API.', 'artitechcore'));
         }
 
-        $response = wp_remote_post($url, [
+        $response = artitechcore_safe_ai_remote_post($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $api_key,
             ],
             'body' => $body,
-            'timeout' => 60,
-        ]);
+            'timeout' => ARTITECHCORE_API_TIMEOUT,
+        ], 'openai');
 
         if (is_wp_error($response)) {
-            throw new Exception(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message()));
-        }
-
-        $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            $error_message = wp_remote_retrieve_response_message($response);
-            throw new Exception(sprintf(__('OpenAI API returned error %d: %s', 'artitechcore'), $response_code, $error_message));
+            throw new Exception($response->get_error_message());
         }
 
         $response_body = wp_remote_retrieve_body($response);
@@ -507,7 +610,9 @@ Focus on creating a complete website architecture that will rank well and conver
         return $pages;
 
     } catch (Exception $e) {
-        error_log('ArtitechCore OpenAI API Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore OpenAI API Error: ' . $e->getMessage());
+        }
         return [];
     }
 }
@@ -626,20 +731,14 @@ Focus on creating a complete website architecture that will rank well and conver
             throw new Exception(__('Failed to encode request data for Gemini API.', 'artitechcore'));
         }
 
-        $response = wp_remote_post($url, [
+        $response = artitechcore_safe_ai_remote_post($url, [
             'headers' => ['Content-Type' => 'application/json'],
             'body' => $body,
-            'timeout' => 120,
-        ]);
+            'timeout' => ARTITECHCORE_API_TIMEOUT,
+        ], 'gemini');
 
         if (is_wp_error($response)) {
-            throw new Exception(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message()));
-        }
-
-        $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            $error_message = wp_remote_retrieve_response_message($response);
-            throw new Exception(sprintf(__('Gemini API returned error %d: %s', 'artitechcore'), $response_code, $error_message));
+            throw new Exception($response->get_error_message());
         }
 
         $response_body = wp_remote_retrieve_body($response);
@@ -678,7 +777,9 @@ Focus on creating a complete website architecture that will rank well and conver
         return $pages;
 
     } catch (Exception $e) {
-        error_log('ArtitechCore Gemini API Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore Gemini API Error: ' . $e->getMessage());
+        }
         return [];
     }
 }
@@ -800,23 +901,17 @@ Focus on creating a complete website architecture that will rank well and conver
             throw new Exception(__('Failed to encode request data for DeepSeek API.', 'artitechcore'));
         }
 
-        $response = wp_remote_post($url, [
+        $response = artitechcore_safe_ai_remote_post($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $api_key,
             ],
             'body' => $body,
-            'timeout' => 30,
-        ]);
+            'timeout' => ARTITECHCORE_API_TIMEOUT,
+        ], 'deepseek');
 
         if (is_wp_error($response)) {
-            throw new Exception(sprintf(__('DeepSeek API request failed: %s', 'artitechcore'), $response->get_error_message()));
-        }
-
-        $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            $error_message = wp_remote_retrieve_response_message($response);
-            throw new Exception(sprintf(__('DeepSeek API returned error %d: %s', 'artitechcore'), $response_code, $error_message));
+            throw new Exception($response->get_error_message());
         }
 
         $response_body = wp_remote_retrieve_body($response);
@@ -855,7 +950,9 @@ Focus on creating a complete website architecture that will rank well and conver
         return $pages;
 
     } catch (Exception $e) {
-        error_log('ArtitechCore DeepSeek API Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore DeepSeek API Error: ' . $e->getMessage());
+        }
         return [];
     }
 }
@@ -983,7 +1080,9 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
 
         // Log errors if any
         if (!empty($errors)) {
-            error_log('ArtitechCore Page Creation Errors: ' . implode('; ', $errors));
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('ArtitechCore Page Creation Errors: ' . implode('; ', $errors));
+            }
         }
 
         // Log successful creation
@@ -991,7 +1090,9 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
 
     } catch (Exception $e) {
         echo '<div class="notice notice-error"><p>' . __('An error occurred during page creation. Please try again.', 'artitechcore') . '</p></div>';
-        error_log('ArtitechCore Page Creation Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore Page Creation Error: ' . $e->getMessage());
+        }
         artitechcore_log_ai_generation('page_creation', 'manual', false, 0, $e->getMessage());
     }
 }
@@ -1115,7 +1216,9 @@ This image will be used as a featured image for a webpage, so it should:
         return true;
         
     } catch (Exception $e) {
-        error_log('ArtitechCore Image Generation Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore Image Generation Error: ' . $e->getMessage());
+        }
         return false;
     }
 }
@@ -1144,45 +1247,17 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
         
         // API Retry Loop (P1-5)
         $max_retries = 3;
-        $retry_count = 0;
-        $response = null;
+        $response = artitechcore_safe_ai_remote_post($url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $api_key,
+            ],
+            'body' => $body,
+            'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120, // Global constant or default
+        ], 'openai');
 
-        while ($retry_count < $max_retries) {
-            $response = wp_remote_post($url, [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $api_key,
-                ],
-                'body' => $body,
-                'timeout' => 60, // Longer timeout for image generation
-            ]);
-
-            if (!is_wp_error($response)) {
-                $response_code = wp_remote_retrieve_response_code($response);
-                if ($response_code === 200) {
-                    break; // Success
-                }
-                
-                // Only retry on rate limits (429) or server errors (5xx)
-                if ($response_code !== 429 && ($response_code < 500 || $response_code > 599)) {
-                    break; // Fatal error
-                }
-            }
-
-            $retry_count++;
-            if ($retry_count < $max_retries) {
-                sleep(pow(2, $retry_count));
-            }
-        }
-        
         if (is_wp_error($response)) {
-            throw new Exception(sprintf(__('OpenAI image generation request failed after %d attempts: %s', 'artitechcore'), $max_retries, $response->get_error_message()));
-        }
-
-        $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            $error_message = wp_remote_retrieve_response_message($response);
-            throw new Exception(sprintf(__('OpenAI image generation returned error %d after %d attempts: %s', 'artitechcore'), $response_code, $max_retries, $error_message));
+            throw new Exception($response->get_error_message());
         }
 
         $response_body = wp_remote_retrieve_body($response);
@@ -1212,7 +1287,9 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
         return $image_url;
         
     } catch (Exception $e) {
-        error_log('ArtitechCore OpenAI Image Generation Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore OpenAI Image Generation Error: ' . $e->getMessage());
+        }
         return '';
     }
 }
@@ -1235,6 +1312,11 @@ function artitechcore_process_keywords_csv($file) {
 
         if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
             throw new Exception(__('No temporary file found for CSV processing.', 'artitechcore'));
+        }
+
+        // Security check: Verify file was uploaded via HTTP POST
+        if (!is_uploaded_file($file['tmp_name'])) {
+            throw new Exception(__('Security check failed: File was not uploaded via standard HTTP POST.', 'artitechcore'));
         }
 
         // Check for upload errors
@@ -1334,7 +1416,9 @@ function artitechcore_process_keywords_csv($file) {
         return implode(', ', $keywords);
 
     } catch (Exception $e) {
-        error_log('ArtitechCore CSV Processing Error: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('ArtitechCore CSV Processing Error: ' . $e->getMessage());
+        }
         return '';
     }
 }
@@ -1365,7 +1449,9 @@ if (!function_exists('artitechcore_extract_primary_keywords')) {
             
             return implode(' ', $keywords) ?: sanitize_text_field($title);
         } catch (Exception $e) {
-            error_log('ArtitechCore Keyword Extraction Error: ' . $e->getMessage());
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('ArtitechCore Keyword Extraction Error: ' . $e->getMessage());
+            }
             return sanitize_text_field($title);
         }
     }
@@ -1398,13 +1484,17 @@ if (!function_exists('artitechcore_check_ai_rate_limit')) {
             // Validate provider
             $valid_providers = ['openai', 'gemini', 'deepseek'];
             if (!in_array($provider, $valid_providers)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore Rate Limit: Invalid provider specified: ' . $provider);
+            }
                 return true; // Allow on invalid provider to prevent blocking
             }
             
             $user_id = get_current_user_id();
             if (empty($user_id)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore Rate Limit: No user ID found');
+            }
                 return true; // Allow for non-logged-in users (shouldn't happen in admin)
             }
             
@@ -1726,14 +1816,14 @@ function artitechcore_get_openai_advanced_suggestions($business_type, $business_
         'max_tokens' => 8000,
     ]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => [
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $api_key,
         ],
         'body' => $body,
-        'timeout' => 120, // Increased timeout for advanced generation
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'openai');
 
     if (is_wp_error($response)) {
         error_log('ArtitechCore OpenAI API Error: ' . $response->get_error_message());
@@ -1760,25 +1850,14 @@ function artitechcore_get_gemini_advanced_suggestions($business_type, $business_
 
     error_log('ArtitechCore: Making Gemini API request...');
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => ['Content-Type' => 'application/json'],
         'body' => $body,
-        'timeout' => 120,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'gemini');
 
     if (is_wp_error($response)) {
-        error_log('ArtitechCore Gemini API WP Error: ' . $response->get_error_message());
-        return [];
-    }
-
-    $response_code = wp_remote_retrieve_response_code($response);
-    error_log('ArtitechCore: Gemini API HTTP Status: ' . $response_code);
-
-    if ($response_code !== 200) {
-        $response_message = wp_remote_retrieve_response_message($response);
-        $response_body_raw = wp_remote_retrieve_body($response);
-        error_log('ArtitechCore Gemini API Error (' . $response_code . '): ' . $response_message);
-        error_log('ArtitechCore Gemini API Error Body: ' . $response_body_raw);
+        error_log('ArtitechCore Gemini API Error: ' . $response->get_error_message());
         return [];
     }
 
@@ -1812,14 +1891,14 @@ function artitechcore_get_deepseek_advanced_suggestions($business_type, $busines
         'max_tokens' => 8000,
     ]);
 
-    $response = wp_remote_post($url, [
+    $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => [
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $api_key,
         ],
         'body' => $body,
-        'timeout' => 120,
-    ]);
+        'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
+    ], 'deepseek');
 
     if (is_wp_error($response)) {
         error_log('ArtitechCore DeepSeek API Error: ' . $response->get_error_message());
@@ -2019,69 +2098,66 @@ function artitechcore_display_advanced_content_suggestions($suggestions) {
 
     // Display standard pages
     if (!empty($suggestions['pages'])) {
-        echo '<div class="artitechcore-pages-section">';
+        echo '<div class="artitechcore-pages-section" style="margin-top: 32px;">';
+        echo '<div class="results-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">';
         echo '<h3>📄 ' . esc_html__('Core Architecture: Pages', 'artitechcore') . '</h3>';
-        echo '<table class="dg10-table">';
-        echo '<thead>';
-        echo '<tr>';
-        echo '<th width="40px"><input type="checkbox" id="select-all-pages" checked></th>';
-        echo '<th>' . esc_html__('Strategic Page', 'artitechcore') . '</th>';
-        echo '<th>' . esc_html__('SEO Description', 'artitechcore') . '</th>';
-        echo '<th>' . esc_html__('Strategic Reasoning', 'artitechcore') . '</th>';
-        echo '</tr>';
-        echo '</thead>';
-        echo '<tbody>';
+        echo '<div class="results-actions" style="display: flex; align-items: center; gap: 10px;">';
+        echo '<span style="font-size: 13px; color: var(--color-text-secondary);">' . esc_html__('Select all:', 'artitechcore') . '</span>';
+        echo '<input type="checkbox" id="select-all-pages" checked>';
+        echo '</div>';
+        echo '</div>';
         
+        echo '<div class="artitechcore-suggestion-grid">';
         foreach ($suggestions['pages'] as $page) {
-            echo '<tr>';
-            echo '<td><input type="checkbox" name="artitechcore_selected_pages[]" value="' . esc_attr(json_encode($page)) . '" class="artitechcore-page-checkbox" checked></td>';
-            echo '<td><strong>' . esc_html($page['title']) . '</strong></td>';
-            echo '<td>' . esc_html($page['meta_description']) . '</td>';
-            echo '<td><small>' . esc_html($page['reasoning']) . '</small></td>';
-            echo '</tr>';
+            // Dynamic icons based on title keywords
+            $icon = '📄';
+            $lower_title = strtolower($page['title']);
+            if (strpos($lower_title, 'service') !== false) $icon = '🛠️';
+            elseif (strpos($lower_title, 'about') !== false) $icon = '🏢';
+            elseif (strpos($lower_title, 'contact') !== false) $icon = '📧';
+            elseif (strpos($lower_title, 'blog') !== false || strpos($lower_title, 'news') !== false) $icon = '📰';
+            
+            echo '<div class="artitechcore-suggestion-card is-selected" data-page="' . esc_attr(json_encode($page)) . '">';
+            echo '<div class="card-select-wrap"><input type="checkbox" name="artitechcore_selected_pages[]" value="' . esc_attr(json_encode($page)) . '" class="artitechcore-page-checkbox" checked></div>';
+            echo '<span class="card-icon">' . $icon . '</span>';
+            echo '<h4 class="card-title">' . esc_html($page['title']) . '</h4>';
+            echo '<p class="card-excerpt">' . esc_html($page['meta_description']) . '</p>';
+            echo '<div class="card-meta">';
+            echo '<span class="neural-pill">' . esc_html__('SEO Strategy', 'artitechcore') . '</span>';
+            echo '<span class="neural-pill" title="' . esc_attr($page['reasoning']) . '">' . esc_html__('View Logic', 'artitechcore') . '</span>';
+            echo '</div>';
+            echo '</div>';
         }
-        
-        echo '</tbody>';
-        echo '</table>';
+        echo '</div>';
         echo '</div>';
     }
 
     // Display custom post types
     if (!empty($suggestions['custom_post_types'])) {
-        echo '<div class="artitechcore-cpts-section">';
+        echo '<div class="artitechcore-cpts-section" style="margin-top: 48px;">';
         echo '<h3>🏗️ ' . esc_html__('Dynamic Ecosystem: Custom Post Types', 'artitechcore') . '</h3>';
         
-        echo '<div class="artitechcore-cpt-suggestions-grid">';
+        echo '<div class="artitechcore-suggestion-grid">';
         foreach ($suggestions['custom_post_types'] as $cpt) {
-            echo '<div class="cpt-suggestion dg10-card">';
-            echo '<div class="cpt-header">';
-            echo '<label class="dg10-checkbox-label">';
-            echo '<input type="checkbox" name="artitechcore_selected_cpts[]" value="' . esc_attr(json_encode($cpt)) . '" class="artitechcore-cpt-checkbox" checked>';
-            echo '<strong>' . esc_html($cpt['label']) . '</strong> <code class="dg10-slug">' . esc_html($cpt['name']) . '</code>';
-            echo '</label>';
-            echo '</div>';
-            
-            echo '<div class="cpt-details">';
-            echo '<p class="description">' . esc_html($cpt['description']) . '</p>';
-            echo '<p class="reasoning"><strong>' . esc_html__('Why it works:', 'artitechcore') . '</strong> ' . esc_html($cpt['reasoning']) . '</p>';
+            echo '<div class="artitechcore-suggestion-card is-selected" style="border-left: 4px solid var(--color-primary);">';
+            echo '<div class="card-select-wrap"><input type="checkbox" name="artitechcore_selected_cpts[]" value="' . esc_attr(json_encode($cpt)) . '" class="artitechcore-cpt-checkbox" checked></div>';
+            echo '<span class="card-icon">🏗️</span>';
+            echo '<h4 class="card-title">' . esc_html($cpt['label']) . ' <code style="font-size: 11px; opacity: 0.7;">' . esc_html($cpt['name']) . '</code></h4>';
+            echo '<p class="card-excerpt">' . esc_html($cpt['description']) . '</p>';
             
             if (!empty($cpt['custom_fields'])) {
-                echo '<div class="custom-fields">';
-                echo '<h4>' . esc_html__('Intelligence Fields:', 'artitechcore') . '</h4>';
-                echo '<ul>';
-                foreach ($cpt['custom_fields'] as $field) {
-                    echo '<li>';
-                    echo '<strong>' . esc_html($field['label']) . '</strong>';
-                    echo ' <span class="field-type">(' . esc_html($field['type']) . ')</span>';
-                    if ($field['required']) {
-                        echo ' <span class="required">*</span>';
-                    }
-                    echo '<br><small>' . esc_html($field['description']) . '</small>';
-                    echo '</li>';
+                echo '<div class="card-meta" style="margin-top: 12px; gap: 4px;">';
+                foreach (array_slice($cpt['custom_fields'], 0, 3) as $field) {
+                    echo '<span class="neural-pill" style="font-size: 9px;">+' . esc_html($field['label']) . '</span>';
                 }
-                echo '</ul>';
+                if (count($cpt['custom_fields']) > 3) {
+                    echo '<span class="neural-pill" style="font-size: 9px;">+' . (count($cpt['custom_fields']) - 3) . ' more</span>';
+                }
                 echo '</div>';
             }
+            
+            echo '<div class="card-meta" style="margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(180, 124, 253, 0.1);">';
+            echo '<span class="neural-pill" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);">' . esc_html__('Advanced Entity', 'artitechcore') . '</span>';
             echo '</div>';
             echo '</div>';
         }
@@ -2091,23 +2167,19 @@ function artitechcore_display_advanced_content_suggestions($suggestions) {
 
     // Display custom taxonomies
     if (!empty($suggestions['custom_taxonomies'])) {
-        echo '<div class="artitechcore-cpts-section" style="margin-top: 30px;">';
-        echo '<h3>🏷️ ' . esc_html__('Taxonomies & Categories', 'artitechcore') . '</h3>';
+        echo '<div class="artitechcore-cpts-section" style="margin-top: 48px;">';
+        echo '<h3>🏷️ ' . esc_html__('Semantic Intelligence: Taxonomies', 'artitechcore') . '</h3>';
         
-        echo '<div class="artitechcore-cpt-suggestions-grid">';
+        echo '<div class="artitechcore-suggestion-grid">';
         foreach ($suggestions['custom_taxonomies'] as $tax) {
-            echo '<div class="cpt-suggestion dg10-card">';
-            echo '<div class="cpt-header">';
-            echo '<label class="dg10-checkbox-label">';
-            echo '<input type="checkbox" name="artitechcore_selected_taxonomies[]" value="' . esc_attr(json_encode($tax)) . '" class="artitechcore-cpt-checkbox" checked>';
-            echo '<strong>' . esc_html($tax['plural_label']) . '</strong> <code class="dg10-slug">' . esc_html($tax['name']) . '</code>';
-            echo '</label>';
-            echo '</div>';
-            
-            echo '<div class="cpt-details">';
-            echo '<p class="description">Singular: ' . esc_html($tax['singular_label']) . '</p>';
+            echo '<div class="artitechcore-suggestion-card is-selected" style="border-left: 4px solid #6366F1; min-height: 150px;">';
+            echo '<div class="card-select-wrap"><input type="checkbox" name="artitechcore_selected_taxonomies[]" value="' . esc_attr(json_encode($tax)) . '" class="artitechcore-cpt-checkbox" checked></div>';
+            echo '<span class="card-icon">🏷️</span>';
+            echo '<h4 class="card-title">' . esc_html($tax['plural_label']) . '</h4>';
+            echo '<div class="card-meta">';
+            echo '<span class="neural-pill">' . esc_html($tax['name']) . '</span>';
             if (!empty($tax['post_types'])) {
-                echo '<p class="reasoning"><strong>' . esc_html__('Applies to:', 'artitechcore') . '</strong> ' . esc_html(implode(', ', $tax['post_types'])) . '</p>';
+                echo '<span class="neural-pill" style="background: rgba(99, 102, 241, 0.1); color: #4F46E5;">' . esc_html(implode(', ', $tax['post_types'])) . '</span>';
             }
             echo '</div>';
             echo '</div>';
@@ -2120,20 +2192,26 @@ function artitechcore_display_advanced_content_suggestions($suggestions) {
     $provider = get_option('artitechcore_ai_provider', 'openai');
     $is_deepseek = $provider === 'deepseek';
     
-    echo '<div class="artitechcore-options dg10-card" style="margin-top: 32px; padding: 24px;">';
-    echo '<label class="dg10-checkbox-label">';
+    echo '<div class="artitechcore-options dg10-card" style="margin-top: 48px; padding: 24px; background: rgba(180, 124, 253, 0.03); border: 1px dashed var(--color-primary);">';
+    echo '<div style="display: flex; justify-content: space-between; align-items: center;">';
+    echo '<div>';
+    echo '<h4 style="margin: 0 0 4px 0;">🖼️ ' . esc_html__('AI Visual Generation', 'artitechcore') . '</h4>';
+    echo '<p style="margin: 0; font-size: 13px; color: var(--color-text-secondary);">' . esc_html__('Automatically create premium featured images for each new structure.', 'artitechcore') . '</p>';
+    echo '</div>';
+    echo '<label class="premium-switch">';
     echo '<input type="checkbox" name="artitechcore_generate_images" id="artitechcore_generate_images" value="1" ' . checked(true, !$is_deepseek, false) . '>';
-    echo '<span><strong>' . esc_html__('AI Visual Generation', 'artitechcore') . '</strong> - ' . esc_html__('Automatically create premium featured images for each new page.', 'artitechcore') . '</span>';
+    echo '<span class="slider round"></span>';
     echo '</label>';
+    echo '</div>';
     
     if ($is_deepseek) {
-        echo '<p class="dg10-form-help dg10-text-danger" style="margin-top: 10px;">' . esc_html__('DeepSeek does not currently support image generation.', 'artitechcore') . '</p>';
+        echo '<p class="dg10-form-help dg10-text-danger" style="margin-top: 12px; font-weight: 600;">⚠️ ' . esc_html__('DeepSeek does not currently support image generation.', 'artitechcore') . '</p>';
     }
     echo '</div>';
 
-    echo '<div class="dg10-form-actions" style="margin-top: 32px;">';
-    echo '<button type="submit" class="dg10-btn dg10-btn-primary">';
-    echo '<span class="nav-icon">🚀</span>';
+    echo '<div class="dg10-form-actions" style="margin-top: 48px; position: sticky; bottom: 0; background: rgba(255,255,255,0.9); padding: 15px; border-radius: var(--radius-md); backdrop-filter: blur(5px); display: flex; justify-content: center;">';
+    echo '<button type="submit" class="dg10-btn dg10-btn-primary glow-btn" style="padding: 15px 40px; font-size: 16px;">';
+    echo '<span class="nav-icon">🚀</span> ';
     echo esc_html__('Deploy Selected Strategy', 'artitechcore');
     echo '</button>';
     echo '</div>';
@@ -2364,38 +2442,3 @@ function artitechcore_generate_sample_field_value($field) {
             return 'Sample ' . $field['label'];
     }
 }
-
-/**
- * AJAX Handler for AI Suggestions
- */
-function artitechcore_ajax_generate_suggestions() {
-    // Increase execution time for AI operations
-    set_time_limit(300);
-
-    // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'artitechcore_ai_ajax')) {
-        wp_send_json_error(['message' => __('Security check failed.', 'artitechcore')]);
-    }
-    
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(['message' => __('Permission denied.', 'artitechcore')]);
-    }
-
-    $business_type = isset($_POST['business_type']) ? sanitize_text_field($_POST['business_type']) : '';
-    $business_details = isset($_POST['business_details']) ? sanitize_textarea_field($_POST['business_details']) : '';
-    $seo_keywords = isset($_POST['seo_keywords']) ? sanitize_text_field($_POST['seo_keywords']) : '';
-    $target_audience = isset($_POST['target_audience']) ? sanitize_text_field($_POST['target_audience']) : '';
-
-    ob_start();
-    artitechcore_generate_advanced_content_with_ai($business_type, $business_details, $seo_keywords, $target_audience);
-    $html = ob_get_clean();
-
-    if (empty($html) || strpos($html, 'notice-error') !== false) {
-        // If HTML contains error notice, extract it or return generic error
-        wp_send_json_error(['message' => strip_tags($html)]);
-    }
-
-    wp_send_json_success(['html' => $html]);
-}
-
-// Logic handled by artitechcore_handle_ai_generate_suggestions_ajax at the top

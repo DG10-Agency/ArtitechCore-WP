@@ -100,7 +100,9 @@ class ArtitechCore_Website_Builder_Queue {
             wp_schedule_single_event(time() + 5, 'artitechcore_process_builder_job', [$this->job_id]);
         } else {
             // Fallback: mark as pending, will be processed by manual trigger or AJAX polling
-            error_log('ArtitechCore: WP-Cron not available. Job ' . $this->job_id . ' will need manual processing.');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('ArtitechCore: WP-Cron not available. Job ' . $this->job_id . ' will need manual processing.');
+            }
         }
 
         // Also store in options for admin visibility (last 20 jobs)
@@ -160,7 +162,9 @@ class ArtitechCore_Website_Builder_Queue {
         $job_data = get_transient($transient_key);
 
         if (!$job_data) {
-            error_log("ArtitechCore: Cannot update job $job_id - not found");
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("ArtitechCore: Cannot update job $job_id - not found");
+            }
             return false;
         }
 
@@ -253,8 +257,10 @@ function artitechcore_process_builder_job($job_id) {
     $queue = new ArtitechCore_Website_Builder_Queue();
     $job_data = $queue::get_job_status($job_id);
 
-    if (!$job_data) {
-        error_log("ArtitechCore: Job $job_id not found or expired");
+    if (false === $job_data) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("ArtitechCore: Job $job_id not found or expired");
+        }
         return;
     }
 
@@ -283,12 +289,14 @@ function artitechcore_process_builder_job($job_id) {
         foreach ($job_data['jobs'] as $job_index => $job) {
             // Check if we are approaching timeout (P2-3)
             if ((microtime(true) - $start_time) > $time_limit) {
-                error_log("ArtitechCore: Job $job_id reaching time limit. Rescheduling remaining batches.");
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("ArtitechCore: Job $job_id reaching time limit. Rescheduling remaining batches.");
+                }
                 $queue::update_job($job_id, [
                     'status' => ARTITECHCORE_QUEUE_PENDING, // Requeue for next cron run
                     'jobs' => array_slice($job_data['jobs'], $job_index) // Only remaining jobs
                 ]);
-                wp_schedule_single_event(time() + 10, 'artitechcore_process_builder_job', [$job_id]);
+                wp_schedule_single_event(time() + 10, 'artitechcore_process_builder_job', [$this->job_id]);
                 return;
             }
 
@@ -371,7 +379,9 @@ function artitechcore_process_builder_job($job_id) {
         }
 
     } catch (Exception $e) {
-        error_log("ArtitechCore: Job $job_id failed with exception: " . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("ArtitechCore: Job $job_id failed with exception: " . $e->getMessage());
+        }
         $queue::update_job($job_id, [
             'status' => ARTITECHCORE_QUEUE_FAILED,
             'completed_at' => current_time('mysql'),

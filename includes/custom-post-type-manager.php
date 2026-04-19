@@ -504,7 +504,7 @@ function artitechcore_cpt_list_tab() {
             $.post(ajaxurl, {
                 action: 'artitechcore_handle_duplicate_cpt_ajax',
                 cpt_slug: cpt,
-                nonce: '<?php echo wp_create_nonce("artitechcore_cpt_ajax"); ?>'
+                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
             }, function(response) {
                 if(response.success) {
                     location.reload();
@@ -525,7 +525,7 @@ function artitechcore_cpt_list_tab() {
             $.post(ajaxurl, {
                 action: 'artitechcore_get_cpt_item_count',
                 post_types: [cpt],
-                nonce: '<?php echo wp_create_nonce("artitechcore_cpt_ajax"); ?>'
+                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
             }, function(countResponse) {
                 var count = countResponse.success ? countResponse.data.count : 0;
                 if(!confirm('<?php echo esc_js(__('Are you sure you want to delete this CPT? This will permanently delete ALL ', 'artitechcore')); ?>' + count + '<?php echo esc_js(__(' posts of this type. This cannot be undone.', 'artitechcore')); ?>')) return;
@@ -535,7 +535,7 @@ function artitechcore_cpt_list_tab() {
                 $.post(ajaxurl, {
                     action: 'artitechcore_delete_cpt_ajax',
                     post_type: cpt,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_cpt_ajax"); ?>'
+                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
                 }, function(response) {
                     if(response.success) {
                         location.reload();
@@ -567,7 +567,7 @@ function artitechcore_cpt_list_tab() {
                 $.post(ajaxurl, {
                     action: 'artitechcore_get_cpt_item_count',
                     post_types: checked,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_cpt_ajax"); ?>'
+                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
                 }, function(countResponse) {
                     var count = countResponse.success ? countResponse.data.count : 0;
                     if (!confirm('<?php echo esc_js(__('Permanently delete selected items? This will delete ALL ', 'artitechcore')); ?>' + count + '<?php echo esc_js(__(' posts. This cannot be undone.', 'artitechcore')); ?>')) {
@@ -586,7 +586,7 @@ function artitechcore_cpt_list_tab() {
                     action: 'artitechcore_handle_bulk_cpt_operations_ajax',
                     bulk_action: action,
                     cpt_ids: checked,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_cpt_ajax"); ?>'
+                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
                 }, function(response) {
                    location.reload();
                 });
@@ -704,7 +704,7 @@ function artitechcore_cpt_create_tab() {
             $.post(ajaxurl, {
                 action: 'artitechcore_get_cpt_data_ajax',
                 post_type: cpt,
-                nonce: '<?php echo wp_create_nonce("artitechcore_cpt_ajax"); ?>'
+                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
             }, function(response) {
                 if (response.success) {
                     var data = response.data;
@@ -1250,7 +1250,7 @@ function artitechcore_process_cpt_creation($form_data) {
  */
 function artitechcore_handle_cpt_creation_ajax() {
     // Security checks
-    check_ajax_referer('artitechcore_cpt_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(__('You do not have permission to create custom post types.', 'artitechcore'));
@@ -1274,7 +1274,7 @@ function artitechcore_handle_cpt_creation_ajax() {
  * @since 1.0
  */
 function artitechcore_handle_get_cpt_item_count_ajax() {
-    check_ajax_referer('artitechcore_cpt_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(__('Unauthorized access', 'artitechcore'));
@@ -1302,7 +1302,7 @@ function artitechcore_handle_get_cpt_item_count_ajax() {
  */
 function artitechcore_handle_cpt_deletion_ajax() {
     // Security checks
-    check_ajax_referer('artitechcore_cpt_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(__('You do not have permission to delete custom post types.', 'artitechcore'));
@@ -1331,7 +1331,7 @@ function artitechcore_handle_cpt_deletion_ajax() {
  * @since 1.0
  */
 function artitechcore_handle_duplicate_cpt_ajax() {
-    check_ajax_referer('artitechcore_cpt_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
@@ -1642,7 +1642,7 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
  * @since 1.0
  */
 function artitechcore_save_custom_field_data($post_id, $post) {
-    // Security checks
+    // Security and state checks
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (defined('DOING_AJAX') && DOING_AJAX) return;
     if (!current_user_can('edit_post', $post_id)) return;
@@ -2164,7 +2164,7 @@ function artitechcore_cpt_import_export_tab() {
  */
 function artitechcore_get_cpt_data_ajax() {
     // Security checks
-    check_ajax_referer('artitechcore_cpt_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
@@ -2208,7 +2208,7 @@ function artitechcore_get_cpt_data_ajax() {
  */
 function artitechcore_handle_bulk_cpt_operations_ajax() {
     // Security checks
-    check_ajax_referer('artitechcore_cpt_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
@@ -2338,7 +2338,7 @@ function artitechcore_handle_bulk_cpt_operations_ajax() {
  */
 function artitechcore_handle_cpt_update_ajax() {
     // Security checks
-    check_ajax_referer('artitechcore_cpt_ajax', 'nonce');
+    check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
