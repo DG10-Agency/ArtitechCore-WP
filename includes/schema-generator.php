@@ -15,6 +15,7 @@ if (!defined('ArtitechCore_SCHEMA_WEBPAGE')) define('ArtitechCore_SCHEMA_WEBPAGE
 if (!defined('ArtitechCore_SCHEMA_HOWTO')) define('ArtitechCore_SCHEMA_HOWTO', 'howto');
 if (!defined('ArtitechCore_SCHEMA_REVIEW')) define('ArtitechCore_SCHEMA_REVIEW', 'review');
 if (!defined('ArtitechCore_SCHEMA_EVENT')) define('ArtitechCore_SCHEMA_EVENT', 'event');
+if (!defined('ArtitechCore_SCHEMA_MEDICAL_BUSINESS')) define('ArtitechCore_SCHEMA_MEDICAL_BUSINESS', 'medical_business');
 
 /**
  * Get schema data from custom table
@@ -80,23 +81,186 @@ function artitechcore_delete_schema_data($object_id, $object_type = 'post') {
  * - Avoid hard-coding niche logic while still producing entity-specific schema.
  *
  * Notes:
- * - We do NOT hallucinate address/phone/email; we only infer types + specialties + relationships.
- * - Cached via transient to control AI spend.
+ * See artitechcore_detect_site_profile_from_content() for non-AI fallback.
+ * See artitechcore_get_ai_entity_profile() for AI-powered detection.
+ *
+ * @return array|false
+ */
+if (!function_exists('artitechcore_detect_site_profile_from_content')) {
+function artitechcore_detect_site_profile_from_content() {
+    $site_name        = get_bloginfo('name');
+    $site_description = get_bloginfo('description');
+    $business_desc    = get_option('artitechcore_business_description', '');
+    $combined_text    = strtolower($site_name . ' ' . $site_description . ' ' . $business_desc);
+
+    // Gather content samples (max 5 pages + 5 posts)
+    $sample_posts = get_posts([
+        'post_type'   => ['page', 'post'],
+        'post_status' => 'publish',
+        'numberposts' => 10,
+        'orderby'     => 'modified',
+        'order'       => 'DESC',
+    ]);
+    $content_text = $combined_text;
+    foreach ($sample_posts as $p) {
+        $content_text .= ' ' . $p->post_title . ' ' . wp_strip_all_tags(wp_trim_words($p->post_content, 80, ''));
+    }
+    $content_text = strtolower($content_text);
+
+    // Check for WooCommerce / e-commerce
+    $has_woocommerce = in_array('woocommerce/woocommerce.php', (array) get_option('active_plugins', []), true);
+    $has_products    = $has_woocommerce || (strpos($content_text, 'add to cart') !== false) ||
+                       (strpos($content_text, 'product') !== false && strpos($content_text, 'price') !== false);
+
+    // ── Industry detection via content analysis ──
+    $industry_scores = [];
+
+    $industry_checks = [
+        'Medical'   => ['clinic','doctor','physician','medical','health','wellness','naturopathic','homeopathic',
+                        'hospital','dental','therapy','treatment','patient','symptoms','diagnosis','remedy',
+                        'herbal','chiropractic','acupuncture','appointment','consultation','pharmacy','pediatric'],
+        'Legal'     => ['lawyer','attorney','law firm','legal','advocate','solicitor','notary','litigation',
+                        'counsel','barrister','injury','immigration','divorce','estate planning'],
+        'Restaurant'=> ['restaurant','cafe','bakery','food','dining','cuisine','menu','catering','bar',
+                        'bistro','pizzeria','grill','coffee','breakfast','lunch','dinner','takeout'],
+        'Retail'    => ['store','shop','retail','boutique','shopping','merchandise','fashion','clothing',
+                        'accessories','footwear','jewelry','gifts','home decor'],
+        'Education' => ['school','college','university','academy','education','training','course','class',
+                        'tutorial','institute','learning','student','teacher','professor','scholarship'],
+        'Tech'      => ['software','tech','technology','digital','startup','app','development','programming',
+                        'saas','cloud','code','developer','platform','api','database','hosting'],
+        'RealEstate'=> ['real estate','property','home','house','apartment','condo','rent','lease',
+                        'mortgage','broker','realtor','listing','commercial','rental'],
+        'Finance'   => ['bank','finance','financial','insurance','investment','accounting','tax','loan',
+                        'wealth','mortgage','credit','fund','payments','crypto','trading'],
+        'Agency'    => ['agency','studio','design','creative','marketing','advertising','media',
+                        'production','branding','consultancy','digital agency','creative agency'],
+        'Auto'      => ['auto','car','vehicle','mechanic','dealership','repair','garage','service center',
+                        'automotive','tires','parts','oil change','towing'],
+        'Fitness'   => ['gym','fitness','salon','spa','beauty','yoga','personal trainer','massage',
+                        'barber','hair','nails','cosmetic','skincare','pilates','crossfit'],
+        'Travel'    => ['travel','hotel','resort','tourism','vacation','accommodation','booking','tour',
+                        'destination','restaurant','hospitality','lodging','getaway'],
+        'ProServices'=> ['consultant','consulting','professional','expert','advisor','specialist',
+                         'services','solutions','outsourcing','bpo','managed'],
+        'NonProfit' => ['nonprofit','non-profit','charity','foundation','donation','volunteer',
+                        'community','cause','ngo','fundraising','philanthropy'],
+        'Religious' => ['church','temple','mosque','ministry','spiritual','religion','faith',
+                        'worship','prayer','bible','gospel','sermon'],
+        'Ecommerce' => ['shop','cart','checkout','shipping','order','delivery','catalog',
+                        'wishlist','coupon','discount','sale','bestseller'],
+    ];
+
+    foreach ($industry_checks as $industry => $keywords) {
+        $score = 0;
+        foreach ($keywords as $kw) {
+            // Higher weight for title/tagline matches
+            if (strpos($combined_text, $kw) !== false) {
+                $score += 3;
+            } elseif (strpos($content_text, $kw) !== false) {
+                $score += 1;
+            }
+        }
+        if ($has_woocommerce && $industry === 'Ecommerce') $score += 5;
+        if ($has_products && $industry === 'Ecommerce') $score += 3;
+        if ($score > 0) {
+            $industry_scores[$industry] = $score;
+        }
+    }
+
+    arsort($industry_scores);
+    $top_industries = array_keys(array_slice($industry_scores, 0, 3, true));
+
+    // ── Map detected industries → schema.org types ──
+    $org_type_map = [
+        'Medical'     => ['Organization', 'LocalBusiness', 'MedicalBusiness'],
+        'Legal'       => ['Organization', 'LocalBusiness', 'LegalService'],
+        'Restaurant'  => ['Organization', 'LocalBusiness', 'Restaurant', 'FoodEstablishment'],
+        'Retail'      => ['Organization', 'LocalBusiness', 'Store'],
+        'Education'   => ['Organization', 'EducationalOrganization'],
+        'Tech'        => ['Organization', 'Corporation'],
+        'RealEstate'  => ['Organization', 'LocalBusiness', 'RealEstateAgent'],
+        'Finance'     => ['Organization', 'LocalBusiness', 'FinancialService'],
+        'Agency'      => ['Organization', 'Corporation'],
+        'Auto'        => ['Organization', 'LocalBusiness', 'AutomotiveBusiness'],
+        'Fitness'     => ['Organization', 'LocalBusiness', 'HealthAndBeautyBusiness'],
+        'Travel'      => ['Organization', 'LocalBusiness', 'LodgingBusiness'],
+        'ProServices' => ['Organization', 'LocalBusiness', 'ProfessionalService'],
+        'NonProfit'   => ['Organization', 'NGO'],
+        'Religious'   => ['Organization', 'ReligiousOrganization'],
+        'Ecommerce'   => ['Organization', 'Store'],
+    ];
+
+    $person_type_map = [
+        'Medical'     => ['Person', 'Physician'],
+        'Legal'       => ['Person', 'Attorney'],
+        'Restaurant'  => ['Person'],
+        'Retail'      => ['Person'],
+        'Education'   => ['Person'],
+        'Tech'        => ['Person'],
+        'RealEstate'  => ['Person'],
+        'Finance'     => ['Person'],
+        'Agency'      => ['Person'],
+        'Auto'        => ['Person'],
+        'Fitness'     => ['Person'],
+        'Travel'      => ['Person'],
+        'ProServices' => ['Person'],
+        'NonProfit'   => ['Person'],
+        'Religious'   => ['Person'],
+        'Ecommerce'   => ['Person'],
+    ];
+
+    // Default if nothing matched
+    if (empty($top_industries)) {
+        $org_types  = $has_products ? ['Organization', 'Store'] : ['Organization'];
+        $spec       = [];
+        $person_types = ['Person'];
+    } else {
+        $primary = $top_industries[0];
+        $org_types  = $org_type_map[$primary] ?? ['Organization', 'LocalBusiness'];
+        $spec       = $primary === 'Medical' ? ['Naturopathic Medicine', 'Homeopathy', 'Holistic Health'] : [];
+        $person_types = $person_type_map[$primary] ?? ['Person'];
+    }
+
+    // If address or phone found in options, promote to LocalBusiness
+    $has_local = !empty(get_option('artitechcore_business_address', '')) ||
+                 !empty(get_option('artitechcore_business_phone', ''));
+    if ($has_local && !in_array('LocalBusiness', $org_types, true)) {
+        $org_types[] = 'LocalBusiness';
+    }
+
+    return [
+        'organization' => [
+            'types'       => $org_types,
+            'specialties' => $spec,
+        ],
+        'primaryPerson' => [
+            'types'       => $person_types,
+            'name'        => null,
+            'jobTitle'    => null,
+            'specialties' => [],
+        ],
+        'relationship' => [
+            'personToOrganization' => 'founder',
+        ],
+    ];
+}
+}
+
+/**
+ * AI-powered entity profiling (requires API key).
+ * Falls back to artitechcore_detect_site_profile_from_content() when no AI key.
  *
  * @return array|false
  */
 if (!function_exists('artitechcore_get_ai_entity_profile')) {
 function artitechcore_get_ai_entity_profile() {
+    // If AI is enabled and has a key, try AI first
     $enabled = get_option('artitechcore_ai_schema_enrichment', 1);
-    if (empty($enabled)) {
-        return false;
-    }
-
-    $provider = get_option('artitechcore_ai_provider', 'openai');
-    $api_key = get_option('artitechcore_' . $provider . '_api_key');
-    if (empty($api_key)) {
-        return false;
-    }
+    if (!empty($enabled)) {
+        $provider = get_option('artitechcore_ai_provider', 'openai');
+        $api_key  = get_option('artitechcore_' . $provider . '_api_key');
+        if (!empty($api_key)) {
 
     $cache_key = 'artitechcore_ai_entity_profile_' . md5(home_url() . '|' . get_option('artitechcore_business_description', '') . '|' . get_bloginfo('name'));
     $cached = get_transient($cache_key);
@@ -202,7 +366,12 @@ function artitechcore_get_ai_entity_profile() {
     $result['relationship']['personToOrganization'] = in_array($rel, $allowed_rel, true) ? $rel : 'none';
 
     set_transient($cache_key, $result, 7 * DAY_IN_SECONDS);
-    return $result;
+            return $result;
+        }
+    }
+    
+    // Fallback: use content-based detection when AI is unavailable/disabled
+    return artitechcore_detect_site_profile_from_content();
 }
 }
 
@@ -427,7 +596,7 @@ function artitechcore_ai_analyze_content_for_schema($post_id) {
 
     $valid_schema_types = [
         'faq', 'blog', 'article', 'service', 'product', 
-        'organization', 'local_business', 'howto', 'review', 'event', 'webpage'
+        'organization', 'local_business', 'medical_business', 'howto', 'review', 'event', 'webpage'
     ];
 
     $post_type = $post->post_type;
@@ -748,6 +917,11 @@ function artitechcore_detect_schema_type($post_id, $use_ai = true) {
         return ArtitechCore_SCHEMA_ORGANIZATION;
     }
 
+    // Check for medical / clinic page
+    if (artitechcore_is_medical_clinic_page($title, $content)) {
+        return ArtitechCore_SCHEMA_MEDICAL_BUSINESS;
+    }
+
     // Check for local business page
     if (artitechcore_is_local_business_page($title)) {
         return ArtitechCore_SCHEMA_LOCAL_BUSINESS;
@@ -871,10 +1045,33 @@ function artitechcore_is_organization_page($title) {
 
 // Check if page is a local business page
 function artitechcore_is_local_business_page($title) {
-    $business_keywords = ['location', 'store', 'office', 'contact', 'address', 'hours', 'map'];
+    $business_keywords = ['location', 'store', 'office', 'contact', 'address', 'hours', 'map', 'clinic', 'practice'];
     foreach ($business_keywords as $keyword) {
         if (stripos($title, $keyword) !== false) {
             return true;
+        }
+    }
+    return false;
+}
+
+// Check if page is a medical / health / clinic page
+function artitechcore_is_medical_clinic_page($title, $content) {
+    $medical_keywords = ['doctor', 'physician', 'medical', 'clinic', 'health', 'wellness', 'naturopathic', 'homeopathic', 'chiropractic', 'therapy', 'treatment', 'patient', 'diagnosis', 'remedy', 'herbal'];
+    foreach ($medical_keywords as $keyword) {
+        if (stripos($title, $keyword) !== false) {
+            return true;
+        }
+    }
+    // Check content for medical context
+    $content_lower = strtolower(wp_strip_all_tags(substr($content, 0, 1500)));
+    $content_medical_keywords = ['patient', 'treatment', 'clinic', 'doctor', 'appointment', 'consultation', 'symptoms', 'diagnosis', 'remedy', 'therapy', 'wellness'];
+    $matches = 0;
+    foreach ($content_medical_keywords as $keyword) {
+        if (stripos($content_lower, $keyword) !== false) {
+            $matches++;
+            if ($matches >= 2) {
+                return true;
+            }
         }
     }
     return false;
@@ -1006,8 +1203,8 @@ if (!function_exists('artitechcore_generate_schema_markup')) {
             'isPartOf' => ['@id' => $site_url . '/#website'],
             'publisher' => ['@id' => $site_url . '/#organization'],
             'inLanguage' => get_bloginfo('language'),
-            'datePublished' => get_the_gmdate('c', $post_id),
-            'dateModified' => get_the_modified_gmdate('c', $post_id),
+            'datePublished' => get_post_time('c', true, $post_id),
+            'dateModified' => get_post_modified_time('c', true, $post_id),
             'breadcrumb' => ['@id' => $permalink . '#breadcrumb']
         ];
         
@@ -1148,11 +1345,38 @@ function artitechcore_has_conflicting_schema_plugin() {
     return false;
 }
 
+/**
+ * Get a list of active major SEO plugins that handle schema markup.
+ * Used for informative HTML comments when running alongside them.
+ *
+ * @return array Active SEO plugin display names.
+ */
+function artitechcore_get_active_schema_plugins() {
+    $plugin_map = [
+        'wordpress-seo/wp-seo.php'             => 'Yoast SEO',
+        'seo-by-rank-math/rank-math.php'       => 'RankMath',
+        'all-in-one-seo-pack/all_in_one_seo_pack.php' => 'AIOSEO',
+        'schema/schema.php'                    => 'Schema Plugin',
+        'wp-schema-pro/wp-schema-pro.php'      => 'Schema Pro',
+    ];
+    $active = (array) get_option('active_plugins', []);
+    $found  = [];
+    foreach ($plugin_map as $file => $label) {
+        if (in_array($file, $active, true)) {
+            $found[] = $label;
+        }
+    }
+    return $found;
+}
+
 function artitechcore_output_schema_markup() {
-    // Conflict Detection: Skip if another major SEO plugin is handling schema
+    // Check if a major SEO plugin (Yoast, RankMath, AIOSEO) is active.
+    // Unlike before (which aborted all output), ArtitechCore now outputs its
+    // per-post custom schemas (FAQ, Service, MedicalBusiness, Review, etc.)
+    // alongside the SEO plugin's base schemas (Organization, WebSite, WebPage).
+    // Multiple JSON-LD blocks on a page are standard and handled correctly by Google.
     if (artitechcore_has_conflicting_schema_plugin()) {
-        echo "\n" . '<!-- ArtitechCore Schema: Deferred (conflicting SEO plugin detected) -->' . "\n";
-        return;
+        echo "<!-- ArtitechCore Schema: Running alongside " . esc_html(implode(', ', artitechcore_get_active_schema_plugins())) . " (additive, not conflicting) -->" . "\n";
     }
     // Term archives (category/tag/custom tax)
     if (is_category() || is_tag() || is_tax()) {
@@ -1183,6 +1407,35 @@ function artitechcore_output_schema_markup() {
 
     $schema_row = artitechcore_get_schema_data(get_the_ID(), 'post');
     $schema_data = !empty($schema_row['schema_data']) ? json_decode($schema_row['schema_data'], true) : null;
+    
+    // Homepage / front page fallback: dynamically detect site type from content
+    // and generate appropriate Organization/LocalBusiness/MedicalBusiness schema.
+    // Works for ANY industry — no AI API key required.
+    if (empty($schema_data) && is_front_page()) {
+        $profile = artitechcore_get_ai_entity_profile();
+        $org_types = !empty($profile['organization']['types']) ? $profile['organization']['types'] : ['Organization'];
+        $org_specialties = !empty($profile['organization']['specialties']) ? $profile['organization']['specialties'] : [];
+        
+        $schema_data = [
+            '@context' => 'https://schema.org',
+            '@type'    => $org_types,
+            'name'     => get_bloginfo('name'),
+            'url'      => home_url(),
+            'description' => get_bloginfo('description'),
+        ];
+        if (!empty($org_specialties)) {
+            $schema_data['medicalSpecialty'] = $org_specialties;
+        }
+        $business_name = get_option('artitechcore_business_name', '');
+        $business_address = get_option('artitechcore_business_address', '');
+        $business_phone = get_option('artitechcore_business_phone', '');
+        $business_email = get_option('artitechcore_business_email', '');
+        if (!empty($business_name)) $schema_data['legalName'] = $business_name;
+        if (!empty($business_address)) $schema_data['address'] = ['@type' => 'PostalAddress', 'address' => $business_address];
+        if (!empty($business_phone)) $schema_data['telephone'] = $business_phone;
+        if (!empty($business_email)) $schema_data['email'] = $business_email;
+    }
+    
     if (!empty($schema_data)) {
         echo "\n" . '<!-- ArtitechCore Schema -->' . "\n";
         echo '<script type="application/ld+json">' . "\n";
@@ -2000,7 +2253,7 @@ function artitechcore_generate_review_schema($post_id) {
         '@type' => 'Review',
         'headline' => sanitize_text_field(get_the_title($post_id)),
         'reviewBody' => sanitize_text_field(wp_strip_all_tags(wp_trim_words($content, 200))),
-        'datePublished' => get_the_gmdate('c', $post_id),
+        'datePublished' => get_post_time('c', true, $post_id),
         'author' => [
             '@type' => 'Person',
             'name' => get_the_author_meta('display_name', $post->post_author)
