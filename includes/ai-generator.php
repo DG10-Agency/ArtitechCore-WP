@@ -249,9 +249,11 @@ function artitechcore_handle_ai_create_content_ajax() {
             
             // Pass data directly - validation happens inside the function
             artitechcore_create_advanced_content($selected_pages, $selected_cpts, $generate_images);
-            $message = sprintf(__('Successfully created %d pages and %d custom post types.', 'artitechcore'), count($selected_pages), count($selected_cpts));
+            /* translators: %d, %d */
+            $message = sprintf(__('Successfully created %1$d pages and %2$d custom post types.', 'artitechcore'), count($selected_pages), count($selected_cpts));
         } else {
             artitechcore_create_suggested_pages($selected_pages, $generate_images);
+            /* translators: %d */
             $message = sprintf(__('Successfully created %d pages.', 'artitechcore'), count($selected_pages));
         }
     } else {
@@ -291,12 +293,14 @@ function artitechcore_generate_pages_with_ai($business_type, $business_details, 
         $api_key = get_option('artitechcore_' . $provider . '_api_key');
 
         if (empty($api_key)) {
+            /* translators: %s */
             echo '<div class="notice notice-error"><p>' . esc_html(sprintf(__('Please enter your %s API key in the Settings tab.', 'artitechcore'), ucfirst($provider))) . '</p></div>';
             return;
         }
 
         // Validate API key format
         if (!artitechcore_validate_api_key($api_key, $provider)) {
+            /* translators: %s */
             echo '<div class="notice notice-error"><p>' . esc_html(sprintf(__('Invalid %s API key format. Please check your API key.', 'artitechcore'), ucfirst($provider))) . '</p></div>';
             return;
         }
@@ -586,6 +590,7 @@ Focus on creating a complete website architecture that will rank well and conver
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI API error.', 'artitechcore');
+            /* translators: %s */
             throw new Exception(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message));
         }
 
@@ -753,6 +758,7 @@ Focus on creating a complete website architecture that will rank well and conver
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown Gemini API error.', 'artitechcore');
+            /* translators: %s */
             throw new Exception(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message));
         }
 
@@ -926,6 +932,7 @@ Focus on creating a complete website architecture that will rank well and conver
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown DeepSeek API error.', 'artitechcore');
+            /* translators: %s */
             throw new Exception(sprintf(__('DeepSeek API error: %s', 'artitechcore'), $error_message));
         }
 
@@ -998,6 +1005,7 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
 
                 // Validate title length
                 if (strlen($page_title) > 200) {
+                    /* translators: %s */
                     $errors[] = sprintf(__('Page title too long (over 200 characters): %s', 'artitechcore'), substr($page_title, 0, 50) . '...');
                     continue;
                 }
@@ -1006,6 +1014,7 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
 
                 // Validate parent exists if specified
                 if ($parent_id > 0 && !get_post($parent_id)) {
+                    /* translators: %s */
                     $errors[] = sprintf(__('Parent page not found for: %s', 'artitechcore'), $page_title);
                     $parent_id = 0; // Reset to root level
                 }
@@ -1033,7 +1042,8 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
                         try {
                             artitechcore_generate_and_set_featured_image($page_id, $page_title);
                         } catch (Exception $e) {
-                            $errors[] = sprintf(__('Failed to generate image for "%s": %s', 'artitechcore'), $page_title, $e->getMessage());
+                            /* translators: %1$s: page title, %2$s: error message */
+                            $errors[] = sprintf(__('Failed to generate image for "%1$s": %2$s', 'artitechcore'), $page_title, $e->getMessage());
                         }
                     }
                     
@@ -1043,7 +1053,8 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
                         try {
                             artitechcore_generate_schema_markup($page_id);
                         } catch (Exception $e) {
-                            $errors[] = sprintf(__('Failed to generate schema for "%s": %s', 'artitechcore'), $page_title, $e->getMessage());
+                            /* translators: %1$s: page title, %2$s: error message */
+                            $errors[] = sprintf(__('Failed to generate schema for "%1$s": %2$s', 'artitechcore'), $page_title, $e->getMessage());
                         }
                     }
                     
@@ -1052,18 +1063,21 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
                 } else {
                     $failed_count++;
                     $error_message = is_wp_error($page_id) ? $page_id->get_error_message() : __('Unknown error', 'artitechcore');
-                    $errors[] = sprintf(__('Failed to create page "%s": %s', 'artitechcore'), $page_title, $error_message);
+                    /* translators: %1$s: page title, %2$s: error message */
+                    $errors[] = sprintf(__('Failed to create page "%1$s": %2$s', 'artitechcore'), $page_title, $error_message);
                 }
 
             } catch (Exception $e) {
                 $failed_count++;
-                $errors[] = sprintf(__('Error processing page "%s": %s', 'artitechcore'), $page_line, $e->getMessage());
+                /* translators: %1$s: page line/identifier, %2$s: error message */
+                $errors[] = sprintf(__('Error processing page "%1$s": %2$s', 'artitechcore'), $page_line, $e->getMessage());
             }
         }
 
         // Display results
         if ($created_count > 0) {
             $message = sprintf(
+                /* translators: %d */
                 __('%d pages created successfully as drafts.', 'artitechcore'),
                 absint($created_count)
             );
@@ -1074,6 +1088,7 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
         }
 
         if ($failed_count > 0) {
+            /* translators: %d */
             $error_message = sprintf(__('%d pages failed to create.', 'artitechcore'), absint($failed_count));
             echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html($error_message) . '</p></div>';
         }
@@ -1272,6 +1287,7 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI image generation error.', 'artitechcore');
+            /* translators: %s */
             throw new Exception(sprintf(__('OpenAI image generation error: %s', 'artitechcore'), $error_message));
         }
 
@@ -1366,6 +1382,7 @@ function artitechcore_process_keywords_csv($file) {
             // Prevent processing too many lines
             if ($line_count > $max_lines) {
                 fclose($handle);
+                /* translators: %d */
                 throw new Exception(sprintf(__('CSV file has too many lines. Maximum allowed: %d', 'artitechcore'), $max_lines));
             }
 
@@ -1732,6 +1749,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
 
         if (empty($api_key)) {
             error_log('ArtitechCore: API key is empty for provider: ' . $provider);
+            /* translators: %s */
             echo '<div class="notice notice-error"><p>' . sprintf(__('Please enter your %s API key in the Settings tab.', 'artitechcore'), esc_html(ucfirst($provider))) . '</p></div>';
             return;
         }
@@ -1739,6 +1757,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         // Validate API key format
         if (!artitechcore_validate_api_key($api_key, $provider)) {
             error_log('ArtitechCore: API key validation failed for provider: ' . $provider);
+            /* translators: %s */
             echo '<div class="notice notice-error"><p>' . sprintf(__('Invalid %s API key format. Please check your API key.', 'artitechcore'), esc_html(ucfirst($provider))) . '</p></div>';
             return;
         }
@@ -2429,9 +2448,9 @@ function artitechcore_create_sample_cpt_entries($cpt_data) {
 function artitechcore_generate_sample_field_value($field) {
     switch ($field['type']) {
         case 'number':
-            return rand(1, 100);
+            return wp_rand(1, 100);
         case 'date':
-            return date('Y-m-d');
+            return gmdate('Y-m-d');
         case 'url':
             return 'https://example.com';
         case 'image':

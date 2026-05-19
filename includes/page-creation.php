@@ -101,6 +101,7 @@ function artitechcore_create_pages_manually($titles_str) {
     }
 
     if ($created_pages > 0) {
+        /* translators: %d */
         echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(esc_html__('%d pages created successfully!', 'artitechcore'), absint($created_pages)) . '</p></div>';
     } else {
         echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__('No pages were created. Please check your input.', 'artitechcore') . '</p></div>';

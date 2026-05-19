@@ -45,6 +45,7 @@ function artitechcore_check_ai_rate_limit() {
     if ($current >= $limit) {
         return new WP_Error(
             'rate_limit_exceeded', 
+            /* translators: %d */
             sprintf(__('Rate limit exceeded. Please wait a minute. (Max: %d rpm)', 'artitechcore'), $limit)
         );
     }
@@ -136,7 +137,8 @@ function artitechcore_safe_ai_remote_request($url, $args, $provider = 'openai', 
             if ($code === 429 || ($code >= 500 && $code <= 599)) {
                 $retry_count++;
                 if ($retry_count > $max_retries) {
-                    $final_result = new WP_Error('api_server_error', sprintf(__('Provider %s returned %d after %d retries.', 'artitechcore'), $provider, $code, $max_retries));
+                    /* translators: %s, %d, %d */
+                    $final_result = new WP_Error('api_server_error', sprintf(__('Provider %1$s returned %2$d after %3$d retries.', 'artitechcore'), $provider, $code, $max_retries));
                     break;
                 }
                 sleep($wait_time);
@@ -144,7 +146,8 @@ function artitechcore_safe_ai_remote_request($url, $args, $provider = 'openai', 
                 continue;
             }
 
-            $final_result = new WP_Error('api_request_error', sprintf(__('Provider %s error %d: %s', 'artitechcore'), $provider, $code, wp_remote_retrieve_response_message($response)));
+            /* translators: %s, %d, %s */
+            $final_result = new WP_Error('api_request_error', sprintf(__('Provider %1$s error %2$d: %3$s', 'artitechcore'), $provider, $code, wp_remote_retrieve_response_message($response)));
             break;
         }
     } finally {

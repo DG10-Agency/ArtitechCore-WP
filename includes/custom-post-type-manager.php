@@ -316,7 +316,7 @@ function artitechcore_render_cpt_management_content($is_tab = false) {
                     <ul role="list">
                     <?php foreach ($menu_items as $tab_key => $item): ?>
                             <li role="listitem">
-                                <a href="<?php echo esc_url(add_query_arg(array('page' => 'artitechcore-cpt-management', 'tab' => $tab_key), admin_url('admin.php'))); ?>" 
+                                <a href="<?php echo esc_url(add_query_arg(array('page' => 'artitechcore-cpt-management', 'tab' => $tab_key), esc_url(admin_url('admin.php')))); ?>" 
                                    class="dg10-sidebar-nav-item <?php echo $active_tab === $tab_key ? 'active' : ''; ?>"
                                    role="menuitem"
                                    aria-label="<?php echo esc_attr($item['title'] . ' - ' . $item['description']); ?>"
@@ -488,7 +488,7 @@ function artitechcore_cpt_list_tab() {
         // Edit CPT
         $(document).on('click', '.artitechcore-action-btn[data-action="edit"]', function() {
             var cpt = $(this).data('cpt');
-            window.location.href = '<?php echo admin_url('admin.php?page=artitechcore-cpt-management&tab=cpt&cpt_subtab=create&action=edit&cpt='); ?>' + cpt;
+            window.location.href = '<?php echo esc_url(admin_url('admin.php?page=artitechcore-cpt-management&tab=cpt&cpt_subtab=create&action=edit&cpt=')); ?>' + cpt;
         });
 
         // Duplicate CPT
@@ -504,7 +504,7 @@ function artitechcore_cpt_list_tab() {
             $.post(ajaxurl, {
                 action: 'artitechcore_handle_duplicate_cpt_ajax',
                 cpt_slug: cpt,
-                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
             }, function(response) {
                 if(response.success) {
                     location.reload();
@@ -525,7 +525,7 @@ function artitechcore_cpt_list_tab() {
             $.post(ajaxurl, {
                 action: 'artitechcore_get_cpt_item_count',
                 post_types: [cpt],
-                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
             }, function(countResponse) {
                 var count = countResponse.success ? countResponse.data.count : 0;
                 if(!confirm('<?php echo esc_js(__('Are you sure you want to delete this CPT? This will permanently delete ALL ', 'artitechcore')); ?>' + count + '<?php echo esc_js(__(' posts of this type. This cannot be undone.', 'artitechcore')); ?>')) return;
@@ -535,7 +535,7 @@ function artitechcore_cpt_list_tab() {
                 $.post(ajaxurl, {
                     action: 'artitechcore_delete_cpt_ajax',
                     post_type: cpt,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                    nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
                 }, function(response) {
                     if(response.success) {
                         location.reload();
@@ -567,7 +567,7 @@ function artitechcore_cpt_list_tab() {
                 $.post(ajaxurl, {
                     action: 'artitechcore_get_cpt_item_count',
                     post_types: checked,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                    nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
                 }, function(countResponse) {
                     var count = countResponse.success ? countResponse.data.count : 0;
                     if (!confirm('<?php echo esc_js(__('Permanently delete selected items? This will delete ALL ', 'artitechcore')); ?>' + count + '<?php echo esc_js(__(' posts. This cannot be undone.', 'artitechcore')); ?>')) {
@@ -586,7 +586,7 @@ function artitechcore_cpt_list_tab() {
                     action: 'artitechcore_handle_bulk_cpt_operations_ajax',
                     bulk_action: action,
                     cpt_ids: checked,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                    nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
                 }, function(response) {
                    location.reload();
                 });
@@ -644,6 +644,7 @@ function artitechcore_cpt_create_tab() {
                         <p class="dg10-form-help">
                             <?php 
                             printf(
+                                /* translators: %s */
                                 esc_html__('Enter a %s (e.g., dashicons-portfolio).', 'artitechcore'),
                                 '<a href="https://developer.wordpress.org/resource/dashicons/" target="_blank">Dashicon class</a>'
                             ); 
@@ -704,7 +705,7 @@ function artitechcore_cpt_create_tab() {
             $.post(ajaxurl, {
                 action: 'artitechcore_get_cpt_data_ajax',
                 post_type: cpt,
-                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
             }, function(response) {
                 if (response.success) {
                     var data = response.data;
@@ -857,7 +858,7 @@ function artitechcore_get_cpts_rest_data($request) {
                     'id' => $post->ID,
                     'title' => $post->post_title,
                     'status' => $post->post_status,
-                    'url' => get_permalink($post->ID)
+                    'url' => esc_url(get_permalink($post->ID))
                 );
             }, $posts)
         );
@@ -889,7 +890,7 @@ function artitechcore_add_cpt_to_hierarchy_export($data) {
                 'parent' => '#',
                 'type' => 'cpt',
                 'post_type' => $post_type,
-                'url' => get_permalink($post->ID)
+                'url' => esc_url(get_permalink($post->ID))
             );
         }
     }
@@ -943,9 +944,9 @@ function artitechcore_generate_cpt_schema($post_id, $post) {
         '@type' => 'CreativeWork',
         'name' => $post->post_title,
         'description' => wp_trim_words($post->post_content, 20),
-        'url' => get_permalink($post_id),
-        'datePublished' => get_the_date('c', $post_id),
-        'dateModified' => get_the_modified_date('c', $post_id)
+        'url' => esc_url(get_permalink($post_id)),
+        'datePublished' => get_the_gmdate('c', $post_id),
+        'dateModified' => get_the_modified_gmdate('c', $post_id)
     );
     
     // Add custom fields to schema
@@ -1706,7 +1707,9 @@ function artitechcore_render_cpt_card($post_type, $cpt_data) {
             <div class="artitechcore-cpt-checkbox">
                 <input type="checkbox" id="cpt-<?php echo esc_attr($post_type); ?>" 
                        value="<?php echo esc_attr($post_type); ?>" class="cpt-checkbox"
-                       aria-label="<?php echo esc_attr(sprintf(__('Select %s', 'artitechcore'), $cpt_data['label'])); ?>">
+                       aria-label="<?php echo esc_attr(sprintf(
+                           /* translators: %s */
+                           __('Select %s', 'artitechcore'), $cpt_data['label'])); ?>">
             </div>
             <div class="artitechcore-cpt-status">
                 <span class="artitechcore-status-indicator <?php echo $is_active ? 'active' : 'inactive'; ?>" 
@@ -1716,17 +1719,23 @@ function artitechcore_render_cpt_card($post_type, $cpt_data) {
             <div class="artitechcore-cpt-actions">
                 <button type="button" class="artitechcore-action-btn" data-action="edit" 
                         data-cpt="<?php echo esc_attr($post_type); ?>"
-                        aria-label="<?php echo esc_attr(sprintf(__('Edit %s', 'artitechcore'), $cpt_data['label'])); ?>">
+                        aria-label="<?php echo esc_attr(sprintf(
+                            /* translators: %s */
+                            __('Edit %s', 'artitechcore'), $cpt_data['label'])); ?>">
                     <span class="dashicons dashicons-edit" aria-hidden="true"></span>
                 </button>
                 <button type="button" class="artitechcore-action-btn" data-action="duplicate" 
                         data-cpt="<?php echo esc_attr($post_type); ?>"
-                        aria-label="<?php echo esc_attr(sprintf(__('Duplicate %s', 'artitechcore'), $cpt_data['label'])); ?>">
+                        aria-label="<?php echo esc_attr(sprintf(
+                            /* translators: %s */
+                            __('Duplicate %s', 'artitechcore'), $cpt_data['label'])); ?>">
                     <span class="dashicons dashicons-admin-page" aria-hidden="true"></span>
                 </button>
                 <button type="button" class="artitechcore-action-btn artitechcore-danger" data-action="delete" 
                         data-cpt="<?php echo esc_attr($post_type); ?>"
-                        aria-label="<?php echo esc_attr(sprintf(__('Delete %s', 'artitechcore'), $cpt_data['label'])); ?>">
+                        aria-label="<?php echo esc_attr(sprintf(
+                            /* translators: %s */
+                            __('Delete %s', 'artitechcore'), $cpt_data['label'])); ?>">
                     <span class="dashicons dashicons-trash" aria-hidden="true"></span>
                 </button>
             </div>
@@ -1739,7 +1748,9 @@ function artitechcore_render_cpt_card($post_type, $cpt_data) {
             <div class="artitechcore-cpt-info">
                 <h3 class="artitechcore-cpt-title">
                     <a href="<?php echo esc_url(admin_url('edit.php?post_type=' . $post_type)); ?>" 
-                       title="<?php echo esc_attr(sprintf(__('View all %s', 'artitechcore'), $cpt_data['label'])); ?>">
+                       title="<?php echo esc_attr(sprintf(
+                           /* translators: %s */
+                           __('View all %s', 'artitechcore'), $cpt_data['label'])); ?>">
                         <?php echo esc_html($cpt_data['label']); ?>
                     </a>
                 </h3>
@@ -1785,7 +1796,9 @@ function artitechcore_render_cpt_card($post_type, $cpt_data) {
             
             <?php if (!empty($last_modified)): ?>
                 <div class="artitechcore-cpt-meta">
-                    <small><?php echo esc_html(sprintf(__('Modified: %s', 'artitechcore'), $last_modified)); ?></small>
+                    <small><?php echo esc_html(sprintf(
+                        /* translators: %s */
+                        __('Modified: %s', 'artitechcore'), $last_modified)); ?></small>
                 </div>
             <?php endif; ?>
         </div>
@@ -1997,7 +2010,7 @@ function artitechcore_cpt_bulk_operations_tab() {
                                         <?php echo esc_html(count($cpt_data['custom_fields'] ?? array())); ?>
                                     </td>
                                     <td>
-                                        <?php echo esc_html($last_modified ? date('M j, Y', strtotime($last_modified)) : 'Never'); ?>
+                                        <?php echo esc_html($last_modified ? gmdate('M j, Y', strtotime($last_modified)) : 'Never'); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -2324,7 +2337,8 @@ function artitechcore_handle_bulk_cpt_operations_ajax() {
         'error_count' => $error_count,
         'results' => $results,
         'message' => sprintf(
-            __('Bulk operation completed. %d successful, %d failed.', 'artitechcore'),
+            /* translators: %d, %d */
+            __('Bulk operation completed. %1$d successful, %2$d failed.', 'artitechcore'),
             $success_count,
             $error_count
         )
@@ -2902,6 +2916,7 @@ function artitechcore_create_cpt_from_template() {
     if (is_wp_error($result)) {
         echo '<div class="notice notice-error"><p>' . esc_html($result->get_error_message()) . '</p></div>';
     } else {
+        /* translators: %s: template name */
         echo '<div class="notice notice-success"><p>' . sprintf(__('Custom post type "%s" created successfully from template!', 'artitechcore'), $template['name']) . '</p></div>';
         
         // Create sample entries if available
@@ -2948,7 +2963,7 @@ function artitechcore_handle_cpt_export() {
     }
     
     // Generate filename
-    $filename = 'artitechcore-cpts-export-' . date('Y-m-d-H-i-s') . '.json';
+    $filename = 'artitechcore-cpts-export-' . gmdate('Y-m-d-H-i-s') . '.json';
     
     // Set headers for download
     header('Content-Type: application/json');
@@ -3004,6 +3019,7 @@ function artitechcore_handle_cpt_import() {
         
         // Validate CPT data
         if (!artitechcore_validate_cpt_data($cpt_data)) {
+            /* translators: %s: post type key */
             $errors[] = sprintf(__('Invalid data for CPT "%s"', 'artitechcore'), $post_type);
             continue;
         }
@@ -3027,12 +3043,15 @@ function artitechcore_handle_cpt_import() {
     // Display results
     $message_parts = array();
     if ($imported_count > 0) {
+        /* translators: %d */
         $message_parts[] = sprintf(__('%d CPTs imported successfully.', 'artitechcore'), $imported_count);
     }
     if ($skipped_count > 0) {
+        /* translators: %d */
         $message_parts[] = sprintf(__('%d CPTs skipped (already exist).', 'artitechcore'), $skipped_count);
     }
     if (!empty($errors)) {
+        /* translators: %d */
         $message_parts[] = sprintf(__('%d errors occurred.', 'artitechcore'), count($errors));
     }
     
@@ -3121,13 +3140,21 @@ function artitechcore_register_dynamic_taxonomy($taxonomy_data) {
     $labels = array(
         'name'              => $plural_label,
         'singular_name'     => $singular_label,
+        /* translators: %s */
         'search_items'      => sprintf(__('Search %s', 'artitechcore'), $plural_label),
+        /* translators: %s */
         'all_items'         => sprintf(__('All %s', 'artitechcore'), $plural_label),
+        /* translators: %s */
         'parent_item'       => $hierarchical ? sprintf(__('Parent %s', 'artitechcore'), $singular_label) : null,
+        /* translators: %s */
         'parent_item_colon' => $hierarchical ? sprintf(__('Parent %s:', 'artitechcore'), $singular_label) : null,
+        /* translators: %s */
         'edit_item'         => sprintf(__('Edit %s', 'artitechcore'), $singular_label),
+        /* translators: %s */
         'update_item'       => sprintf(__('Update %s', 'artitechcore'), $singular_label),
+        /* translators: %s */
         'add_new_item'      => sprintf(__('Add New %s', 'artitechcore'), $singular_label),
+        /* translators: %s */
         'new_item_name'     => sprintf(__('New %s Name', 'artitechcore'), $singular_label),
         'menu_name'         => $plural_label,
     );
@@ -3334,7 +3361,7 @@ function artitechcore_cpt_taxonomies_tab() {
                 method: 'POST',
                 data: {
                     action: 'artitechcore_delete_taxonomy_ajax',
-                    nonce: '<?php echo wp_create_nonce('artitechcore_delete_taxonomy'); ?>',
+                    nonce: '<?php echo esc_attr(wp_create_nonce('artitechcore_delete_taxonomy')); ?>',
                     taxonomy: taxonomy
                 },
                 success: function(response) {

@@ -33,8 +33,8 @@ if ($persist_schema || !empty($persist_ce)) {
     error_log('ArtitechCore Uninstall: Persisting data via bridge.');
 } else {
     // Clean up any old bridge files
-    @unlink($mu_dir . '/artitechcore-schema-bridge.php');
-    @unlink($mu_dir . '/artitechcore-persistence-bridge.php');
+    @wp_delete_file($mu_dir . '/artitechcore-schema-bridge.php');
+    @wp_delete_file($mu_dir . '/artitechcore-persistence-bridge.php');
 }
 
 // Common options to delete regardless of persistence (AI keys, etc. should usually be removed for security)

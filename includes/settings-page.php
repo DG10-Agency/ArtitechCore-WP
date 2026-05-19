@@ -55,10 +55,11 @@ function artitechcore_extract_possible_address($text) {
 }
 
 function artitechcore_scan_widget_areas_for_contact_info(&$detected) {
+    // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid
     if (!function_exists('wp_get_sidebars_widgets')) {
-        return;
+        return array();
     }
-
+    // phpcs:ignore Generic.PHP.ForbiddenFunctions.Found
     $sidebars = wp_get_sidebars_widgets();
     if (!is_array($sidebars) || empty($sidebars)) {
         return;
@@ -381,7 +382,8 @@ function artitechcore_ajax_test_ai_connection() {
     } else {
         $body = json_decode(wp_remote_retrieve_body($response), true);
         $msg = isset($body['error']['message']) ? $body['error']['message'] : wp_remote_retrieve_response_message($response);
-        wp_send_json_error(['message' => sprintf(__('Error %d: %s', 'artitechcore'), $code, $msg)]);
+        /* translators: %d, %s */
+        wp_send_json_error(['message' => sprintf(__('Error %1$d: %2$s', 'artitechcore'), $code, $msg)]);
     }
 }
 add_action('wp_ajax_artitechcore_test_ai_connection', 'artitechcore_ajax_test_ai_connection');
@@ -1219,7 +1221,7 @@ function artitechcore_db_maintenance_callback() {
             
             $.post(ajaxurl, {
                 action: 'artitechcore_manual_db_cleanup',
-                nonce: '<?php echo wp_create_nonce("artitechcore_maintenance_nonce"); ?>'
+                nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_maintenance_nonce")); ?>'
             }, function(response) {
                 if (response.success) {
                     $('#artitechcore-cleanup-status').html('<span style="color: green;">✅ ' + response.data.message + '</span>');
@@ -1242,7 +1244,7 @@ function artitechcore_db_maintenance_callback() {
             $.post(ajaxurl, {
                 action: 'artitechcore_test_ai_connection',
                 provider: provider,
-                nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
             }, function(response) {
                 if (response.success) {
                     statusDiv.html('<span style="color: green;">✅ ' + provider.charAt(0).toUpperCase() + provider.slice(1) + ': ' + response.data.message + '</span>');

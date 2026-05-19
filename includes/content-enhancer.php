@@ -202,7 +202,7 @@ function artitechcore_ce_meta_box_html($post) {
                 type: 'POST',
                 data: {
                     action: 'artitechcore_ce_generate',
-                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>',
+                    nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>',
                     post_id: postId,
                     content: editorContent,
                     generate_type: genType
@@ -796,7 +796,7 @@ function artitechcore_ce_render_frontend_script() {
             
             const formData = new FormData(form);
             
-            fetch("<?php echo admin_url('admin-ajax.php'); ?>", {
+            fetch("<?php echo esc_url(admin_url('admin-ajax.php')); ?>", {
                 method: 'POST',
                 body: formData
             })
@@ -1226,10 +1226,10 @@ function artitechcore_content_enhancer_tab() {
                                 <td>
                                     <div class="artitechcore-schema-actions">
                                         <?php if (!$has_enhancement): ?>
-                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=generate_ce&post=' . $p->ID), 'generate_ce_' . $p->ID)); ?>" class="button button-small">Generate</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=generate_ce&post=' . $p->ID)), 'generate_ce_' . $p->ID)); ?>" class="button button-small">Generate</a>
                                         <?php else: ?>
-                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=' . $p->ID), 'regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
-                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_ce&post=' . $p->ID), 'remove_ce_' . $p->ID)); ?>" class="button button-small button-link-delete" onclick="return confirm('Remove AI enhancements from this post?')">Remove</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=' . $p->ID)), 'regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_ce&post=' . $p->ID)), 'remove_ce_' . $p->ID)); ?>" class="button button-small button-link-delete" onclick="return confirm('Remove AI enhancements from this post?')">Remove</a>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -1463,7 +1463,7 @@ function artitechcore_ce_native_cta_ajax_handler() {
     
     $fields = get_option('artitechcore_ce_cta_native_fields', ['name', 'email', 'message']);
     $body = "New submission from ArtitechCore CTA on your post.\n\n";
-    $body .= "Post URL: " . get_permalink($post_id) . "\n";
+    $body .= "Post URL: " . esc_url(get_permalink($post_id)) . "\n";
     $body .= "--------------------------------------------------\n\n";
     
     foreach ($fields as $field) {
