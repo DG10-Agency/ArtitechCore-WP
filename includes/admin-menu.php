@@ -345,15 +345,17 @@ function artitechcore_admin_page() {
                                 <div class="dg10-promotion-buttons" role="group" aria-label="<?php esc_attr_e('Action Buttons', 'artitechcore'); ?>">
                                     <a href="https://www.dg10.agency" target="_blank" class="dg10-btn dg10-btn-primary" role="button" aria-label="<?php esc_attr_e('Visit DG10 Agency Website - Opens in new tab', 'artitechcore'); ?>">
                                         <span class="btn-text"><?php esc_html_e('Visit Website', 'artitechcore'); ?></span>
-                                        <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('External link icon'); ?>">→</span>
+                                        <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('External link icon', 'artitechcore'); ?>">→</span>
                                     </a>
                                     <a href="https://calendly.com/dg10-agency/30min" target="_blank" class="dg10-btn dg10-btn-outline" role="button" aria-label="<?php esc_attr_e('Book a Free Consultation - Opens in new tab', 'artitechcore'); ?>">
-                                        <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Calendar icon'); ?>">📅</span>
+                                        <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Calendar icon', 'artitechcore'); ?>">📅</span>
                                         <span class="btn-text"><?php esc_html_e('Book a Free Consultation', 'artitechcore'); ?></span>
                                     </a>
                                 </div>
                                 <p class="dg10-promotion-footer" role="text">
-                                    <?php printf(__('This is an open-source project - please %s.', 'artitechcore'), '<a href="' . esc_url(ARTITECHCORE_GITHUB_URL) . '" target="_blank" role="link" aria-label="' . esc_attr__('Star the repository on GitHub - Opens in new tab', 'artitechcore') . '">' . __('star the repo on GitHub', 'artitechcore') . '</a>'); ?>
+                                    <?php printf(
+                                        /* translators: %s */
+                                        __('This is an open-source project - please %s.', 'artitechcore'), '<a href="' . esc_url(ARTITECHCORE_GITHUB_URL) . '" target="_blank" role="link" aria-label="' . esc_attr__('Star the repository on GitHub - Opens in new tab', 'artitechcore') . '">' . __('star the repo on GitHub', 'artitechcore') . '</a>'); ?>
                                 </p>
                             </div>
                         </section>
@@ -489,7 +491,7 @@ function artitechcore_render_manual_tab_content() {
                             class="dg10-btn dg10-btn-primary"
                             role="button"
                             aria-label="<?php esc_attr_e('Create Pages from Titles', 'artitechcore'); ?>">
-                        <span class="btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Rocket icon'); ?>">🚀</span>
+                        <span class="btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Rocket icon', 'artitechcore'); ?>">🚀</span>
                         <span class="btn-text"><?php esc_html_e('Create Pages', 'artitechcore'); ?></span>
                 </button>
             </form>
@@ -520,7 +522,9 @@ function artitechcore_render_csv_tab_content() {
                                aria-required="true"
                                role="button">
                         <div id="csv-instructions" class="dg10-form-help" role="region" aria-label="<?php esc_attr_e('CSV File Instructions', 'artitechcore'); ?>">
-                            <p><?php printf(__('Upload a CSV file with the following columns: %s, %s (optional), %s, %s, %s, %s, %s.', 'artitechcore'), 
+                            <p><?php printf(
+                                /* translators: %s, %s, %s, %s, %s, %s, %s */
+                                __('Upload a CSV file with the following columns: %1$s, %2$s (optional), %3$s, %4$s, %5$s, %6$s, %7$s.', 'artitechcore'), 
                                 '<code>post_title</code>', 
                                 '<code>slug</code>', 
                                 '<code>post_parent</code>', 
@@ -529,8 +533,12 @@ function artitechcore_render_csv_tab_content() {
                                 '<code>page_template</code>', 
                                 '<code>post_status</code>'); ?></p>
                             <ul>
-                                <li><?php printf(__('The %s column should contain the title of the parent page.', 'artitechcore'), '<code>post_parent</code>'); ?></li>
-                                <li><?php printf(__('%s is optional - if empty, SEO-optimized slugs are automatically generated.', 'artitechcore'), '<code>slug</code>'); ?></li>
+                                <li><?php printf(
+                                    /* translators: %s */
+                                    __('The %s column should contain the title of the parent page.', 'artitechcore'), '<code>post_parent</code>'); ?></li>
+                                <li><?php printf(
+                                    /* translators: %s */
+                                    __('%s is optional - if empty, SEO-optimized slugs are automatically generated.', 'artitechcore'), '<code>slug</code>'); ?></li>
                                 <li><strong><?php echo esc_html(artitechcore_get_max_file_size_display()); ?></strong></li>
                                 <li><?php _e('Maximum rows: 10,000', 'artitechcore'); ?></li>
                             </ul>
@@ -543,7 +551,7 @@ function artitechcore_render_csv_tab_content() {
                             class="dg10-btn dg10-btn-primary"
                             role="button"
                             aria-label="<?php esc_attr_e('Upload CSV File and Create Pages', 'artitechcore'); ?>">
-                        <span class="btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Upload icon'); ?>">📤</span>
+                        <span class="btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Upload icon', 'artitechcore'); ?>">📤</span>
                         <span class="btn-text"><?php esc_html_e('Upload and Create Pages', 'artitechcore'); ?></span>
                     </button>
                 </div>
@@ -632,9 +640,10 @@ function artitechcore_menu_generator_tab() {
              echo '<p style="font-size: 14px; margin: 0;">' . esc_html($result->get_error_message()) . '</p>';
              echo '<script>document.getElementById("artitechcore-result-notice").style.borderLeftColor = "#d63638";</script>';
         } elseif ($result) {
-             $edit_link = admin_url('nav-menus.php?action=edit&menu=' . $result);
-             $locations_link = admin_url('nav-menus.php?action=locations');
+             $edit_link = esc_url(admin_url('nav-menus.php?action=edit&menu=' . $result));
+             $locations_link = esc_url(admin_url('nav-menus.php?action=locations'));
              
+             /* translators: %s */
              echo '<h3 style="margin: 0 0 10px; color: #46b450;">' . sprintf(__('%s Created Successfully!', 'artitechcore'), ucwords(str_replace('_', ' ', $menu_type))) . '</h3>';
              echo '<div style="display: flex; gap: 15px; align-items: center; margin-top: 15px;">';
              echo '<a href="' . esc_url($edit_link) . '" class="button button-primary button-large">' . __('Edit Menu Items', 'artitechcore') . '</a>';

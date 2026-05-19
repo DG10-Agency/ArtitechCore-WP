@@ -147,3 +147,7 @@ nbdist/
 .yarn/
 .yarnrc.yml
 .pnp.*
+.claude
+
+# Git objects (blobs)
+/objects/

@@ -173,7 +173,7 @@ function artitechcore_hierarchy_tab() {
             <p><strong><?php esc_html_e('Note:', 'artitechcore'); ?></strong> <?php esc_html_e('This is an analytical visualization. To restructure your hierarchy, please use the native WordPress Page Attributes in the editor.', 'artitechcore'); ?></p>
         </div>
     </div>
-    <input type="hidden" id="artitechcore-export-nonce" value="<?php echo wp_create_nonce('artitechcore_export_nonce'); ?>">
+    <input type="hidden" id="artitechcore-export-nonce" value="<?php echo esc_attr(wp_create_nonce('artitechcore_export_nonce')); ?>">
     <?php
 }
 
@@ -261,8 +261,8 @@ function artitechcore_get_page_hierarchy() {
         $author_name = $author ? $author->display_name : 'Unknown';
         $author_login = $author ? $author->user_login : 'unknown';
         
-        $publish_date = date('M j, Y', strtotime($homepage->post_date));
-        $modified_date = date('M j, Y', strtotime($homepage->post_modified));
+        $publish_date = gmdate('M j, Y', strtotime($homepage->post_date));
+        $modified_date = gmdate('M j, Y', strtotime($homepage->post_modified));
         
         $hierarchy_data[] = array(
             'id' => $homepage->ID,
@@ -279,7 +279,7 @@ function artitechcore_get_page_hierarchy() {
                 'data-is-homepage' => 'true'
             ),
             'a_attr' => array(
-                'href' => get_permalink($homepage->ID),
+                'href' => esc_url(get_permalink($homepage->ID)),
                 'target' => '_blank',
                 'title' => 'View: ' . esc_attr($homepage->post_title)
             ),
@@ -302,8 +302,8 @@ function artitechcore_get_page_hierarchy() {
         $author_login = $author ? $author->user_login : 'unknown';
         
         // Format dates
-        $publish_date = date('M j, Y', strtotime($page->post_date));
-        $modified_date = date('M j, Y', strtotime($page->post_modified));
+        $publish_date = gmdate('M j, Y', strtotime($page->post_date));
+        $modified_date = gmdate('M j, Y', strtotime($page->post_modified));
         
         $hierarchy_data[] = array(
             'id' => $page->ID,
@@ -319,7 +319,7 @@ function artitechcore_get_page_hierarchy() {
                 'data-page-status' => $page->post_status
             ),
             'a_attr' => array(
-                'href' => get_permalink($page->ID),
+                'href' => esc_url(get_permalink($page->ID)),
                 'target' => '_blank',
                 'title' => 'View: ' . esc_attr($page->post_title)
             ),
@@ -385,8 +385,8 @@ function artitechcore_get_page_hierarchy() {
                 $author_name = $author ? $author->display_name : 'Unknown';
                 $author_login = $author ? $author->user_login : 'unknown';
                 
-                $publish_date = date('M j, Y', strtotime($post->post_date));
-                $modified_date = date('M j, Y', strtotime($post->post_modified));
+                $publish_date = gmdate('M j, Y', strtotime($post->post_date));
+                $modified_date = gmdate('M j, Y', strtotime($post->post_modified));
                 
                 $hierarchy_data[] = array(
                     'id' => 'cpt_' . $post->ID,
@@ -403,7 +403,7 @@ function artitechcore_get_page_hierarchy() {
                         'data-post-status' => $post->post_status
                     ),
                     'a_attr' => array(
-                        'href' => get_permalink($post->ID),
+                        'href' => esc_url(get_permalink($post->ID)),
                         'target' => '_blank',
                         'title' => 'View: ' . esc_attr($post->post_title)
                     ),
@@ -680,7 +680,7 @@ function artitechcore_build_hierarchy_for_export($pages) {
             'id' => $page->ID,
             'title' => $page->post_title,
             'parent' => $page->post_parent,
-            'url' => get_permalink($page->ID),
+            'url' => esc_url(get_permalink($page->ID)),
             'excerpt' => $page->post_excerpt,
             'published' => $page->post_date,
             'modified' => $page->post_modified,
@@ -775,8 +775,8 @@ function artitechcore_generate_hierarchy_csv($hierarchy_data) {
             $page['title'],
             $page['url'],
             $page['excerpt'],
-            date('Y-m-d', strtotime($page['published'])),
-            date('Y-m-d', strtotime($page['modified'])),
+            gmdate('Y-m-d', strtotime($page['published'])),
+            gmdate('Y-m-d', strtotime($page['modified'])),
             $author_name,
             $page['status'],
             $page['level'],

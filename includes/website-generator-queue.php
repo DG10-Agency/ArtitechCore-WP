@@ -394,7 +394,7 @@ function artitechcore_process_builder_job($job_id) {
  * Update monthly usage statistics (for cost tracking)
  */
 function artitechcore_update_monthly_stats($pages_generated, $images_generated, $spent = 0.0) {
-    $current_month = date('Y-m');
+    $current_month = gmdate('Y-m');
     $usage_key = 'artitechcore_monthly_usage_' . $current_month;
 
     $usage = get_option($usage_key, [

@@ -200,7 +200,7 @@ function artitechcore_website_builder_tab() {
             </div>
             <?php endforeach; ?>
         </div>
-        <a href="<?php echo esc_url( admin_url( 'admin.php?page=artitechcore-main&tab=settings' ) ); ?>"
+        <a href="<?php echo esc_url( esc_url(admin_url( 'admin.php?page=artitechcore-main&tab=settings' )) ); ?>"
            style="display:inline-block;font-size:1em;font-weight:600;padding:12px 32px;background:linear-gradient(135deg,#4A90E2,#6C63FF);color:#fff;border-radius:8px;text-decoration:none;box-shadow:0 4px 14px rgba(108,99,255,.3);">
             <?php esc_html_e( '⚡ Configure Brand Kit Now →', 'artitechcore' ); ?>
         </a>
@@ -522,7 +522,7 @@ function artitechcore_website_builder_tab() {
                 type: 'POST',
                 data: {
                     action: 'artitechcore_build_website',
-                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>',
+                    nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>',
                     blueprint: blueprintKey,
                     page_configs: JSON.stringify(pageConfigs),
                     generate_images: generateImages ? 1 : 0,
@@ -560,7 +560,7 @@ function artitechcore_website_builder_tab() {
                     data: {
                         action: 'artitechcore_builder_job_status',
                         job_id: jobId,
-                        nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                        nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
                     },
                     success: function(res) {
                         if (res.success) {
@@ -657,11 +657,15 @@ function artitechcore_website_builder_tab() {
             let html = '<div class="notice notice-success"><h3><?php echo esc_js(__('Generation Complete!', 'artitechcore')); ?></h3>';
             
             // LATE ESCAPING & I18N (Compliance Fix)
-            let pagesText = '<?php echo esc_js(__('%d pages created', 'artitechcore')); ?>'.replace('%d', pages);
+            let pagesText = '<?php echo esc_js(
+                /* translators: %d */
+                __('%d pages created', 'artitechcore')); ?>'.replace('%d', pages);
             html += '<p>' + pagesText;
             
             if (images > 0) {
-                let imagesText = '<?php echo esc_js(__(' and %d featured images generated', 'artitechcore')); ?>'.replace('%d', images);
+                let imagesText = '<?php echo esc_js(
+                    /* translators: %d */
+                    __(' and %d featured images generated', 'artitechcore')); ?>'.replace('%d', images);
                 html += imagesText;
             }
             html += '.</p>';
@@ -672,7 +676,9 @@ function artitechcore_website_builder_tab() {
                 let contentCost = parseFloat(data.cost.content_cost).toFixed(4);
                 let imageCost = parseFloat(data.cost.image_cost).toFixed(4);
                 
-                let costText = '<?php echo esc_js(__('Estimated cost: $%s (Content: $%s, Images: $%s)', 'artitechcore')); ?>'
+                let costText = '<?php echo esc_js(
+                    /* translators: %s, %s, %s — keep unordered for JS .replace() sequential matching */
+                    __('Estimated cost: $%s (Content: $%s, Images: $%s)', 'artitechcore')); ?>'
                     .replace('%s', costTotal)
                     .replace('%s', contentCost)
                     .replace('%s', imageCost);
@@ -687,7 +693,9 @@ function artitechcore_website_builder_tab() {
                     html += '<li>' + escapeHtml(err) + '</li>';
                 });
                 if (summary.errors.length > 5) {
-                    let moreErrorsText = '<?php echo esc_js(__('... and %d more. Check error logs for details.', 'artitechcore')); ?>'
+                    let moreErrorsText = '<?php echo esc_js(
+                        /* translators: %d */
+                        __('... and %d more. Check error logs for details.', 'artitechcore')); ?>'
                         .replace('%d', (summary.errors.length - 5));
                     html += '<li>' + moreErrorsText + '</li>';
                 }
@@ -712,7 +720,7 @@ function artitechcore_website_builder_tab() {
                 data: {
                     action: 'artitechcore_builder_cancel_job',
                     job_id: currentJobId,
-                    nonce: '<?php echo wp_create_nonce("artitechcore_ajax_nonce"); ?>'
+                    nonce: '<?php echo esc_attr(wp_create_nonce("artitechcore_ajax_nonce")); ?>'
                 },
                 success: function(res) {
                     if (res.success) {
@@ -855,7 +863,7 @@ function artitechcore_ajax_build_website() {
     $monthly_limit = get_option('artitechcore_monthly_cost_limit', null);
     
     if ($monthly_limit !== null) {
-        $current_month = date('Y-m');
+        $current_month = gmdate('Y-m');
         $usage = get_option('artitechcore_monthly_usage_' . $current_month, ['spent' => 0]);
         $spent_so_far = isset($usage['spent']) ? (float)$usage['spent'] : 0.0;
         
@@ -897,7 +905,7 @@ function artitechcore_ajax_build_website() {
         $response_data = [
             'message' => __('Website generation started in background. You will receive notifications when complete.', 'artitechcore'),
             'job_id' => $job_id,
-            'status_url' => admin_url('admin-ajax.php?action=artitechcore_builder_job_status'),
+            'status_url' => esc_url(admin_url('admin-ajax.php?action=artitechcore_builder_job_status')),
             'cost' => $cost_estimate,
             'pages_total' => array_sum(array_column($page_configs, 'count')),
             'status' => 'queued'
@@ -1276,13 +1284,15 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
     ], 'openai');
 
     if (is_wp_error($response)) {
-        throw new Exception(esc_html(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message())));
+        /* translators: %s */
+        throw new Exception(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message()));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
-        throw new Exception(esc_html(sprintf(__('OpenAI API returned error %d: %s', 'artitechcore'), $response_code, $error_message)));
+        /* translators: %d, %s */
+        throw new Exception(sprintf(__('OpenAI API returned error %1$d: %2$s', 'artitechcore'), $response_code, $error_message));
     }
 
     $response_body = wp_remote_retrieve_body($response);
@@ -1297,7 +1307,8 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
 
     if (isset($decoded_response['error'])) {
         $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI API error.', 'artitechcore');
-        throw new Exception(esc_html(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message)));
+        /* translators: %s */
+        throw new Exception(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message));
     }
 
     if (!isset($decoded_response['choices'][0]['message']['content'])) {
@@ -1334,7 +1345,7 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
         if (preg_match('/<title[^>]*>(.*?)<\/title>/i', $html_content, $matches)) {
             $title = sanitize_text_field(html_entity_decode(trim($matches[1]), ENT_QUOTES, 'UTF-8'));
         } elseif (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html_content, $matches)) {
-            $title = sanitize_text_field(html_entity_decode(trim(strip_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
+            $title = sanitize_text_field(html_entity_decode(trim(wp_strip_all_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
         }
     }
     
@@ -1403,13 +1414,15 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
     ], 'gemini');
 
     if (is_wp_error($response)) {
-        throw new Exception(esc_html(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message())));
+        /* translators: %s */
+        throw new Exception(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message()));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
-        throw new Exception(esc_html(sprintf(__('Gemini API returned error %d: %s', 'artitechcore'), $response_code, $error_message)));
+        /* translators: %d, %s */
+        throw new Exception(sprintf(__('Gemini API returned error %1$d: %2$s', 'artitechcore'), $response_code, $error_message));
     }
 
     $response_body = wp_remote_retrieve_body($response);
@@ -1424,7 +1437,8 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
 
     if (isset($decoded_response['error'])) {
         $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown Gemini API error.', 'artitechcore');
-        throw new Exception(esc_html(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message)));
+        /* translators: %s */
+        throw new Exception(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message));
     }
 
     if (!isset($decoded_response['candidates'][0]['content']['parts'][0]['text'])) {
@@ -1460,7 +1474,7 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
         if (preg_match('/<title[^>]*>(.*?)<\/title>/i', $html_content, $matches)) {
             $title = sanitize_text_field(html_entity_decode(trim($matches[1]), ENT_QUOTES, 'UTF-8'));
         } elseif (preg_match('/<h1[^>]*>(.*?)<\/h1>/i', $html_content, $matches)) {
-            $title = sanitize_text_field(html_entity_decode(trim(strip_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
+            $title = sanitize_text_field(html_entity_decode(trim(wp_strip_all_tags($matches[1])), ENT_QUOTES, 'UTF-8'));
         }
     }
     

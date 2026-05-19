@@ -51,7 +51,7 @@ class ArtitechCore_Keyword_Analyzer {
             $formatted_pages[] = array(
                 'id' => $page->ID,
                 'title' => $page->post_title,
-                'url' => get_permalink($page->ID),
+                'url' => esc_url(get_permalink($page->ID)),
                 'type' => $page->post_type
             );
         }
@@ -498,7 +498,7 @@ class ArtitechCore_Keyword_Analyzer {
             'page_info' => array(
                 'id' => $page->ID,
                 'title' => $page->post_title,
-                'url' => get_permalink($page->ID),
+                'url' => esc_url(get_permalink($page->ID)),
                 'type' => $page->post_type,
                 'word_count' => $total_words,
                 'analysis_date' => current_time('Y-m-d H:i:s'),
@@ -1105,6 +1105,7 @@ class ArtitechCore_Keyword_Analyzer {
                 'type' => 'warning',
                 'priority' => 'high',
                 'title' => __('Over-Optimization Detected', 'artitechcore'),
+                /* translators: %d */
                 'message' => sprintf(__('%d keyword(s) have high density (≥3%%). Consider reducing usage to avoid keyword stuffing penalties.', 'artitechcore'), $status_counts['high']),
                 'keywords' => $keyword_list,
                 'action' => __('Reduce keyword frequency and use synonyms or related terms instead.', 'artitechcore')
@@ -1120,6 +1121,7 @@ class ArtitechCore_Keyword_Analyzer {
                 'type' => 'info',
                 'priority' => 'medium',
                 'title' => __('Under-Optimization Detected', 'artitechcore'),
+                /* translators: %d */
                 'message' => sprintf(__('%d keyword(s) have low density (0.2-0.8%%). Consider increasing usage naturally.', 'artitechcore'), $status_counts['low']),
                 'keywords' => $keyword_list,
                 'action' => __('Add keywords naturally in headings, meta descriptions, and content.', 'artitechcore')
@@ -1135,6 +1137,7 @@ class ArtitechCore_Keyword_Analyzer {
                 'type' => 'error',
                 'priority' => 'high',
                 'title' => __('Keywords Not Found', 'artitechcore'),
+                /* translators: %d */
                 'message' => sprintf(__('%d keyword(s) were not found in the content.', 'artitechcore'), $status_counts['none']),
                 'keywords' => $keyword_list,
                 'action' => __('Add these keywords to your content, title, or meta description.', 'artitechcore')
@@ -1148,6 +1151,7 @@ class ArtitechCore_Keyword_Analyzer {
                 'type' => 'success',
                 'priority' => 'low',
                 'title' => __('Good Optimization', 'artitechcore'),
+                /* translators: %d */
                 'message' => sprintf(__('%d keyword(s) are well-optimized with good density levels.', 'artitechcore'), $good_count),
                 'action' => __('Keep maintaining these keyword levels.', 'artitechcore')
             );
@@ -1166,6 +1170,7 @@ class ArtitechCore_Keyword_Analyzer {
                     'type' => 'warning',
                     'priority' => 'medium',
                     'title' => __('Content Too Short', 'artitechcore'),
+                    /* translators: %d */
                     'message' => sprintf(__('Content has only %d words. Google prefers content with 300+ words.', 'artitechcore'), $total_words),
                     'action' => __('Add more valuable content to improve SEO performance.', 'artitechcore')
                 );
@@ -1174,6 +1179,7 @@ class ArtitechCore_Keyword_Analyzer {
                     'type' => 'info',
                     'priority' => 'low',
                     'title' => __('Content Very Long', 'artitechcore'),
+                    /* translators: %d */
                     'message' => sprintf(__('Content has %d words. Consider breaking into multiple pages if appropriate.', 'artitechcore'), $total_words),
                     'action' => __('Ensure content remains engaging and valuable throughout.', 'artitechcore')
                 );
@@ -1197,7 +1203,7 @@ class ArtitechCore_Keyword_Analyzer {
         $keywords = $analysis_data['keywords'];
         $summary = $analysis_data['summary'];
         
-        $filename = sanitize_file_name($page_info['title']) . '_keyword_analysis_' . date('Y-m-d');
+        $filename = sanitize_file_name($page_info['title']) . '_keyword_analysis_' . gmdate('Y-m-d');
         
         switch ($format) {
             case 'csv':

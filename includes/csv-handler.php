@@ -20,7 +20,8 @@ function artitechcore_create_pages_from_csv($file) {
             $max_size_mb = round($max_file_size / (1024 * 1024), 2);
             echo '<div class="notice notice-error is-dismissible"><p>' . 
                 sprintf(
-                    esc_html__('File size too large. Your file is %s MB, but the maximum allowed size is %s MB. Please reduce the file size and try again.', 'artitechcore'),
+                    /* translators: %s, %s */
+                    esc_html__('File size too large. Your file is %1$s MB, but the maximum allowed size is %2$s MB. Please reduce the file size and try again.', 'artitechcore'),
                     $file_size_mb,
                     $max_size_mb
                 ) . '</p></div>';
@@ -39,7 +40,8 @@ function artitechcore_create_pages_from_csv($file) {
             $max_size_mb = round($max_file_size / (1024 * 1024), 2);
             echo '<div class="notice notice-error is-dismissible"><p>' . 
                 sprintf(
-                    esc_html__('File size too large. Your file is %s MB, but the maximum allowed size is %s MB. Please reduce the file size and try again.', 'artitechcore'),
+                    /* translators: %s, %s */
+                    esc_html__('File size too large. Your file is %1$s MB, but the maximum allowed size is %2$s MB. Please reduce the file size and try again.', 'artitechcore'),
                     $file_size_mb,
                     $max_size_mb
                 ) . '</p></div>';
@@ -79,6 +81,7 @@ function artitechcore_create_pages_from_csv($file) {
         if (!in_array($mime_type, $allowed_mime_types)) {
             echo '<div class="notice notice-error is-dismissible"><p>' . 
                 sprintf(
+                    /* translators: %s */
                     esc_html__('Invalid file type. Expected CSV file, but received %s. Please upload a valid CSV file.', 'artitechcore'),
                     esc_html($mime_type)
                 ) . '</p></div>';
@@ -90,6 +93,7 @@ function artitechcore_create_pages_from_csv($file) {
         if ($file_extension !== 'csv') {
             echo '<div class="notice notice-error is-dismissible"><p>' . 
                 sprintf(
+                    /* translators: %s */
                     esc_html__('Invalid file extension. Expected .csv file, but received .%s. Please upload a valid CSV file.', 'artitechcore'),
                     esc_html($file_extension)
                 ) . '</p></div>';
@@ -202,6 +206,7 @@ function artitechcore_create_pages_from_csv($file) {
     }
 
     if ($created_pages > 0) {
+        /* translators: %d */
         echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(esc_html__('%d pages created successfully from the CSV file!', 'artitechcore'), absint($created_pages)) . '</p></div>';
     } else {
         echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__('No pages were created from the CSV file. Please check the file format and content.', 'artitechcore') . '</p></div>';
@@ -227,6 +232,7 @@ function artitechcore_get_upload_error_message($error_code) {
 function artitechcore_get_max_file_size_display() {
     $max_file_size = 5 * 1024 * 1024; // 5MB in bytes
     $max_size_mb = round($max_file_size / (1024 * 1024), 2);
+    /* translators: %s */
     return sprintf(__('Maximum file size: %s MB', 'artitechcore'), $max_size_mb);
 }
 

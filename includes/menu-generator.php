@@ -62,7 +62,7 @@ class ArtitechCore_Menu_Generator {
                     $legal_pages[] = array(
                         'ID' => $page->ID,
                         'title' => $page->post_title,
-                        'url' => get_permalink($page->ID)
+                        'url' => esc_url(get_permalink($page->ID))
                     );
                     break; // Stop checking other patterns for this page
                 }
@@ -124,7 +124,7 @@ class ArtitechCore_Menu_Generator {
 
         if (!empty($contact_pages)) {
             $contact_page = $contact_pages[0];
-            $this->add_menu_item($menu_id, 'Contact', get_permalink($contact_page->ID));
+            $this->add_menu_item($menu_id, 'Contact', esc_url(get_permalink($contact_page->ID)));
         }
         
         // Assign to menu location if specified
@@ -269,7 +269,7 @@ class ArtitechCore_Menu_Generator {
         
         // Create main Services parent item (use main services page if exists)
         $services_parent_url = isset($service_categories['main_services']) 
-            ? get_permalink($service_categories['main_services']->ID) 
+            ? esc_url(get_permalink($service_categories['main_services']->ID)) 
             : '#';
         $services_parent_id = $this->add_menu_item($menu_id, 'Services', $services_parent_url, 0);
         
@@ -277,14 +277,14 @@ class ArtitechCore_Menu_Generator {
         foreach ($organized_services as $category => $services) {
             if (count($services) == 1) {
                 // Single service - add directly under main Services
-                $this->add_menu_item($menu_id, $services[0]->post_title, get_permalink($services[0]->ID), $services_parent_id);
+                $this->add_menu_item($menu_id, $services[0]->post_title, esc_url(get_permalink($services[0]->ID)), $services_parent_id);
             } else {
                 // Multiple services in category - create subcategory
                 $category_parent_id = $this->add_menu_item($menu_id, $category, '#', $services_parent_id);
                 
                 foreach ($services as $service) {
                     // Add actual service pages
-                    $service_item_id = $this->add_menu_item($menu_id, $service->post_title, get_permalink($service->ID), $category_parent_id);
+                    $service_item_id = $this->add_menu_item($menu_id, $service->post_title, esc_url(get_permalink($service->ID)), $category_parent_id);
                     
                     // Add any child pages of this service
                     $child_services = get_pages(array(
@@ -293,7 +293,7 @@ class ArtitechCore_Menu_Generator {
                     ));
                     
                     foreach ($child_services as $child_service) {
-                        $this->add_menu_item($menu_id, $child_service->post_title, get_permalink($child_service->ID), $service_item_id);
+                        $this->add_menu_item($menu_id, $child_service->post_title, esc_url(get_permalink($child_service->ID)), $service_item_id);
                     }
                 }
             }
@@ -309,7 +309,7 @@ class ArtitechCore_Menu_Generator {
         
         foreach ($service_pages as $service) {
             if (!in_array($service->ID, $all_organized_ids)) {
-                $this->add_menu_item($menu_id, $service->post_title, get_permalink($service->ID), $services_parent_id);
+                $this->add_menu_item($menu_id, $service->post_title, esc_url(get_permalink($service->ID)), $services_parent_id);
             }
         }
         
@@ -350,7 +350,7 @@ class ArtitechCore_Menu_Generator {
             
             $debug_info[$page->ID] = array(
                 'title' => $page->post_title,
-                'url' => get_permalink($page->ID),
+                'url' => esc_url(get_permalink($page->ID)),
                 'detected' => false,
                 'reason' => 'Not detected as service page'
             );
@@ -727,17 +727,17 @@ class ArtitechCore_Menu_Generator {
             if ($section === 'other') {
                 // Add other pages directly to menu
                 foreach ($data as $page) {
-                    $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID), 0);
+                    $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)), 0);
                 }
             } else {
                 // Handle structured sections
                 if (isset($data['main_page']) && $data['main_page']) {
                     // Use main page as parent
-                    $parent_id = $this->add_menu_item($menu_id, $data['main_page']->post_title, get_permalink($data['main_page']->ID), 0);
+                    $parent_id = $this->add_menu_item($menu_id, $data['main_page']->post_title, esc_url(get_permalink($data['main_page']->ID)), 0);
                     
                     // Add sub-pages under main page
                     foreach ($data['sub_pages'] as $sub_page) {
-                        $this->add_menu_item($menu_id, $sub_page->post_title, get_permalink($sub_page->ID), $parent_id);
+                        $this->add_menu_item($menu_id, $sub_page->post_title, esc_url(get_permalink($sub_page->ID)), $parent_id);
                     }
                     
                     // Add any WordPress child pages
@@ -747,7 +747,7 @@ class ArtitechCore_Menu_Generator {
                     ));
                     
                     foreach ($wp_children as $child) {
-                        $this->add_menu_item($menu_id, $child->post_title, get_permalink($child->ID), $parent_id);
+                        $this->add_menu_item($menu_id, $child->post_title, esc_url(get_permalink($child->ID)), $parent_id);
                     }
                     
                 } elseif (!empty($data['sub_pages'])) {
@@ -759,7 +759,7 @@ class ArtitechCore_Menu_Generator {
                     $parent_id = $this->add_menu_item($menu_id, $category_title, '#', 0);
                     
                     foreach ($data['sub_pages'] as $sub_page) {
-                        $this->add_menu_item($menu_id, $sub_page->post_title, get_permalink($sub_page->ID), $parent_id);
+                        $this->add_menu_item($menu_id, $sub_page->post_title, esc_url(get_permalink($sub_page->ID)), $parent_id);
                     }
                 }
             }
@@ -958,16 +958,16 @@ class ArtitechCore_Menu_Generator {
         
         // About section
         if ($structure['about']['main_page']) {
-            $about_parent_id = $this->add_menu_item($menu_id, $structure['about']['main_page']->post_title, get_permalink($structure['about']['main_page']->ID), 0);
+            $about_parent_id = $this->add_menu_item($menu_id, $structure['about']['main_page']->post_title, esc_url(get_permalink($structure['about']['main_page']->ID)), 0);
             
             foreach ($structure['about']['sub_pages'] as $sub_page) {
-                $this->add_menu_item($menu_id, $sub_page->post_title, get_permalink($sub_page->ID), $about_parent_id);
+                $this->add_menu_item($menu_id, $sub_page->post_title, esc_url(get_permalink($sub_page->ID)), $about_parent_id);
             }
         } elseif (!empty($structure['about']['sub_pages'])) {
             $about_parent_id = $this->add_menu_item($menu_id, 'About', '#', 0);
             
             foreach ($structure['about']['sub_pages'] as $sub_page) {
-                $this->add_menu_item($menu_id, $sub_page->post_title, get_permalink($sub_page->ID), $about_parent_id);
+                $this->add_menu_item($menu_id, $sub_page->post_title, esc_url(get_permalink($sub_page->ID)), $about_parent_id);
             }
         } else {
             $this->add_menu_item($menu_id, 'About', home_url('/about/'));
@@ -975,20 +975,20 @@ class ArtitechCore_Menu_Generator {
         
         // Services section
         $services_url = $structure['services']['main_page'] 
-            ? get_permalink($structure['services']['main_page']->ID) 
+            ? esc_url(get_permalink($structure['services']['main_page']->ID)) 
             : home_url('/services/');
         $services_parent_id = $this->add_menu_item($menu_id, 'Services', $services_url, 0);
         
         foreach ($structure['services']['categories'] as $category_name => $services) {
             if (count($services) == 1) {
                 // Single service - add directly under Services
-                $this->add_menu_item($menu_id, $services[0]->post_title, get_permalink($services[0]->ID), $services_parent_id);
+                $this->add_menu_item($menu_id, $services[0]->post_title, esc_url(get_permalink($services[0]->ID)), $services_parent_id);
             } else {
                 // Multiple services - create category
                 $category_parent_id = $this->add_menu_item($menu_id, $category_name, '#', $services_parent_id);
                 
                 foreach ($services as $service) {
-                    $this->add_menu_item($menu_id, $service->post_title, get_permalink($service->ID), $category_parent_id);
+                    $this->add_menu_item($menu_id, $service->post_title, esc_url(get_permalink($service->ID)), $category_parent_id);
                 }
             }
         }
@@ -996,12 +996,12 @@ class ArtitechCore_Menu_Generator {
         // Industries section (only if there are industry pages)
         if ($structure['industries']['main_page'] || !empty($structure['industries']['sub_pages'])) {
             $industries_url = $structure['industries']['main_page'] 
-                ? get_permalink($structure['industries']['main_page']->ID) 
+                ? esc_url(get_permalink($structure['industries']['main_page']->ID)) 
                 : '#';
             $industries_parent_id = $this->add_menu_item($menu_id, 'Industries', $industries_url, 0);
             
             foreach ($structure['industries']['sub_pages'] as $industry_page) {
-                $this->add_menu_item($menu_id, $industry_page->post_title, get_permalink($industry_page->ID), $industries_parent_id);
+                $this->add_menu_item($menu_id, $industry_page->post_title, esc_url(get_permalink($industry_page->ID)), $industries_parent_id);
             }
         }
         
@@ -1011,7 +1011,7 @@ class ArtitechCore_Menu_Generator {
             
             // Add blog if exists
             if ($structure['resources']['blog']) {
-                $this->add_menu_item($menu_id, 'Blog', get_permalink($structure['resources']['blog']), $resources_parent_id);
+                $this->add_menu_item($menu_id, 'Blog', esc_url(get_permalink($structure['resources']['blog'])), $resources_parent_id);
                 
                 // Add categories
                 foreach ($structure['resources']['categories'] as $category) {
@@ -1021,13 +1021,13 @@ class ArtitechCore_Menu_Generator {
             
             // Add resource pages
             foreach ($structure['resources']['resource_pages'] as $resource_page) {
-                $this->add_menu_item($menu_id, $resource_page->post_title, get_permalink($resource_page->ID), $resources_parent_id);
+                $this->add_menu_item($menu_id, $resource_page->post_title, esc_url(get_permalink($resource_page->ID)), $resources_parent_id);
             }
         }
         
         // Contact
         if ($structure['contact']) {
-            $this->add_menu_item($menu_id, $structure['contact']->post_title, get_permalink($structure['contact']->ID));
+            $this->add_menu_item($menu_id, $structure['contact']->post_title, esc_url(get_permalink($structure['contact']->ID)));
         } else {
             $this->add_menu_item($menu_id, 'Contact', home_url('/contact/'));
         }
@@ -1075,7 +1075,7 @@ class ArtitechCore_Menu_Generator {
         }
 
         // Add main resources link
-        $resources_url = $main_resources_page ? get_permalink($main_resources_page->ID) : home_url('/resources/');
+        $resources_url = $main_resources_page ? esc_url(get_permalink($main_resources_page->ID)) : home_url('/resources/');
         $resources_parent_id = $this->add_menu_item($menu_id, 'Resources', $resources_url);
 
         // Organize resource pages into categories
@@ -1083,20 +1083,20 @@ class ArtitechCore_Menu_Generator {
 
         // Add blog/news first if exists
         if (get_option('page_for_posts')) {
-            $this->add_menu_item($menu_id, 'Blog', get_permalink(get_option('page_for_posts')), $resources_parent_id);
+            $this->add_menu_item($menu_id, 'Blog', esc_url(get_permalink(get_option('page_for_posts'))), $resources_parent_id);
         }
 
         // Build organized resource structure
         foreach ($organized_resources as $category_name => $pages) {
             if (count($pages) == 1) {
                 // Single page - add directly under Resources
-                $this->add_menu_item($menu_id, $pages[0]->post_title, get_permalink($pages[0]->ID), $resources_parent_id);
+                $this->add_menu_item($menu_id, $pages[0]->post_title, esc_url(get_permalink($pages[0]->ID)), $resources_parent_id);
             } else {
                 // Multiple pages - create category
                 $category_parent_id = $this->add_menu_item($menu_id, $category_name, '#', $resources_parent_id);
                 
                 foreach ($pages as $page) {
-                    $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID), $category_parent_id);
+                    $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)), $category_parent_id);
                     
                     // Add any child pages
                     $child_pages = get_pages(array(
@@ -1105,7 +1105,7 @@ class ArtitechCore_Menu_Generator {
                     ));
                     
                     foreach ($child_pages as $child_page) {
-                        $this->add_menu_item($menu_id, $child_page->post_title, get_permalink($child_page->ID), $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID), $category_parent_id));
+                        $this->add_menu_item($menu_id, $child_page->post_title, esc_url(get_permalink($child_page->ID)), $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)), $category_parent_id));
                     }
                 }
             }
@@ -1307,31 +1307,31 @@ class ArtitechCore_Menu_Generator {
 
         // Add high priority pages (About, Services, Contact)
         foreach ($footer_structure['high_priority'] as $page) {
-            $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID));
+            $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)));
         }
 
         // Add medium priority pages (Resources, Support, etc.)
         foreach ($footer_structure['medium_priority'] as $page) {
-            $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID));
+            $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)));
         }
 
         // Add legal pages (Privacy, Terms, etc.)
         foreach ($footer_structure['legal_pages'] as $page) {
-            $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID));
+            $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)));
         }
 
         // Add company pages if space allows (limited to 3)
         $added_company = 0;
         foreach ($footer_structure['company_pages'] as $page) {
             if ($added_company < 3) {
-                $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID));
+                $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)));
                 $added_company++;
             }
         }
 
         // Add sitemap and other utility pages
         foreach ($footer_structure['utility_pages'] as $page) {
-            $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID));
+            $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)));
         }
 
         // Add default sitemap if no sitemap page found
@@ -1551,7 +1551,7 @@ class ArtitechCore_Menu_Generator {
         }
 
         // Add main support link
-        $support_url = $main_support_page ? get_permalink($main_support_page->ID) : home_url('/support/');
+        $support_url = $main_support_page ? esc_url(get_permalink($main_support_page->ID)) : home_url('/support/');
         $support_parent_id = $this->add_menu_item($menu_id, 'Support', $support_url);
 
         // Organize support pages into categories
@@ -1561,13 +1561,13 @@ class ArtitechCore_Menu_Generator {
         foreach ($organized_support as $category_name => $pages) {
             if (count($pages) == 1) {
                 // Single page - add directly under Support
-                $this->add_menu_item($menu_id, $pages[0]->post_title, get_permalink($pages[0]->ID), $support_parent_id);
+                $this->add_menu_item($menu_id, $pages[0]->post_title, esc_url(get_permalink($pages[0]->ID)), $support_parent_id);
             } else {
                 // Multiple pages - create category
                 $category_parent_id = $this->add_menu_item($menu_id, $category_name, '#', $support_parent_id);
                 
                 foreach ($pages as $page) {
-                    $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID), $category_parent_id);
+                    $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)), $category_parent_id);
                     
                     // Add any child pages
                     $child_pages = get_pages(array(
@@ -1576,7 +1576,7 @@ class ArtitechCore_Menu_Generator {
                     ));
                     
                     foreach ($child_pages as $child_page) {
-                        $this->add_menu_item($menu_id, $child_page->post_title, get_permalink($child_page->ID), $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID), $category_parent_id));
+                        $this->add_menu_item($menu_id, $child_page->post_title, esc_url(get_permalink($child_page->ID)), $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)), $category_parent_id));
                     }
                 }
             }
@@ -1771,7 +1771,7 @@ class ArtitechCore_Menu_Generator {
         }
 
         // Add main products link
-        $products_url = $main_products_page ? get_permalink($main_products_page->ID) : home_url('/products/');
+        $products_url = $main_products_page ? esc_url(get_permalink($main_products_page->ID)) : home_url('/products/');
         $products_parent_id = $this->add_menu_item($menu_id, 'Products', $products_url);
 
         // Organize product pages into categories
@@ -1781,13 +1781,13 @@ class ArtitechCore_Menu_Generator {
         foreach ($organized_products as $category_name => $pages) {
             if (count($pages) == 1) {
                 // Single page - add directly under Products
-                $this->add_menu_item($menu_id, $pages[0]->post_title, get_permalink($pages[0]->ID), $products_parent_id);
+                $this->add_menu_item($menu_id, $pages[0]->post_title, esc_url(get_permalink($pages[0]->ID)), $products_parent_id);
             } else {
                 // Multiple pages - create category
                 $category_parent_id = $this->add_menu_item($menu_id, $category_name, '#', $products_parent_id);
                 
                 foreach ($pages as $page) {
-                    $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID), $category_parent_id);
+                    $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)), $category_parent_id);
                     
                     // Add any child pages
                     $child_pages = get_pages(array(
@@ -1796,7 +1796,7 @@ class ArtitechCore_Menu_Generator {
                     ));
                     
                     foreach ($child_pages as $child_page) {
-                        $this->add_menu_item($menu_id, $child_page->post_title, get_permalink($child_page->ID), $this->add_menu_item($menu_id, $page->post_title, get_permalink($page->ID), $category_parent_id));
+                        $this->add_menu_item($menu_id, $child_page->post_title, esc_url(get_permalink($child_page->ID)), $this->add_menu_item($menu_id, $page->post_title, esc_url(get_permalink($page->ID)), $category_parent_id));
                     }
                 }
             }

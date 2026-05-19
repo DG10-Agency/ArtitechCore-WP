@@ -5,7 +5,7 @@
  * Description: The core engine for Artitech WP ecosystem, providing AI-powered page generation, hierarchy management, and structural organization.
  * Version: 1.1.2
  * Requires at least: 5.6
- * Tested up to: 6.4
+ * Tested up to: 6.9
  * Requires PHP: 7.4
  * Author: DG10 Agency
  * Author URI: https://www.dg10.agency
@@ -13,7 +13,6 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: artitechcore
  * Domain Path: /languages
- * Network: false
  * 
  * @package ArtitechCore
  * @version 1.1.2
@@ -158,13 +157,13 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
 
     $mu_dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (ABSPATH . 'wp-content/mu-plugins');
     if (!is_dir($mu_dir)) {
-        if (!wp_is_writable(dirname($mu_dir)) || !@mkdir($mu_dir, 0755, true)) {
+        if (!wp_is_writable(dirname($mu_dir)) || !@wp_mkdir_p($mu_dir, 0755, true)) {
             error_log('ArtitechCore Error: Could not create mu-plugins directory.');
             return false;
         }
     }
     
-    if (!is_writable($mu_dir)) {
+    if (!wp_is_writable($mu_dir)) {
         error_log('ArtitechCore Error: mu-plugins directory is not writable.');
         return false;
     }
@@ -287,7 +286,7 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
         $bridge_code .= "}, 99);\n";
     }
 
-    @unlink($mu_dir . '/artitechcore-schema-bridge.php');
+    @wp_delete_file($mu_dir . '/artitechcore-schema-bridge.php');
     return @file_put_contents($mu_dir . '/artitechcore-persistence-bridge.php', $bridge_code);
 }
 
@@ -608,12 +607,12 @@ function artitechcore_admin_scripts($hook) {
 
     // --- LOCALIZATION (Unified) ---
     wp_localize_script('artitechcore-scripts', 'artitechcore_data', array(
-        'ajaxurl'    => admin_url('admin-ajax.php'),
+        'ajaxurl'    => esc_url(admin_url('admin-ajax.php')),
         'plugin_url' => ARTITECHCORE_PLUGIN_URL,
         'post_id'    => $post ? $post->ID : 0,
         'nonces'     => array(
-            'ajax'     => wp_create_nonce('artitechcore_ajax_nonce'),
-            'main'     => wp_create_nonce('artitechcore_nonce'),
+            'ajax'     => esc_attr(wp_create_nonce('artitechcore_ajax_nonce')),
+            'main'     => esc_attr(wp_create_nonce('artitechcore_nonce')),
         ),
         'strings'    => array(
             'processing'    => esc_html__('Processing...', 'artitechcore'),
@@ -625,32 +624,32 @@ function artitechcore_admin_scripts($hook) {
 
     // Also localize for the keyword analyzer specifically since it uses its own variable name
     wp_localize_script('artitechcore-keyword-analyzer', 'artitechcore_keyword_data', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+        'ajaxurl' => esc_url(admin_url('admin-ajax.php')),
+        'nonce'   => esc_attr(wp_create_nonce('artitechcore_ajax_nonce'))
     ));
 
     // Localize for Hierarchy
     wp_localize_script('artitechcore-hierarchy', 'artitechcoreHierarchy', array(
         'rest_url' => esc_url_raw(rest_url('artitechcore/v1/')),
-        'nonce'    => wp_create_nonce('wp_rest')
+        'nonce'    => esc_attr(wp_create_nonce('wp_rest'))
     ));
 
     // Localize for CPT Management
     wp_localize_script('artitechcore-cpt-management', 'artitechcore_cpt_data', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+        'ajaxurl' => esc_url(admin_url('admin-ajax.php')),
+        'nonce'   => esc_attr(wp_create_nonce('artitechcore_ajax_nonce'))
     ));
 
     // Localize for AI Generator
     wp_localize_script('artitechcore-ai-generator', 'artitechcore_ai_data', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+        'ajaxurl' => esc_url(admin_url('admin-ajax.php')),
+        'nonce'   => esc_attr(wp_create_nonce('artitechcore_ajax_nonce'))
     ));
 
     // Localize for Schema Generator
     wp_localize_script('artitechcore-schema-generator', 'artitechcore_schema_data', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+        'ajaxurl' => esc_url(admin_url('admin-ajax.php')),
+        'nonce'   => esc_attr(wp_create_nonce('artitechcore_ajax_nonce'))
     ));
 }
 add_action('admin_enqueue_scripts', 'artitechcore_admin_scripts');
@@ -662,8 +661,8 @@ function artitechcore_frontend_scripts() {
     wp_enqueue_script('artitechcore-frontend', ARTITECHCORE_PLUGIN_URL . 'assets/js/frontend.js', array(), ARTITECHCORE_VERSION, true);
     
     wp_localize_script('artitechcore-frontend', 'artitechcore_frontend_data', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => wp_create_nonce('artitechcore_ajax_nonce')
+        'ajaxurl' => esc_url(admin_url('admin-ajax.php')),
+        'nonce'   => esc_attr(wp_create_nonce('artitechcore_ajax_nonce'))
     ));
 }
 add_action('wp_enqueue_scripts', 'artitechcore_frontend_scripts');
