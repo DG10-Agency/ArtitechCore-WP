@@ -925,7 +925,7 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
     $blueprint_data = $blueprints[$blueprint] ?? null;
 
     if (!$blueprint_data) {
-        throw new Exception(__('Invalid blueprint selected', 'artitechcore'));
+        throw new Exception(esc_html(__('Invalid blueprint selected', 'artitechcore')));
     }
 
     $pages_created = 0;
@@ -1231,7 +1231,7 @@ function artitechcore_generate_page_content($page_type, $brand_kit, $instance = 
  */
 function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, $instance, $api_key, $endpoint = 'https://api.openai.com/v1/chat/completions') {
     if (empty($api_key)) {
-        throw new Exception(__('API key not configured', 'artitechcore'));
+        throw new Exception(esc_html(__('API key not configured', 'artitechcore')));
     }
 
     $prompt = artitechcore_build_page_generation_prompt($page_type, $brand_kit, $instance);
@@ -1263,7 +1263,7 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
     $body = json_encode($request_data);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception(__('Failed to encode request data for OpenAI API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Failed to encode request data for OpenAI API.', 'artitechcore')));
     }
 
     $response = artitechcore_safe_ai_remote_post($url, [
@@ -1276,32 +1276,32 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
     ], 'openai');
 
     if (is_wp_error($response)) {
-        throw new Exception(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message()));
+        throw new Exception(esc_html(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message())));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
-        throw new Exception(sprintf(__('OpenAI API returned error %d: %s', 'artitechcore'), $response_code, $error_message));
+        throw new Exception(esc_html(sprintf(__('OpenAI API returned error %d: %s', 'artitechcore'), $response_code, $error_message)));
     }
 
     $response_body = wp_remote_retrieve_body($response);
     if (empty($response_body)) {
-        throw new Exception(__('Empty response received from OpenAI API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Empty response received from OpenAI API.', 'artitechcore')));
     }
 
     $decoded_response = json_decode($response_body, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception(__('Invalid JSON response from OpenAI API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Invalid JSON response from OpenAI API.', 'artitechcore')));
     }
 
     if (isset($decoded_response['error'])) {
         $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI API error.', 'artitechcore');
-        throw new Exception(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message));
+        throw new Exception(esc_html(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message)));
     }
 
     if (!isset($decoded_response['choices'][0]['message']['content'])) {
-        throw new Exception(__('Unexpected response format from OpenAI API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Unexpected response format from OpenAI API.', 'artitechcore')));
     }
 
     $html_content = trim($decoded_response['choices'][0]['message']['content']);
@@ -1313,7 +1313,7 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
     $response_content = trim($response_content);
 
     if (empty($response_content)) {
-        throw new Exception(__('Empty content received from OpenAI API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Empty content received from OpenAI API.', 'artitechcore')));
     }
     
     $parsed_response = json_decode($response_content, true);
@@ -1371,7 +1371,7 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
  */
 function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, $instance, $api_key) {
     if (empty($api_key)) {
-        throw new Exception(__('Gemini API key not configured', 'artitechcore'));
+        throw new Exception(esc_html(__('Gemini API key not configured', 'artitechcore')));
     }
 
     $prompt = artitechcore_build_page_generation_prompt($page_type, $brand_kit, $instance);
@@ -1393,7 +1393,7 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
     ]);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception(__('Failed to encode request data for Gemini API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Failed to encode request data for Gemini API.', 'artitechcore')));
     }
 
     $response = artitechcore_safe_ai_remote_post($url, [
@@ -1403,32 +1403,32 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
     ], 'gemini');
 
     if (is_wp_error($response)) {
-        throw new Exception(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message()));
+        throw new Exception(esc_html(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message())));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
-        throw new Exception(sprintf(__('Gemini API returned error %d: %s', 'artitechcore'), $response_code, $error_message));
+        throw new Exception(esc_html(sprintf(__('Gemini API returned error %d: %s', 'artitechcore'), $response_code, $error_message)));
     }
 
     $response_body = wp_remote_retrieve_body($response);
     if (empty($response_body)) {
-        throw new Exception(__('Empty response received from Gemini API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Empty response received from Gemini API.', 'artitechcore')));
     }
 
     $decoded_response = json_decode($response_body, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception(__('Invalid JSON response from Gemini API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Invalid JSON response from Gemini API.', 'artitechcore')));
     }
 
     if (isset($decoded_response['error'])) {
         $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown Gemini API error.', 'artitechcore');
-        throw new Exception(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message));
+        throw new Exception(esc_html(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message)));
     }
 
     if (!isset($decoded_response['candidates'][0]['content']['parts'][0]['text'])) {
-        throw new Exception(__('Unexpected response format from Gemini API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Unexpected response format from Gemini API.', 'artitechcore')));
     }
 
     $response_content = trim($decoded_response['candidates'][0]['content']['parts'][0]['text']);
@@ -1439,7 +1439,7 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
     $response_content = trim($response_content);
 
     if (empty($response_content)) {
-        throw new Exception(__('Empty content received from Gemini API.', 'artitechcore'));
+        throw new Exception(esc_html(__('Empty content received from Gemini API.', 'artitechcore')));
     }
 
     $parsed_response = json_decode($response_content, true);

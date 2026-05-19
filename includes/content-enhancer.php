@@ -1245,14 +1245,14 @@ function artitechcore_content_enhancer_tab() {
             if ($total_pages > 1) {
                 $base_url = remove_query_arg('paged');
                 echo '<div class="tablenav"><div class="tablenav-pages" style="margin: 16px 0;">';
-                echo paginate_links([
+                echo wp_kses_post(paginate_links([
                     'base' => esc_url_raw(add_query_arg('paged', '%#%', $base_url)),
                     'format' => '',
                     'prev_text' => '&laquo;',
                     'next_text' => '&raquo;',
                     'total' => $total_pages,
                     'current' => $paged,
-                ]);
+]) );
                 echo '</div></div>';
             }
             wp_reset_postdata(); // FIX #11

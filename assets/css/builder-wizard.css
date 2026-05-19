@@ -1,0 +1,159 @@
+/* ==========================================================================
+   AI WEBSITE BUILDER - MODERN WIZARD INTERFACE
+   ========================================================================== */
+
+:root {
+    --wizard-step-bg: #ffffff;
+    --wizard-accent: var(--color-primary, #B47CFD);
+    --wizard-border: var(--color-border, #e2e8f0);
+    --wizard-sidebar-width: 400px;
+}
+
+/* Main Container Structure */
+.artitechcore-builder-grid {
+    display: grid;
+    grid-template-columns: 1fr var(--wizard-sidebar-width);
+    gap: 32px;
+    align-items: start;
+    position: relative;
+    margin-top: 24px;
+}
+
+/* Step 1: Blueprint Selection */
+.artitechcore-blueprint-selection {
+    background: var(--wizard-step-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--wizard-border);
+    padding: 32px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+/* Compact State for Step 1 */
+.artitechcore-blueprint-selection.is-compact {
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    background: #f8fafc;
+    border-left: 4px solid var(--wizard-accent);
+}
+
+.artitechcore-blueprint-selection.is-compact .artitechcore-blueprint-grid {
+    display: none !important;
+}
+
+.artitechcore-blueprint-selection.is-compact h2 {
+    display: none;
+}
+
+/* Summary View (Visible only when compact) */
+.artitechcore-selection-summary {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.is-compact .artitechcore-selection-summary {
+    display: flex;
+}
+
+.summary-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.summary-icon {
+    font-size: 24px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.summary-text h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--color-dark);
+}
+
+.summary-text p {
+    margin: 2px 0 0 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+/* Sticky Customization Sidebar */
+.artitechcore-builder-sidebar {
+    position: sticky;
+    top: 48px; /* Offset for WP Admin Bar (32px) + small gap */
+    z-index: 10;
+}
+
+/* Ensure Step 2 & 3 share the main column space */
+.artitechcore-main-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Step 2 Panel Styling */
+.artitechcore-customize-panel {
+    background: white;
+    border: 1px solid var(--wizard-border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    animation: slideInUp 0.4s ease-out;
+}
+
+/* Step 3 Panel Styling */
+.artitechcore-generation-status-panel {
+    background: #fdf2f8; /* Very light pink/purple tint */
+    border: 1px solid rgba(180, 124, 253, 0.2);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-top: 16px;
+}
+
+/* Custom Checkbox Grid for Step 2 */
+.artitechcore-blueprint-pages-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.blueprint-page-item {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: transform 0.2s ease;
+}
+
+.blueprint-page-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--wizard-accent);
+}
+
+/* Transitions */
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Overrides */
+@media screen and (max-width: 1200px) {
+    .artitechcore-builder-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .artitechcore-builder-sidebar {
+        position: relative;
+        top: 0;
+    }
+}

@@ -449,7 +449,7 @@ function artitechcore_get_openai_suggestions($business_type, $business_details, 
     try {
         // Input validation
         if (empty($api_key) || empty($business_type) || empty($business_details)) {
-            throw new Exception(__('Missing required parameters for OpenAI API call.', 'artitechcore'));
+            throw new Exception(esc_html(__('Missing required parameters for OpenAI API call.', 'artitechcore')));
         }
 
         $url = 'https://api.openai.com/v1/chat/completions';
@@ -558,7 +558,7 @@ Focus on creating a complete website architecture that will rank well and conver
         ]);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Failed to encode request data for OpenAI API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Failed to encode request data for OpenAI API.', 'artitechcore')));
         }
 
         $response = artitechcore_safe_ai_remote_post($url, [
@@ -571,31 +571,31 @@ Focus on creating a complete website architecture that will rank well and conver
         ], 'openai');
 
         if (is_wp_error($response)) {
-            throw new Exception($response->get_error_message());
+            throw new Exception(esc_html($response->get_error_message()));
         }
 
         $response_body = wp_remote_retrieve_body($response);
         if (empty($response_body)) {
-            throw new Exception(__('Empty response received from OpenAI API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty response received from OpenAI API.', 'artitechcore')));
         }
 
         $decoded_response = json_decode($response_body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Invalid JSON response from OpenAI API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Invalid JSON response from OpenAI API.', 'artitechcore')));
         }
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI API error.', 'artitechcore');
-            throw new Exception(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['choices'][0]['message']['content'])) {
-            throw new Exception(__('Unexpected response format from OpenAI API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Unexpected response format from OpenAI API.', 'artitechcore')));
         }
 
         $pages_str = $decoded_response['choices'][0]['message']['content'];
         if (empty($pages_str)) {
-            throw new Exception(__('Empty content received from OpenAI API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty content received from OpenAI API.', 'artitechcore')));
         }
 
         $pages = array_map('trim', explode("\n", $pages_str));
@@ -604,7 +604,7 @@ Focus on creating a complete website architecture that will rank well and conver
         });
 
         if (empty($pages)) {
-            throw new Exception(__('No valid page suggestions received from OpenAI API.', 'artitechcore'));
+            throw new Exception(esc_html(__('No valid page suggestions received from OpenAI API.', 'artitechcore')));
         }
 
         return $pages;
@@ -622,7 +622,7 @@ function artitechcore_get_gemini_suggestions($business_type, $business_details, 
     try {
         // Input validation
         if (empty($api_key) || empty($business_type) || empty($business_details)) {
-            throw new Exception(__('Missing required parameters for Gemini API call.', 'artitechcore'));
+            throw new Exception(esc_html(__('Missing required parameters for Gemini API call.', 'artitechcore')));
         }
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key;
@@ -728,7 +728,7 @@ Focus on creating a complete website architecture that will rank well and conver
         ]);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Failed to encode request data for Gemini API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Failed to encode request data for Gemini API.', 'artitechcore')));
         }
 
         $response = artitechcore_safe_ai_remote_post($url, [
@@ -738,31 +738,31 @@ Focus on creating a complete website architecture that will rank well and conver
         ], 'gemini');
 
         if (is_wp_error($response)) {
-            throw new Exception($response->get_error_message());
+            throw new Exception(esc_html($response->get_error_message()));
         }
 
         $response_body = wp_remote_retrieve_body($response);
         if (empty($response_body)) {
-            throw new Exception(__('Empty response received from Gemini API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty response received from Gemini API.', 'artitechcore')));
         }
 
         $decoded_response = json_decode($response_body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Invalid JSON response from Gemini API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Invalid JSON response from Gemini API.', 'artitechcore')));
         }
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown Gemini API error.', 'artitechcore');
-            throw new Exception(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['candidates'][0]['content']['parts'][0]['text'])) {
-            throw new Exception(__('Unexpected response format from Gemini API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Unexpected response format from Gemini API.', 'artitechcore')));
         }
 
         $pages_str = $decoded_response['candidates'][0]['content']['parts'][0]['text'];
         if (empty($pages_str)) {
-            throw new Exception(__('Empty content received from Gemini API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty content received from Gemini API.', 'artitechcore')));
         }
 
         $pages = array_map('trim', explode("\n", $pages_str));
@@ -771,7 +771,7 @@ Focus on creating a complete website architecture that will rank well and conver
         });
 
         if (empty($pages)) {
-            throw new Exception(__('No valid page suggestions received from Gemini API.', 'artitechcore'));
+            throw new Exception(esc_html(__('No valid page suggestions received from Gemini API.', 'artitechcore')));
         }
 
         return $pages;
@@ -789,7 +789,7 @@ function artitechcore_get_deepseek_suggestions($business_type, $business_details
     try {
         // Input validation
         if (empty($api_key) || empty($business_type) || empty($business_details)) {
-            throw new Exception(__('Missing required parameters for DeepSeek API call.', 'artitechcore'));
+            throw new Exception(esc_html(__('Missing required parameters for DeepSeek API call.', 'artitechcore')));
         }
 
         $url = 'https://api.deepseek.com/v1/chat/completions';
@@ -898,7 +898,7 @@ Focus on creating a complete website architecture that will rank well and conver
         ]);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Failed to encode request data for DeepSeek API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Failed to encode request data for DeepSeek API.', 'artitechcore')));
         }
 
         $response = artitechcore_safe_ai_remote_post($url, [
@@ -911,31 +911,31 @@ Focus on creating a complete website architecture that will rank well and conver
         ], 'deepseek');
 
         if (is_wp_error($response)) {
-            throw new Exception($response->get_error_message());
+            throw new Exception(esc_html($response->get_error_message()));
         }
 
         $response_body = wp_remote_retrieve_body($response);
         if (empty($response_body)) {
-            throw new Exception(__('Empty response received from DeepSeek API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty response received from DeepSeek API.', 'artitechcore')));
         }
 
         $decoded_response = json_decode($response_body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Invalid JSON response from DeepSeek API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Invalid JSON response from DeepSeek API.', 'artitechcore')));
         }
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown DeepSeek API error.', 'artitechcore');
-            throw new Exception(sprintf(__('DeepSeek API error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('DeepSeek API error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['choices'][0]['message']['content'])) {
-            throw new Exception(__('Unexpected response format from DeepSeek API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Unexpected response format from DeepSeek API.', 'artitechcore')));
         }
 
         $pages_str = $decoded_response['choices'][0]['message']['content'];
         if (empty($pages_str)) {
-            throw new Exception(__('Empty content received from DeepSeek API.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty content received from DeepSeek API.', 'artitechcore')));
         }
 
         $pages = array_map('trim', explode("\n", $pages_str));
@@ -944,7 +944,7 @@ Focus on creating a complete website architecture that will rank well and conver
         });
 
         if (empty($pages)) {
-            throw new Exception(__('No valid page suggestions received from DeepSeek API.', 'artitechcore'));
+            throw new Exception(esc_html(__('No valid page suggestions received from DeepSeek API.', 'artitechcore')));
         }
 
         return $pages;
@@ -1102,17 +1102,17 @@ function artitechcore_generate_and_set_featured_image($post_id, $page_title, $ov
     try {
         // Input validation
         if (empty($post_id) || empty($page_title) || !is_numeric($post_id)) {
-            throw new Exception(__('Missing or invalid parameters for image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Missing or invalid parameters for image generation.', 'artitechcore')));
         }
 
         $post_id = absint($post_id);
         if ($post_id <= 0) {
-            throw new Exception(__('Invalid post ID for image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Invalid post ID for image generation.', 'artitechcore')));
         }
 
         // Verify post exists
         if (!get_post($post_id)) {
-            throw new Exception(__('Post not found for image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Post not found for image generation.', 'artitechcore')));
         }
 
         $provider = get_option('artitechcore_ai_provider', 'openai');
@@ -1123,17 +1123,17 @@ function artitechcore_generate_and_set_featured_image($post_id, $page_title, $ov
         $brand_color = is_array($override_brand_color) ? ($override_brand_color['primary_color'] ?? '#4A90E2') : ($override_brand_color ?: get_option('artitechcore_brand_color', '#4A90E2'));
         
         if (empty($api_key)) {
-            throw new Exception(__('API key not configured for image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('API key not configured for image generation.', 'artitechcore')));
         }
         
         // Skip if provider is DeepSeek (no image generation support)
         if ($provider === 'deepseek') {
-            throw new Exception(__('Image generation not supported with DeepSeek provider.', 'artitechcore'));
+            throw new Exception(esc_html(__('Image generation not supported with DeepSeek provider.', 'artitechcore')));
         }
         
         // Rate limiting check for image generation
         if (!artitechcore_check_ai_rate_limit($provider)) {
-            throw new Exception(__('Too many AI requests. Please wait a moment before trying again.', 'artitechcore'));
+            throw new Exception(esc_html(__('Too many AI requests. Please wait a moment before trying again.', 'artitechcore')));
         }
         
         // Validate brand color format
@@ -1185,16 +1185,16 @@ This image will be used as a featured image for a webpage, so it should:
                 $image_url = artitechcore_generate_gemini_image($prompt, $api_key);
                 break;
             default:
-                throw new Exception(__('Unsupported provider for image generation.', 'artitechcore'));
+                throw new Exception(esc_html(__('Unsupported provider for image generation.', 'artitechcore')));
         }
         
         if (empty($image_url)) {
-            throw new Exception(__('Failed to generate image URL from AI provider.', 'artitechcore'));
+            throw new Exception(esc_html(__('Failed to generate image URL from AI provider.', 'artitechcore')));
         }
 
         // Validate image URL
         if (!filter_var($image_url, FILTER_VALIDATE_URL)) {
-            throw new Exception(__('Invalid image URL received from AI provider.', 'artitechcore'));
+            throw new Exception(esc_html(__('Invalid image URL received from AI provider.', 'artitechcore')));
         }
         
         // Generate SEO-optimized image metadata based on page title
@@ -1210,7 +1210,7 @@ This image will be used as a featured image for a webpage, so it should:
         $result = artitechcore_set_featured_image($post_id, $image_url, $image_title, $image_alt, $image_description);
         
         if (!$result) {
-            throw new Exception(__('Failed to set featured image for post.', 'artitechcore'));
+            throw new Exception(esc_html(__('Failed to set featured image for post.', 'artitechcore')));
         }
 
         return true;
@@ -1228,7 +1228,7 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
     try {
         // Input validation
         if (empty($prompt) || empty($api_key)) {
-            throw new Exception(__('Missing required parameters for OpenAI image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Missing required parameters for OpenAI image generation.', 'artitechcore')));
         }
 
         $url = 'https://api.openai.com/v1/images/generations';
@@ -1242,7 +1242,7 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
         ]);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Failed to encode request data for OpenAI image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Failed to encode request data for OpenAI image generation.', 'artitechcore')));
         }
         
         // API Retry Loop (P1-5)
@@ -1257,31 +1257,31 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
         ], 'openai');
 
         if (is_wp_error($response)) {
-            throw new Exception($response->get_error_message());
+            throw new Exception(esc_html($response->get_error_message()));
         }
 
         $response_body = wp_remote_retrieve_body($response);
         if (empty($response_body)) {
-            throw new Exception(__('Empty response received from OpenAI image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty response received from OpenAI image generation.', 'artitechcore')));
         }
 
         $decoded_response = json_decode($response_body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(__('Invalid JSON response from OpenAI image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Invalid JSON response from OpenAI image generation.', 'artitechcore')));
         }
 
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI image generation error.', 'artitechcore');
-            throw new Exception(sprintf(__('OpenAI image generation error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('OpenAI image generation error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['data'][0]['url'])) {
-            throw new Exception(__('Unexpected response format from OpenAI image generation.', 'artitechcore'));
+            throw new Exception(esc_html(__('Unexpected response format from OpenAI image generation.', 'artitechcore')));
         }
 
         $image_url = $decoded_response['data'][0]['url'];
         if (empty($image_url)) {
-            throw new Exception(__('Empty image URL received from OpenAI.', 'artitechcore'));
+            throw new Exception(esc_html(__('Empty image URL received from OpenAI.', 'artitechcore')));
         }
 
         return $image_url;
@@ -1307,16 +1307,16 @@ function artitechcore_process_keywords_csv($file) {
     try {
         // Input validation
         if (!isset($file) || !is_array($file)) {
-            throw new Exception(__('Invalid file data provided.', 'artitechcore'));
+            throw new Exception(esc_html(__('Invalid file data provided.', 'artitechcore')));
         }
 
         if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
-            throw new Exception(__('No temporary file found for CSV processing.', 'artitechcore'));
+            throw new Exception(esc_html(__('No temporary file found for CSV processing.', 'artitechcore')));
         }
 
         // Security check: Verify file was uploaded via HTTP POST
         if (!is_uploaded_file($file['tmp_name'])) {
-            throw new Exception(__('Security check failed: File was not uploaded via standard HTTP POST.', 'artitechcore'));
+            throw new Exception(esc_html(__('Security check failed: File was not uploaded via standard HTTP POST.', 'artitechcore')));
         }
 
         // Check for upload errors
@@ -1331,30 +1331,30 @@ function artitechcore_process_keywords_csv($file) {
                 UPLOAD_ERR_EXTENSION => __('File upload stopped by extension.', 'artitechcore'),
             ];
             $error_message = isset($error_messages[$file['error']]) ? $error_messages[$file['error']] : __('Unknown upload error.', 'artitechcore');
-            throw new Exception($error_message);
+            throw new Exception(esc_html($error_message));
         }
 
         // Validate file type
         $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if ($file_extension !== 'csv') {
-            throw new Exception(__('Only CSV files are allowed.', 'artitechcore'));
+            throw new Exception(esc_html(__('Only CSV files are allowed.', 'artitechcore')));
         }
 
         // Check file size (limit to 1MB)
         if ($file['size'] > 1048576) {
-            throw new Exception(__('File size must be less than 1MB.', 'artitechcore'));
+            throw new Exception(esc_html(__('File size must be less than 1MB.', 'artitechcore')));
         }
 
         // Validate file exists and is readable
         if (!file_exists($file['tmp_name']) || !is_readable($file['tmp_name'])) {
-            throw new Exception(__('File is not accessible for reading.', 'artitechcore'));
+            throw new Exception(esc_html(__('File is not accessible for reading.', 'artitechcore')));
         }
         
         $keywords = [];
         $handle = fopen($file['tmp_name'], 'r');
         
         if ($handle === false) {
-            throw new Exception(__('Failed to open CSV file for reading.', 'artitechcore'));
+            throw new Exception(esc_html(__('Failed to open CSV file for reading.', 'artitechcore')));
         }
 
         $line_count = 0;
@@ -1366,7 +1366,7 @@ function artitechcore_process_keywords_csv($file) {
             // Prevent processing too many lines
             if ($line_count > $max_lines) {
                 fclose($handle);
-                throw new Exception(sprintf(__('CSV file has too many lines. Maximum allowed: %d', 'artitechcore'), $max_lines));
+                throw new Exception(esc_html(sprintf(__('CSV file has too many lines. Maximum allowed: %d', 'artitechcore'), $max_lines)));
             }
 
             if (!is_array($data)) {
@@ -1398,14 +1398,14 @@ function artitechcore_process_keywords_csv($file) {
         fclose($handle);
         
         if (empty($keywords)) {
-            throw new Exception(__('No valid keywords found in CSV file.', 'artitechcore'));
+            throw new Exception(esc_html(__('No valid keywords found in CSV file.', 'artitechcore')));
         }
         
         // Remove duplicates and empty values
         $keywords = array_unique(array_filter($keywords));
         
         if (empty($keywords)) {
-            throw new Exception(__('No valid keywords remaining after processing.', 'artitechcore'));
+            throw new Exception(esc_html(__('No valid keywords remaining after processing.', 'artitechcore')));
         }
 
         // Limit total keywords to prevent issues

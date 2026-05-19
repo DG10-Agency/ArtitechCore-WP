@@ -2270,10 +2270,10 @@ function artitechcore_add_schema_quick_actions($actions, $post) {
     $schema_type = !empty($schema_row['schema_type']) ? $schema_row['schema_type'] : '';
 
     if (empty($schema_type)) {
-        $actions['generate_schema'] = '<a href="' . wp_nonce_url(admin_url('admin.php?page=artitechcore-main&action=generate_schema&post=' . $post->ID), 'generate_schema_' . $post->ID) . '">Generate Schema</a>';
+        $actions['generate_schema'] = '<a href="' . esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&action=generate_schema&post=' . $post->ID), 'generate_schema_' . $post->ID)) . '">Generate Schema</a>';
     } else {
-        $actions['regenerate_schema'] = '<a href="' . wp_nonce_url(admin_url('admin.php?page=artitechcore-main&action=regenerate_schema&post=' . $post->ID), 'regenerate_schema_' . $post->ID) . '">Regenerate Schema</a>';
-        $actions['remove_schema'] = '<a href="' . wp_nonce_url(admin_url('admin.php?page=artitechcore-main&action=remove_schema&post=' . $post->ID), 'remove_schema_' . $post->ID) . '" onclick="return confirm(\'Are you sure you want to remove schema from this page?\')">Remove Schema</a>';
+        $actions['regenerate_schema'] = '<a href="' . esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&action=regenerate_schema&post=' . $post->ID), 'regenerate_schema_' . $post->ID)) . '">Regenerate Schema</a>';
+        $actions['remove_schema'] = '<a href="' . esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&action=remove_schema&post=' . $post->ID), 'remove_schema_' . $post->ID)) . '" onclick="return confirm(\'Are you sure you want to remove schema from this page?\')">Remove Schema</a>';
     }
 
     return $actions;
@@ -2816,14 +2816,14 @@ function artitechcore_schema_management_dashboard() {
             if ($total_pages > 1) {
                 $base_url = remove_query_arg('paged');
                 echo '<div class="tablenav"><div class="tablenav-pages" style="margin: 16px 0;">';
-                echo paginate_links([
+                echo wp_kses_post(paginate_links([
                     'base' => esc_url_raw(add_query_arg('paged', '%#%', $base_url)),
                     'format' => '',
                     'prev_text' => '&laquo;',
                     'next_text' => '&raquo;',
                     'total' => $total_pages,
                     'current' => $paged,
-                ]);
+]) );
                 echo '</div></div>';
             }
             ?>

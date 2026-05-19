@@ -104,7 +104,7 @@ foreach ($options_to_remove as $option) {
 }
 
 // Delete options with dynamic suffixes
-$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'artitechcore_cpt_modified_%'");
+$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('artitechcore_cpt_modified_') . '%'));
 
 // Custom Table Deletion based on persistence
 if (!$persist_schema) {
@@ -127,14 +127,14 @@ if (in_array('cta', $persist_ce)) {
 
 if (empty($ce_meta_to_exclude)) {
     // If nothing to persist, delete all artitechcore meta
-    $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE 'artitechcore_%'");
-    $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '_artitechcore_%'");
+    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $wpdb->esc_like('artitechcore_') . '%'));
+    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $wpdb->esc_like('_artitechcore_') . '%'));
 } else {
     // Delete non-excluded meta
     $placeholders = implode(',', array_fill(0, count($ce_meta_to_exclude), '%s'));
     $query = $wpdb->prepare(
-        "DELETE FROM {$wpdb->postmeta} WHERE (meta_key LIKE 'artitechcore_%%' OR meta_key LIKE '_artitechcore_%%') AND meta_key NOT IN ($placeholders)",
-        $ce_meta_to_exclude
+        "DELETE FROM {$wpdb->postmeta} WHERE (meta_key LIKE %s OR meta_key LIKE %s) AND meta_key NOT IN ($placeholders)",
+        array_merge([$wpdb->esc_like('artitechcore_') . '%', $wpdb->esc_like('_artitechcore_') . '%'], $ce_meta_to_exclude)
     );
     $wpdb->query($query);
 }

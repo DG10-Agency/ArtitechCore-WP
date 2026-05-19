@@ -244,7 +244,7 @@ function artitechcore_render_cpt_management_content($is_tab = false) {
             echo '<div class="notice notice-error"><p>' . esc_html__('You do not have sufficient permissions to access this page.', 'artitechcore') . '</p></div>';
             return;
         } else {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'artitechcore'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'artitechcore'));
         }
     }
     
@@ -752,7 +752,7 @@ function artitechcore_cpt_settings_tab() {
         );
         
         update_option('artitechcore_cpt_settings', $settings);
-        echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
+        echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved successfully!', 'artitechcore') . '</p></div>';
     }
     
     $settings = get_option('artitechcore_cpt_settings', array(
@@ -1083,7 +1083,7 @@ function artitechcore_validate_field_value($value, $field_config) {
 function artitechcore_check_cpt_management_capabilities() {
     if (is_admin() && isset($_GET['page']) && $_GET['page'] === 'artitechcore-cpt-management') {
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'artitechcore'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'artitechcore'));
         }
     }
 }
@@ -1253,7 +1253,7 @@ function artitechcore_handle_cpt_creation_ajax() {
     check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(__('You do not have permission to create custom post types.', 'artitechcore'));
+        wp_send_json_error(esc_html__('You do not have permission to create custom post types.', 'artitechcore'));
     }
     
     $result = artitechcore_process_cpt_creation($_POST);
@@ -1277,13 +1277,13 @@ function artitechcore_handle_get_cpt_item_count_ajax() {
     check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(__('Unauthorized access', 'artitechcore'));
+        wp_send_json_error(esc_html__('Unauthorized access', 'artitechcore'));
     }
     
     $post_types = isset($_POST['post_types']) ? (array) $_POST['post_types'] : array();
     
     if (empty($post_types)) {
-        wp_send_json_error(__('No post types specified', 'artitechcore'));
+        wp_send_json_error(esc_html__('No post types specified', 'artitechcore'));
     }
     
     $total_count = 0;
@@ -1311,7 +1311,7 @@ function artitechcore_handle_cpt_deletion_ajax() {
     $post_type = sanitize_key($_POST['post_type'] ?? '');
     
     if (empty($post_type)) {
-        wp_send_json_error(__('Invalid post type specified.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Invalid post type specified.', 'artitechcore'));
     }
     
     $result = artitechcore_delete_custom_post_type($post_type);
@@ -1334,19 +1334,19 @@ function artitechcore_handle_duplicate_cpt_ajax() {
     check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Insufficient permissions.', 'artitechcore'));
     }
     
     $cpt_slug = sanitize_key($_POST['cpt_slug'] ?? '');
     
     if (empty($cpt_slug)) {
-        wp_send_json_error(__('Invalid CPT slug.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Invalid CPT slug.', 'artitechcore'));
     }
     
     $dynamic_cpts = get_option('artitechcore_dynamic_cpts', array());
     
     if (!isset($dynamic_cpts[$cpt_slug])) {
-        wp_send_json_error(__('Custom post type not found.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Custom post type not found.', 'artitechcore'));
     }
     
     $original_cpt = $dynamic_cpts[$cpt_slug];
@@ -1535,8 +1535,8 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
                       rows="4" 
                       cols="50" 
                       class="large-text"
-                      <?php echo $required_attr; ?>
-                      <?php echo $aria_describedby; ?>><?php echo esc_textarea($value); ?></textarea>
+                      <?php echo wp_kses_post($required_attr); ?>
+                      <?php echo wp_kses_post($aria_describedby); ?>><?php echo esc_textarea($value); ?></textarea>
             <?php
             break;
             
@@ -1545,8 +1545,8 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
             <select name="<?php echo esc_attr($field_name); ?>" 
                     id="<?php echo esc_attr($field_id); ?>" 
                     class="regular-text"
-                    <?php echo $required_attr; ?>
-                    <?php echo $aria_describedby; ?>>
+                    <?php echo wp_kses_post($required_attr); ?>
+                    <?php echo wp_kses_post($aria_describedby); ?>>
                 <option value=""><?php esc_html_e('Select an option', 'artitechcore'); ?></option>
                 <?php foreach ($options as $option_value => $option_label): ?>
                     <option value="<?php echo esc_attr($option_value); ?>" 
@@ -1566,8 +1566,8 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
                    value="<?php echo esc_attr($value); ?>" 
                    class="regular-text" 
                    placeholder="https://"
-                   <?php echo $required_attr; ?>
-                   <?php echo $aria_describedby; ?>>
+                   <?php echo wp_kses_post($required_attr); ?>
+                   <?php echo wp_kses_post($aria_describedby); ?>>
             <?php
             break;
             
@@ -1578,8 +1578,8 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
                    id="<?php echo esc_attr($field_id); ?>" 
                    value="<?php echo esc_attr($value); ?>" 
                    class="regular-text"
-                   <?php echo $required_attr; ?>
-                   <?php echo $aria_describedby; ?>>
+                   <?php echo wp_kses_post($required_attr); ?>
+                   <?php echo wp_kses_post($aria_describedby); ?>>
             <?php
             break;
             
@@ -1590,8 +1590,8 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
                    id="<?php echo esc_attr($field_id); ?>" 
                    value="<?php echo esc_attr($value); ?>" 
                    class="small-text"
-                   <?php echo $required_attr; ?>
-                   <?php echo $aria_describedby; ?>>
+                   <?php echo wp_kses_post($required_attr); ?>
+                   <?php echo wp_kses_post($aria_describedby); ?>>
             <?php
             break;
             
@@ -1601,8 +1601,8 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
                    name="<?php echo esc_attr($field_name); ?>" 
                    id="<?php echo esc_attr($field_id); ?>" 
                    value="<?php echo esc_attr($value); ?>"
-                   <?php echo $required_attr; ?>
-                   <?php echo $aria_describedby; ?>>
+                   <?php echo wp_kses_post($required_attr); ?>
+                   <?php echo wp_kses_post($aria_describedby); ?>>
             <?php
             break;
             
@@ -1614,7 +1614,7 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
                        id="<?php echo esc_attr($field_id); ?>"
                        value="1" 
                        <?php checked($value, 1); ?>
-                       <?php echo $aria_describedby; ?>>
+                       <?php echo wp_kses_post($aria_describedby); ?>>
                 <?php esc_html_e('Check this option', 'artitechcore'); ?>
             </label>
             <?php
@@ -1627,8 +1627,8 @@ function artitechcore_render_field_input($field_id, $field_name, $field_type, $v
                    id="<?php echo esc_attr($field_id); ?>" 
                    value="<?php echo esc_attr($value); ?>" 
                    class="regular-text"
-                   <?php echo $required_attr; ?>
-                   <?php echo $aria_describedby; ?>>
+                   <?php echo wp_kses_post($required_attr); ?>
+                   <?php echo wp_kses_post($aria_describedby); ?>>
             <?php
             break;
     }
@@ -2167,19 +2167,19 @@ function artitechcore_get_cpt_data_ajax() {
     check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Insufficient permissions.', 'artitechcore'));
     }
     
     $post_type = sanitize_key($_POST['post_type'] ?? '');
     
     if (empty($post_type)) {
-        wp_send_json_error(__('Invalid post type specified.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Invalid post type specified.', 'artitechcore'));
     }
     
     $dynamic_cpts = get_option('artitechcore_dynamic_cpts', array());
     
     if (!isset($dynamic_cpts[$post_type])) {
-        wp_send_json_error(__('Custom post type not found.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Custom post type not found.', 'artitechcore'));
     }
     
     $cpt_data = $dynamic_cpts[$post_type];
@@ -2211,7 +2211,7 @@ function artitechcore_handle_bulk_cpt_operations_ajax() {
     check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Insufficient permissions.', 'artitechcore'));
     }
     
     $action = sanitize_key($_POST['bulk_action'] ?? '');
@@ -2341,7 +2341,7 @@ function artitechcore_handle_cpt_update_ajax() {
     check_ajax_referer('artitechcore_ajax_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Insufficient permissions.', 'artitechcore'));
     }
     
     $post_type = sanitize_key($_POST['cpt_name'] ?? '');
@@ -2356,7 +2356,7 @@ function artitechcore_handle_cpt_update_ajax() {
     $dynamic_cpts = get_option('artitechcore_dynamic_cpts', array());
     
     if (!isset($dynamic_cpts[$post_type])) {
-        wp_send_json_error(__('Custom post type not found.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Custom post type not found.', 'artitechcore'));
     }
     
     // Update CPT data
@@ -2866,20 +2866,20 @@ function artitechcore_get_cpt_templates() {
  */
 function artitechcore_create_cpt_from_template() {
     if (!current_user_can('manage_options')) {
-        wp_die(__('You do not have sufficient permissions to access this page.', 'artitechcore'));
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'artitechcore'));
     }
     
     $template_id = sanitize_key($_POST['template_id'] ?? '');
     
     if (empty($template_id)) {
-        echo '<div class="notice notice-error"><p>' . __('Invalid template selected.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('Invalid template selected.', 'artitechcore') . '</p></div>';
         return;
     }
     
     $templates = artitechcore_get_cpt_templates();
     
     if (!isset($templates[$template_id])) {
-        echo '<div class="notice notice-error"><p>' . __('Template not found.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('Template not found.', 'artitechcore') . '</p></div>';
         return;
     }
     
@@ -2902,7 +2902,7 @@ function artitechcore_create_cpt_from_template() {
     if (is_wp_error($result)) {
         echo '<div class="notice notice-error"><p>' . esc_html($result->get_error_message()) . '</p></div>';
     } else {
-        echo '<div class="notice notice-success"><p>' . sprintf(__('Custom post type "%s" created successfully from template!', 'artitechcore'), $template['name']) . '</p></div>';
+        echo '<div class="notice notice-success"><p>' . esc_html(sprintf(__('Custom post type "%s" created successfully from template!', 'artitechcore'), $template['name'])) . '</p></div>';
         
         // Create sample entries if available
         if (!empty($template['sample_entries'])) {
@@ -2918,7 +2918,7 @@ function artitechcore_create_cpt_from_template() {
  */
 function artitechcore_handle_cpt_export() {
     if (!current_user_can('manage_options')) {
-        wp_die(__('You do not have sufficient permissions to access this page.', 'artitechcore'));
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'artitechcore'));
     }
     
     $export_type = sanitize_key($_POST['export_type'] ?? 'all');
@@ -2943,7 +2943,7 @@ function artitechcore_handle_cpt_export() {
     }
     
     if (empty($export_data['cpts'])) {
-        echo '<div class="notice notice-error"><p>' . __('No CPTs selected for export.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('No CPTs selected for export.', 'artitechcore') . '</p></div>';
         return;
     }
     
@@ -2967,11 +2967,11 @@ function artitechcore_handle_cpt_export() {
  */
 function artitechcore_handle_cpt_import() {
     if (!current_user_can('manage_options')) {
-        wp_die(__('You do not have sufficient permissions to access this page.', 'artitechcore'));
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'artitechcore'));
     }
     
     if (!isset($_FILES['cpt_import_file']) || $_FILES['cpt_import_file']['error'] !== UPLOAD_ERR_OK) {
-        echo '<div class="notice notice-error"><p>' . __('Please select a valid JSON file to import.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('Please select a valid JSON file to import.', 'artitechcore') . '</p></div>';
         return;
     }
     
@@ -2979,12 +2979,12 @@ function artitechcore_handle_cpt_import() {
     $import_data = json_decode($file_content, true);
     
     if (json_last_error() !== JSON_ERROR_NONE) {
-        echo '<div class="notice notice-error"><p>' . __('Invalid JSON file format.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('Invalid JSON file format.', 'artitechcore') . '</p></div>';
         return;
     }
     
     if (!isset($import_data['cpts']) || !is_array($import_data['cpts'])) {
-        echo '<div class="notice notice-error"><p>' . __('Invalid import file format.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('Invalid import file format.', 'artitechcore') . '</p></div>';
         return;
     }
     
@@ -3038,10 +3038,10 @@ function artitechcore_handle_cpt_import() {
     
     if (!empty($message_parts)) {
         $class = !empty($errors) ? 'notice-warning' : 'notice-success';
-        echo '<div class="notice ' . $class . '"><p>' . implode(' ', $message_parts) . '</p></div>';
+        echo '<div class="notice ' . esc_attr($class) . '"><p>' . esc_html(implode(' ', $message_parts)) . '</p></div>';
         
         if (!empty($errors)) {
-            echo '<div class="notice notice-error"><p><strong>Errors:</strong><br>' . implode('<br>', $errors) . '</p></div>';
+            echo '<div class="notice notice-error"><p><strong>Errors:</strong><br>' . implode('<br>', array_map('esc_html', $errors)) . '</p></div>';
         }
     }
 }
@@ -3055,7 +3055,7 @@ function artitechcore_display_import_export_history() {
     $history = get_option('artitechcore_import_export_history', array());
     
     if (empty($history)) {
-        echo '<p>' . __('No recent import/export operations.', 'artitechcore') . '</p>';
+        echo '<p>' . esc_html__('No recent import/export operations.', 'artitechcore') . '</p>';
         return;
     }
     
@@ -3069,7 +3069,7 @@ function artitechcore_display_import_export_history() {
         $icon = $item['type'] === 'export' ? 'dashicons-download' : 'dashicons-upload';
         $class = $item['type'] === 'export' ? 'export' : 'import';
         
-        echo '<div class="artitechcore-history-item ' . $class . '">';
+        echo '<div class="artitechcore-history-item ' . esc_attr($class) . '">';
         echo '<span class="dashicons ' . $icon . '" aria-hidden="true"></span>';
         echo '<div class="history-details">';
         echo '<strong>' . ucfirst($item['type']) . '</strong> - ';

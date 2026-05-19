@@ -355,14 +355,14 @@ function artitechcore_migrate_schema_data_v1($batch_limit = 500) {
 
     $table_name = $wpdb->prefix . 'artitechcore_schema_data';
     $legacy_keys = array('_artitechcore_schema_type', '_artitechcore_schema_data', '_artitechcore_schema_markup', '_artitechcore_schema_origin', '_artitechcore_schema_locked');
-    $keys_in = "'" . implode("','", $legacy_keys) . "'";
+    $keys_placeholders = implode(',', array_fill(0, count($legacy_keys), '%s'));
 
     // --- PART A: POST META ---
     $post_ids = $wpdb->get_col($wpdb->prepare("
         SELECT DISTINCT post_id FROM {$wpdb->postmeta} 
-        WHERE meta_key IN ($keys_in) 
+        WHERE meta_key IN ($keys_placeholders) 
         AND meta_value != ''
-        LIMIT %d", $batch_limit));
+        LIMIT %d", array_merge($legacy_keys, [$batch_limit])));
 
     $processed_posts = 0;
     foreach ($post_ids as $post_id) {
@@ -370,8 +370,8 @@ function artitechcore_migrate_schema_data_v1($batch_limit = 500) {
             SELECT meta_key, meta_value 
             FROM {$wpdb->postmeta} 
             WHERE post_id = %d 
-            AND meta_key IN ($keys_in)
-        ", $post_id));
+            AND meta_key IN ($keys_placeholders)
+        ", array_merge($legacy_keys, [$post_id])));
 
         if (empty($metas)) continue;
 
@@ -400,8 +400,8 @@ function artitechcore_migrate_schema_data_v1($batch_limit = 500) {
                 $wpdb->query($wpdb->prepare("
                     DELETE FROM {$wpdb->postmeta} 
                     WHERE post_id = %d 
-                    AND meta_key IN ($keys_in)
-                ", $post_id));
+                    AND meta_key IN ($keys_placeholders)
+                ", array_merge($legacy_keys, [$post_id])));
                 $processed_posts++;
             }
         }
@@ -413,17 +413,17 @@ function artitechcore_migrate_schema_data_v1($batch_limit = 500) {
     if ($remaining_limit > 0) {
         $term_ids = $wpdb->get_col($wpdb->prepare("
             SELECT DISTINCT term_id FROM {$wpdb->termmeta} 
-            WHERE meta_key IN ($keys_in) 
+            WHERE meta_key IN ($keys_placeholders) 
             AND meta_value != ''
-            LIMIT %d", $remaining_limit));
+            LIMIT %d", array_merge($legacy_keys, [$remaining_limit])));
 
         foreach ($term_ids as $term_id) {
             $metas = $wpdb->get_results($wpdb->prepare("
                 SELECT meta_key, meta_value 
                 FROM {$wpdb->termmeta} 
                 WHERE term_id = %d 
-                AND meta_key IN ($keys_in)
-            ", $term_id));
+                AND meta_key IN ($keys_placeholders)
+            ", array_merge($legacy_keys, [$term_id])));
 
             if (empty($metas)) continue;
 
@@ -450,8 +450,8 @@ function artitechcore_migrate_schema_data_v1($batch_limit = 500) {
                     $wpdb->query($wpdb->prepare("
                         DELETE FROM {$wpdb->termmeta} 
                         WHERE term_id = %d 
-                        AND meta_key IN ($keys_in)
-                    ", $term_id));
+                        AND meta_key IN ($keys_placeholders)
+                    ", array_merge($legacy_keys, [$term_id])));
                     $processed_terms++;
                 }
             }

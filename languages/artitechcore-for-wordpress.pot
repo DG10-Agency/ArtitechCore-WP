@@ -1,0 +1,289 @@
+# Copyright (C) 2024 DG10 Agency
+# This file is distributed under the same license as the ArtitechCore -  package.
+msgid ""
+msgstr ""
+"Project-Id-Version: ArtitechCore -  1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/artitechcore-main\n"
+"POT-Creation-Date: 2024-01-15 12:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: artitechcore-for-wordpress.php:9
+msgid "ArtitechCore - Page Management"
+msgstr ""
+
+#: artitechcore-for-wordpress.php:10
+msgid "ArtitechCore"
+msgstr ""
+
+#: includes/admin-menu.php:9
+msgid "ArtitechCore - Page Management"
+msgstr ""
+
+#: includes/admin-menu.php:10
+msgid "ArtitechCore"
+msgstr ""
+
+#: includes/admin-menu.php:27
+msgid "Manual Page Creation"
+msgstr ""
+
+#: includes/admin-menu.php:29
+msgid "Create pages manually with custom hierarchy and attributes"
+msgstr ""
+
+#: includes/admin-menu.php:32
+msgid "CSV Upload"
+msgstr ""
+
+#: includes/admin-menu.php:34
+msgid "Bulk import pages from CSV files"
+msgstr ""
+
+#: includes/admin-menu.php:37
+msgid "AI Generation"
+msgstr ""
+
+#: includes/admin-menu.php:39
+msgid "Generate pages with AI assistance"
+msgstr ""
+
+#: includes/admin-menu.php:42
+msgid "Schema Generator"
+msgstr ""
+
+#: includes/admin-menu.php:44
+msgid "Create structured data markup"
+msgstr ""
+
+#: includes/admin-menu.php:47
+msgid "Menu Generator"
+msgstr ""
+
+#: includes/admin-menu.php:49
+msgid "Automatically generate WordPress menus"
+msgstr ""
+
+#: includes/admin-menu.php:52
+msgid "Page Hierarchy"
+msgstr ""
+
+#: includes/admin-menu.php:54
+msgid "Visualize and manage page structure"
+msgstr ""
+
+#: includes/admin-menu.php:57
+msgid "Hierarchy Export"
+msgstr ""
+
+#: includes/admin-menu.php:59
+msgid "Export page hierarchy data"
+msgstr ""
+
+#: includes/admin-menu.php:62
+msgid "Keyword Analysis"
+msgstr ""
+
+#: includes/admin-menu.php:64
+msgid "Analyze keyword density and SEO"
+msgstr ""
+
+#: includes/admin-menu.php:67
+msgid "Settings"
+msgstr ""
+
+#: includes/admin-menu.php:69
+msgid "Configure plugin options"
+msgstr ""
+
+#: includes/admin-menu.php:79
+msgid "ArtitechCore Plugin"
+msgstr ""
+
+#: includes/admin-menu.php:82
+msgid ""
+msgstr ""
+
+#: includes/admin-menu.php:136
+msgid "DG10 Agency"
+msgstr ""
+
+#: includes/admin-menu.php:137
+msgid "About us"
+msgstr ""
+
+#: includes/admin-menu.php:140
+msgid "We are the ultimate growth ecosystem for visionary entrepreneurs. Leveraging over a decade of expertise, we empower you to Build | Market | Analyze | Automate | Scale with our services,  software products, AI tools & more. We aren’t just an agency; we are your digital infrastructure powerhouse, providing the advanced technology and strategic edge you need to dominate your market.r premium services, elite software products, and high-performance AI tools. We aren’t just an agency; we are your digital infrastructure powerhouse, providing the advanced technology and strategic edge you need to dominate your market."
+msgstr ""
+
+#: includes/admin-menu.php:143
+msgid "Visit Website"
+msgstr ""
+
+#: includes/admin-menu.php:148
+msgid "Book a Free Consultation"
+msgstr ""
+
+#: includes/admin-menu.php:152
+msgid "This is an open-source project - please %s."
+msgstr ""
+
+#: includes/admin-menu.php:152
+msgid "star the repo on GitHub"
+msgstr ""
+
+#: includes/admin-menu.php:251
+msgid "Page Titles"
+msgstr ""
+
+#: includes/admin-menu.php:252
+msgid "Enter one page title per line. Use hyphens for nesting..."
+msgstr ""
+
+#: includes/admin-menu.php:254
+msgid "Syntax Guide:"
+msgstr ""
+
+#: includes/admin-menu.php:255
+msgid "Use"
+msgstr ""
+
+#: includes/admin-menu.php:255
+msgid "for child pages (one hyphen per level)"
+msgstr ""
+
+#: includes/admin-menu.php:256
+msgid "for meta description"
+msgstr ""
+
+#: includes/admin-menu.php:257
+msgid "for featured image URL"
+msgstr ""
+
+#: includes/admin-menu.php:258
+msgid "for page template"
+msgstr ""
+
+#: includes/admin-menu.php:259
+msgid "for post status"
+msgstr ""
+
+#: includes/admin-menu.php:260
+msgid "SEO slugs are automatically generated"
+msgstr ""
+
+#: includes/admin-menu.php:260
+msgid "max 72 chars"
+msgstr ""
+
+#: includes/admin-menu.php:264
+msgid "Create Pages"
+msgstr ""
+
+#: includes/admin-menu.php:282
+msgid "CSV File"
+msgstr ""
+
+#: includes/admin-menu.php:286
+msgid "Upload a CSV file with the following columns: %s, %s (optional), %s, %s, %s, %s, %s."
+msgstr ""
+
+#: includes/admin-menu.php:294
+msgid "The %s column should contain the title of the parent page."
+msgstr ""
+
+#: includes/admin-menu.php:295
+msgid "%s is optional - if empty, SEO-optimized slugs are automatically generated."
+msgstr ""
+
+#: includes/admin-menu.php:300
+msgid "Upload and Create Pages"
+msgstr ""
+
+#: includes/admin-menu.php:307
+msgid "Please select a CSV file to upload."
+msgstr ""
+
+#: includes/admin-menu.php:322
+msgid "Universal Bottom Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:324
+msgid "Failed to create Universal Bottom Menu."
+msgstr ""
+
+#: includes/admin-menu.php:331
+msgid "Services Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:333
+msgid "No service pages found to create Services Menu."
+msgstr ""
+
+#: includes/admin-menu.php:340
+msgid "Company Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:342
+msgid "No company pages found to create Company Menu."
+msgstr ""
+
+#: includes/admin-menu.php:349
+msgid "Main Navigation Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:351
+msgid "Failed to create Main Navigation Menu."
+msgstr ""
+
+#: includes/admin-menu.php:358
+msgid "Resources Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:360
+msgid "Failed to create Resources Menu."
+msgstr ""
+
+#: includes/admin-menu.php:367
+msgid "Footer Quick Links Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:369
+msgid "Failed to create Footer Quick Links Menu."
+msgstr ""
+
+#: includes/admin-menu.php:376
+msgid "Social Media Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:378
+msgid "Failed to create Social Media Menu."
+msgstr ""
+
+#: includes/admin-menu.php:385
+msgid "Support Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:387
+msgid "Failed to create Support Menu."
+msgstr ""
+
+#: includes/admin-menu.php:394
+msgid "Products Menu created successfully!"
+msgstr ""
+
+#: includes/admin-menu.php:396
+msgid "No product pages found to create Products Menu."
+msgstr ""
+
+#: includes/admin-menu.php:403
+msgid "Menu Generator"
+msgstr ""
+
+#: includes/admin-menu.php:404
+msgid "Automatically generate WordPress menus based on your created pages."
+msgstr ""
