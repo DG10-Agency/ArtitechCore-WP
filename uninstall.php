@@ -132,11 +132,13 @@ if (empty($ce_meta_to_exclude)) {
 } else {
     // Delete non-excluded meta
     $placeholders = implode(',', array_fill(0, count($ce_meta_to_exclude), '%s'));
+    // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
     $query = $wpdb->prepare(
         "DELETE FROM {$wpdb->postmeta} WHERE (meta_key LIKE %s OR meta_key LIKE %s) AND meta_key NOT IN ($placeholders)",
         array_merge([$wpdb->esc_like('artitechcore_') . '%', $wpdb->esc_like('_artitechcore_') . '%'], $ce_meta_to_exclude)
     );
     $wpdb->query($query);
+    // phpcs:enable
 }
 
 // Clear scheduled jobs

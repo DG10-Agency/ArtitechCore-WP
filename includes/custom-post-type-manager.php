@@ -945,8 +945,8 @@ function artitechcore_generate_cpt_schema($post_id, $post) {
         'name' => $post->post_title,
         'description' => wp_trim_words($post->post_content, 20),
         'url' => esc_url(get_permalink($post_id)),
-        'datePublished' => get_the_gmdate('c', $post_id),
-        'dateModified' => get_the_modified_gmdate('c', $post_id)
+        'datePublished' => get_post_time('c', true, $post_id),
+        'dateModified' => get_post_modified_time('c', true, $post_id)
     );
     
     // Add custom fields to schema
@@ -2917,7 +2917,7 @@ function artitechcore_create_cpt_from_template() {
         echo '<div class="notice notice-error"><p>' . esc_html($result->get_error_message()) . '</p></div>';
     } else {
         /* translators: %s: template name */
-        echo '<div class="notice notice-success"><p>' . sprintf(__('Custom post type "%s" created successfully from template!', 'artitechcore'), $template['name']) . '</p></div>';
+        echo '<div class="notice notice-success"><p>' . sprintf(esc_html__('Custom post type "%s" created successfully from template!', 'artitechcore'), esc_html($template['name'])) . '</p></div>';
         
         // Create sample entries if available
         if (!empty($template['sample_entries'])) {
@@ -3044,20 +3044,20 @@ function artitechcore_handle_cpt_import() {
     $message_parts = array();
     if ($imported_count > 0) {
         /* translators: %d */
-        $message_parts[] = sprintf(__('%d CPTs imported successfully.', 'artitechcore'), $imported_count);
+        $message_parts[] = sprintf(esc_html__('%d CPTs imported successfully.', 'artitechcore'), $imported_count);
     }
     if ($skipped_count > 0) {
         /* translators: %d */
-        $message_parts[] = sprintf(__('%d CPTs skipped (already exist).', 'artitechcore'), $skipped_count);
+        $message_parts[] = sprintf(esc_html__('%d CPTs skipped (already exist).', 'artitechcore'), $skipped_count);
     }
     if (!empty($errors)) {
         /* translators: %d */
-        $message_parts[] = sprintf(__('%d errors occurred.', 'artitechcore'), count($errors));
+        $message_parts[] = sprintf(esc_html__('%d errors occurred.', 'artitechcore'), count($errors));
     }
     
     if (!empty($message_parts)) {
         $class = !empty($errors) ? 'notice-warning' : 'notice-success';
-        echo '<div class="notice ' . esc_attr($class) . '"><p>' . esc_html(implode(' ', $message_parts)) . '</p></div>';
+        echo '<div class="notice ' . esc_attr($class) . '"><p>' . esc_html(implode(' ', $message_parts)) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         
         if (!empty($errors)) {
             echo '<div class="notice notice-error"><p><strong>Errors:</strong><br>' . implode('<br>', array_map('esc_html', $errors)) . '</p></div>';
@@ -3089,9 +3089,9 @@ function artitechcore_display_import_export_history() {
         $class = $item['type'] === 'export' ? 'export' : 'import';
         
         echo '<div class="artitechcore-history-item ' . esc_attr($class) . '">';
-        echo '<span class="dashicons ' . $icon . '" aria-hidden="true"></span>';
+        echo '<span class="dashicons ' . esc_attr($icon) . '" aria-hidden="true"></span>';
         echo '<div class="history-details">';
-        echo '<strong>' . ucfirst($item['type']) . '</strong> - ';
+        echo '<strong>' . esc_html(ucfirst($item['type'])) . '</strong> - ';
         echo esc_html($item['description']);
         echo '<br><small>' . esc_html($item['date']) . '</small>';
         echo '</div>';

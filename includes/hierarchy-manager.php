@@ -495,12 +495,12 @@ function artitechcore_register_export_ajax_handlers() {
 function artitechcore_ajax_export_hierarchy_csv() {
     // Verify nonce for security
     if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_key(wp_unslash($_GET['nonce'])), 'artitechcore_export_nonce')) {
-        wp_send_json_error(__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
     }
 
     // Check user permissions
     if (!current_user_can('edit_pages')) {
-        wp_send_json_error(__('Insufficient permissions to access this feature.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Insufficient permissions to access this feature.', 'artitechcore'));
     }
 
     try {
@@ -538,11 +538,11 @@ function artitechcore_ajax_export_hierarchy_csv() {
             "Completed CSV export (" . strlen($csv_content) . " bytes)");
 
         // Output the CSV content
-        echo $csv_content;
+        echo esc_html($csv_content);
         exit;
 
     } catch (Exception $e) {
-        wp_die('Export failed: ' . $e->getMessage());
+        wp_die('Export failed: ' . esc_html($e->getMessage()));
     }
 }
 
@@ -550,12 +550,12 @@ function artitechcore_ajax_export_hierarchy_csv() {
 function artitechcore_ajax_export_hierarchy_markdown() {
     // Verify nonce for security
     if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_key(wp_unslash($_GET['nonce'])), 'artitechcore_export_nonce')) {
-        wp_send_json_error(__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
     }
 
     // Check user permissions
     if (!current_user_can('edit_pages')) {
-        wp_send_json_error(__('Insufficient permissions to access this feature.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Insufficient permissions to access this feature.', 'artitechcore'));
     }
 
     try {
@@ -593,11 +593,11 @@ function artitechcore_ajax_export_hierarchy_markdown() {
             "Completed Markdown export (" . strlen($markdown_content) . " bytes)");
 
         // Output the Markdown content
-        echo $markdown_content;
+        echo esc_html($markdown_content);
         exit;
 
     } catch (Exception $e) {
-        wp_die('Export failed: ' . $e->getMessage());
+        wp_die('Export failed: ' . esc_html($e->getMessage()));
     }
 }
 
@@ -605,12 +605,12 @@ function artitechcore_ajax_export_hierarchy_markdown() {
 function artitechcore_ajax_export_hierarchy_json() {
     // Verify nonce for security
     if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_key(wp_unslash($_GET['nonce'])), 'artitechcore_export_nonce')) {
-        wp_send_json_error(__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Security check failed. Please refresh the page and try again.', 'artitechcore'));
     }
 
     // Check user permissions
     if (!current_user_can('edit_pages')) {
-        wp_send_json_error(__('Insufficient permissions to access this feature.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Insufficient permissions to access this feature.', 'artitechcore'));
     }
 
     try {
@@ -657,11 +657,11 @@ function artitechcore_ajax_export_hierarchy_json() {
             "Completed JSON export (" . strlen($json_content) . " bytes)");
 
         // Output the JSON content
-        echo $json_content;
+        echo esc_html($json_content);
         exit;
 
     } catch (Exception $e) {
-        wp_die('Export failed: ' . $e->getMessage());
+        wp_die('Export failed: ' . esc_html($e->getMessage()));
     }
 }
 

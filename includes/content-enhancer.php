@@ -153,8 +153,8 @@ function artitechcore_ce_meta_box_html($post) {
                 <?php else: ?>
                     <?php foreach ($faq as $index => $item): ?>
                         <div class="faq-item" style="margin-bottom:10px; padding:10px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;">
-                            <input type="text" name="artitechcore_ce_faq[<?php echo $index; ?>][q]" value="<?php echo esc_attr($item['q'] ?? ''); ?>" style="width:100%; margin-bottom:5px; font-weight:bold;" placeholder="Question">
-                            <textarea name="artitechcore_ce_faq[<?php echo $index; ?>][a]" style="width:100%; min-height:50px;" placeholder="Answer"><?php echo esc_textarea($item['a'] ?? ''); ?></textarea>
+                            <input type="text" name="artitechcore_ce_faq[<?php echo esc_attr($index); ?>][q]" value="<?php echo esc_attr($item['q'] ?? ''); ?>" style="width:100%; margin-bottom:5px; font-weight:bold;" placeholder="Question">
+                            <textarea name="artitechcore_ce_faq[<?php echo esc_attr($index); ?>][a]" style="width:100%; min-height:50px;" placeholder="Answer"><?php echo esc_textarea($item['a'] ?? ''); ?></textarea>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -434,7 +434,7 @@ function artitechcore_ce_call_openai($prompt, $api_key) {
         'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
         'body' => $body, 'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120
     ], 'openai');
-    if (is_wp_error($response)) throw new Exception($response->get_error_message());
+    if (is_wp_error($response)) throw new Exception(esc_html($response->get_error_message()));
     
     $status_code = wp_remote_retrieve_response_code($response);
     $body = wp_remote_retrieve_body($response);
@@ -442,11 +442,11 @@ function artitechcore_ce_call_openai($prompt, $api_key) {
 
     if ($status_code !== 200) {
         $err_msg = isset($data['error']['message']) ? $data['error']['message'] : 'HTTP ' . $status_code;
-        throw new Exception('OpenAI Error: ' . $err_msg);
+        throw new Exception(esc_html('OpenAI Error: ' . $err_msg));
     }
 
     if (!isset($data['choices'][0]['message']['content'])) {
-        throw new Exception('OpenAI: Unexpected response structure.');
+        throw new Exception(esc_html('OpenAI: Unexpected response structure.'));
     }
     
     return json_decode($data['choices'][0]['message']['content'], true);
@@ -461,7 +461,7 @@ function artitechcore_ce_call_gemini($prompt, $api_key) {
         'headers' => ['Content-Type' => 'application/json'],
         'body' => $body, 'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120
     ], 'gemini');
-    if (is_wp_error($response)) throw new Exception($response->get_error_message());
+    if (is_wp_error($response)) throw new Exception(esc_html($response->get_error_message()));
     
     $status_code = wp_remote_retrieve_response_code($response);
     $body = wp_remote_retrieve_body($response);
@@ -469,11 +469,11 @@ function artitechcore_ce_call_gemini($prompt, $api_key) {
 
     if ($status_code !== 200) {
         $err_msg = isset($data['error']['message']) ? $data['error']['message'] : 'HTTP ' . $status_code;
-        throw new Exception('Gemini Error: ' . $err_msg);
+        throw new Exception(esc_html('Gemini Error: ' . $err_msg));
     }
 
     if (!isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-        throw new Exception('Gemini: Unexpected response structure.');
+        throw new Exception(esc_html('Gemini: Unexpected response structure.'));
     }
     
     $text = $data['candidates'][0]['content']['parts'][0]['text'];
@@ -494,7 +494,7 @@ function artitechcore_ce_call_deepseek($prompt, $api_key) {
         'headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $api_key],
         'body' => $body, 'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120
     ], 'deepseek');
-    if (is_wp_error($response)) throw new Exception($response->get_error_message());
+    if (is_wp_error($response)) throw new Exception(esc_html($response->get_error_message()));
     
     $status_code = wp_remote_retrieve_response_code($response);
     $body = wp_remote_retrieve_body($response);
@@ -502,11 +502,11 @@ function artitechcore_ce_call_deepseek($prompt, $api_key) {
 
     if ($status_code !== 200) {
         $err_msg = isset($data['error']['message']) ? $data['error']['message'] : 'HTTP ' . $status_code;
-        throw new Exception('DeepSeek Error: ' . $err_msg);
+        throw new Exception(esc_html('DeepSeek Error: ' . $err_msg));
     }
 
     if (!isset($data['choices'][0]['message']['content'])) {
-        throw new Exception('DeepSeek: Unexpected response structure.');
+        throw new Exception(esc_html('DeepSeek: Unexpected response structure.'));
     }
     
     return json_decode($data['choices'][0]['message']['content'], true);
@@ -1455,7 +1455,7 @@ function artitechcore_ce_native_cta_ajax_handler() {
     $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : 'unknown';
     $limit_key = 'artitechcore_ce_form_limit_' . md5($ip . $post_id);
     if (get_transient($limit_key)) {
-        wp_send_json_error(__('Please wait 30 seconds before sending another message.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Please wait 30 seconds before sending another message.', 'artitechcore'));
     }
     set_transient($limit_key, 1, 30);
     $to = get_option('artitechcore_ce_cta_native_email', get_option('admin_email'));
@@ -1481,8 +1481,8 @@ function artitechcore_ce_native_cta_ajax_handler() {
     $sent = wp_mail($to, $subject, $body, $headers);
     
     if ($sent) {
-        wp_send_json_success(__('Thank you! Your submission has been received.', 'artitechcore'));
+        wp_send_json_success(esc_html__('Thank you! Your submission has been received.', 'artitechcore'));
     } else {
-        wp_send_json_error(__('Server error. Please try again or contact us directly.', 'artitechcore'));
+        wp_send_json_error(esc_html__('Server error. Please try again or contact us directly.', 'artitechcore'));
     }
 }

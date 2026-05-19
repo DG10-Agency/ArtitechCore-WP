@@ -353,9 +353,9 @@ function artitechcore_admin_page() {
                                     </a>
                                 </div>
                                 <p class="dg10-promotion-footer" role="text">
-                                    <?php printf(
+                                    <?php echo wp_kses_post(sprintf(
                                         /* translators: %s */
-                                        __('This is an open-source project - please %s.', 'artitechcore'), '<a href="' . esc_url(ARTITECHCORE_GITHUB_URL) . '" target="_blank" role="link" aria-label="' . esc_attr__('Star the repository on GitHub - Opens in new tab', 'artitechcore') . '">' . __('star the repo on GitHub', 'artitechcore') . '</a>'); ?>
+                                        esc_html__('This is an open-source project - please %s.', 'artitechcore'), '<a href="' . esc_url(ARTITECHCORE_GITHUB_URL) . '" target="_blank" role="link" aria-label="' . esc_attr__('Star the repository on GitHub - Opens in new tab', 'artitechcore') . '">' . esc_html__('star the repo on GitHub', 'artitechcore') . '</a>')); ?>
                                 </p>
                             </div>
                         </section>
@@ -522,25 +522,25 @@ function artitechcore_render_csv_tab_content() {
                                aria-required="true"
                                role="button">
                         <div id="csv-instructions" class="dg10-form-help" role="region" aria-label="<?php esc_attr_e('CSV File Instructions', 'artitechcore'); ?>">
-                            <p><?php printf(
+                            <p><?php echo wp_kses_post(sprintf(
                                 /* translators: %s, %s, %s, %s, %s, %s, %s */
-                                __('Upload a CSV file with the following columns: %1$s, %2$s (optional), %3$s, %4$s, %5$s, %6$s, %7$s.', 'artitechcore'), 
+                                esc_html__('Upload a CSV file with the following columns: %1$s, %2$s (optional), %3$s, %4$s, %5$s, %6$s, %7$s.', 'artitechcore'), 
                                 '<code>post_title</code>', 
                                 '<code>slug</code>', 
                                 '<code>post_parent</code>', 
                                 '<code>meta_description</code>', 
                                 '<code>featured_image</code>', 
                                 '<code>page_template</code>', 
-                                '<code>post_status</code>'); ?></p>
+                                '<code>post_status</code>')); ?></p>
                             <ul>
-                                <li><?php printf(
+                                <li><?php echo wp_kses_post(sprintf(
                                     /* translators: %s */
-                                    __('The %s column should contain the title of the parent page.', 'artitechcore'), '<code>post_parent</code>'); ?></li>
-                                <li><?php printf(
+                                    esc_html__('The %s column should contain the title of the parent page.', 'artitechcore'), '<code>post_parent</code>')); ?></li>
+                                <li><?php echo wp_kses_post(sprintf(
                                     /* translators: %s */
-                                    __('%s is optional - if empty, SEO-optimized slugs are automatically generated.', 'artitechcore'), '<code>slug</code>'); ?></li>
+                                    esc_html__('%s is optional - if empty, SEO-optimized slugs are automatically generated.', 'artitechcore'), '<code>slug</code>')); ?></li>
                                 <li><strong><?php echo esc_html(artitechcore_get_max_file_size_display()); ?></strong></li>
-                                <li><?php _e('Maximum rows: 10,000', 'artitechcore'); ?></li>
+                                <li><?php esc_html_e('Maximum rows: 10,000', 'artitechcore'); ?></li>
                             </ul>
                         </div>
                     </div>
@@ -636,7 +636,7 @@ function artitechcore_menu_generator_tab() {
         echo '<div id="artitechcore-result-notice" class="artitechcore-notice" style="background: #fff; border-left: 4px solid #46b450; padding: 20px; margin: 20px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
         
         if (is_wp_error($result)) {
-             echo '<h3 style="margin: 0 0 10px; color: #d63638;">' . __('Error', 'artitechcore') . '</h3>';
+             echo '<h3 style="margin: 0 0 10px; color: #d63638;">' . esc_html__('Error', 'artitechcore') . '</h3>';
              echo '<p style="font-size: 14px; margin: 0;">' . esc_html($result->get_error_message()) . '</p>';
              echo '<script>document.getElementById("artitechcore-result-notice").style.borderLeftColor = "#d63638";</script>';
         } elseif ($result) {
@@ -644,18 +644,18 @@ function artitechcore_menu_generator_tab() {
              $locations_link = esc_url(admin_url('nav-menus.php?action=locations'));
              
              /* translators: %s */
-             echo '<h3 style="margin: 0 0 10px; color: #46b450;">' . sprintf(__('%s Created Successfully!', 'artitechcore'), ucwords(str_replace('_', ' ', $menu_type))) . '</h3>';
+             echo '<h3 style="margin: 0 0 10px; color: #46b450;">' . sprintf(esc_html__('%s Created Successfully!', 'artitechcore'), esc_html(ucwords(str_replace('_', ' ', $menu_type)))) . '</h3>';
              echo '<div style="display: flex; gap: 15px; align-items: center; margin-top: 15px;">';
-             echo '<a href="' . esc_url($edit_link) . '" class="button button-primary button-large">' . __('Edit Menu Items', 'artitechcore') . '</a>';
+             echo '<a href="' . esc_url($edit_link) . '" class="button button-primary button-large">' . esc_html__('Edit Menu Items', 'artitechcore') . '</a>';
              if (!empty($location)) {
-                echo '<span style="color: #46b450; display: flex; align-items: center;"><span class="dashicons dashicons-yes" style="margin-right: 5px;"></span> ' . __('Assigned to location', 'artitechcore') . '</span>';
+                echo '<span style="color: #46b450; display: flex; align-items: center;"><span class="dashicons dashicons-yes" style="margin-right: 5px;"></span> ' . esc_html__('Assigned to location', 'artitechcore') . '</span>';
              } else {
-                echo '<a href="' . esc_url($locations_link) . '" class="button button-secondary">' . __('Manage Locations', 'artitechcore') . '</a>';
+                echo '<a href="' . esc_url($locations_link) . '" class="button button-secondary">' . esc_html__('Manage Locations', 'artitechcore') . '</a>';
              }
              echo '</div>';
         } else {
-             echo '<h3 style="margin: 0 0 10px; color: #dba617;">' . __('Warning', 'artitechcore') . '</h3>';
-             echo '<p>' . __('Failed to create menu. No pages found or empty selection.', 'artitechcore') . '</p>';
+             echo '<h3 style="margin: 0 0 10px; color: #dba617;">' . esc_html__('Warning', 'artitechcore') . '</h3>';
+             echo '<p>' . esc_html__('Failed to create menu. No pages found or empty selection.', 'artitechcore') . '</p>';
              echo '<script>document.getElementById("artitechcore-result-notice").style.borderLeftColor = "#dba617";</script>';
         }
         echo '</div>';
@@ -672,8 +672,8 @@ function artitechcore_menu_generator_tab() {
     ?>
     <section class="dg10-card" role="region" aria-labelledby="menu-generator-heading">
         <div class="dg10-card-body">
-            <h2 id="menu-generator-heading"><?php _e('Menu Generator', 'artitechcore'); ?></h2>
-            <p><?php _e('Automatically generate WordPress menus based on your created pages.', 'artitechcore'); ?></p>
+            <h2 id="menu-generator-heading"><?php esc_html_e('Menu Generator', 'artitechcore'); ?></h2>
+            <p><?php esc_html_e('Automatically generate WordPress menus based on your created pages.', 'artitechcore'); ?></p>
         
         <div class="menu-generator-options">
             <!-- Primary Navigation Menus -->
@@ -694,7 +694,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Contact page integration</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="main_navigation">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Main Navigation', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -711,7 +711,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Perfect for header navigation</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="services">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Services Menu', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -734,7 +734,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Perfect for e-commerce sites</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="products">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Products Menu', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -751,7 +751,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>FAQ and help resources</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="resources">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Resources Menu', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -768,7 +768,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Documentation and guides</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="support">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Support Menu', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -792,7 +792,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Contact page integration</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="universal_bottom">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Footer Menu', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -809,7 +809,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Sitemap integration</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="footer_quick_links">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Quick Links', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -832,7 +832,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Includes all company-related content</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="company">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Company Menu', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>
@@ -849,7 +849,7 @@ function artitechcore_menu_generator_tab() {
                                 <li>Ready for customization</li>
                             </ul>
                             <input type="hidden" name="menu_type" value="social_media">
-                            <?php echo $controls_html; ?>
+                            <?php echo wp_kses_post($controls_html); ?>
                             <?php submit_button('Generate Social Menu', 'primary', 'generate_menu'); ?>
                         </div>
                     </form>

@@ -1218,8 +1218,20 @@ class ArtitechCore_Keyword_Analyzer {
     }
     
     /**
-     * Export as CSV
+     * Convert array to CSV line string (replaces fputcsv)
      */
+    private function array_to_csv_line($fields) {
+        $escaped = array();
+        foreach ($fields as $field) {
+            $field = (string) $field;
+            if (strpos($field, ',') !== false || strpos($field, '"') !== false || strpos($field, "\n") !== false || strpos($field, "\r") !== false) {
+                $field = '"' . str_replace('"', '""', $field) . '"';
+            }
+            $escaped[] = $field;
+        }
+        return implode(',', $escaped) . "\r\n";
+    }
+
     private function export_csv($filename, $page_info, $keywords, $summary) {
         // Sanitize filename to prevent directory traversal
         $filename = sanitize_file_name($filename);
@@ -1231,29 +1243,29 @@ class ArtitechCore_Keyword_Analyzer {
         header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
         
-        ob_start();
-        $output = fopen('php://output', 'w');
+        // Build CSV content as a string
+        $csv_lines = array();
         
         // Page info header
-        fputcsv($output, array('Page Analysis Report'));
-        fputcsv($output, array('Page Title', $page_info['title']));
-        fputcsv($output, array('URL', $page_info['url']));
-        fputcsv($output, array('Word Count', $page_info['word_count']));
-        fputcsv($output, array('Analysis Date', $page_info['analysis_date']));
-        fputcsv($output, array(''));
+        $csv_lines[] = $this->array_to_csv_line(array('Page Analysis Report'));
+        $csv_lines[] = $this->array_to_csv_line(array('Page Title', $page_info['title']));
+        $csv_lines[] = $this->array_to_csv_line(array('URL', $page_info['url']));
+        $csv_lines[] = $this->array_to_csv_line(array('Word Count', $page_info['word_count']));
+        $csv_lines[] = $this->array_to_csv_line(array('Analysis Date', $page_info['analysis_date']));
+        $csv_lines[] = $this->array_to_csv_line(array(''));
         
         // Summary
-        fputcsv($output, array('Summary'));
-        fputcsv($output, array('Total Keywords', $summary['total_keywords']));
-        fputcsv($output, array('Keywords Found', $summary['keywords_found']));
-        fputcsv($output, array('Average Density', $summary['average_density'] . '%'));
-        fputcsv($output, array(''));
+        $csv_lines[] = $this->array_to_csv_line(array('Summary'));
+        $csv_lines[] = $this->array_to_csv_line(array('Total Keywords', $summary['total_keywords']));
+        $csv_lines[] = $this->array_to_csv_line(array('Keywords Found', $summary['keywords_found']));
+        $csv_lines[] = $this->array_to_csv_line(array('Average Density', $summary['average_density'] . '%'));
+        $csv_lines[] = $this->array_to_csv_line(array(''));
         
         // Keywords data
-        fputcsv($output, array('Keyword', 'Count', 'Density (%)', 'Status', 'Title', 'Content', 'Meta Description', 'Excerpt', 'Headings'));
+        $csv_lines[] = $this->array_to_csv_line(array('Keyword', 'Count', 'Density (%)', 'Status', 'Title', 'Content', 'Meta Description', 'Excerpt', 'Headings'));
         
         foreach ($keywords as $keyword) {
-            fputcsv($output, array(
+            $csv_lines[] = $this->array_to_csv_line(array(
                 $keyword['keyword'],
                 $keyword['count'],
                 $keyword['density'],
@@ -1266,9 +1278,22 @@ class ArtitechCore_Keyword_Analyzer {
             ));
         }
         
-        fclose($output);
-        $csv_output = ob_get_clean();
-        echo $csv_output;
+        $csv_content = implode('', $csv_lines);
+        
+        // Write to temporary file using WP_Filesystem
+        global $wp_filesystem;
+        if (!function_exists('WP_Filesystem')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+        WP_Filesystem();
+        
+        $upload_dir = wp_upload_dir();
+        $temp_file = trailingslashit($upload_dir['basedir']) . 'artitechcore-' . uniqid() . '.csv';
+        $wp_filesystem->put_contents($temp_file, $csv_content);
+        $csv_output = $wp_filesystem->get_contents($temp_file);
+        $wp_filesystem->delete($temp_file);
+        
+        echo esc_html($csv_output);
         exit;
     }
     

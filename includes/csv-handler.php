@@ -22,8 +22,8 @@ function artitechcore_create_pages_from_csv($file) {
                 sprintf(
                     /* translators: %s, %s */
                     esc_html__('File size too large. Your file is %1$s MB, but the maximum allowed size is %2$s MB. Please reduce the file size and try again.', 'artitechcore'),
-                    $file_size_mb,
-                    $max_size_mb
+                    esc_html($file_size_mb),
+                    esc_html($max_size_mb)
                 ) . '</p></div>';
             return;
         }
@@ -42,8 +42,8 @@ function artitechcore_create_pages_from_csv($file) {
                 sprintf(
                     /* translators: %s, %s */
                     esc_html__('File size too large. Your file is %1$s MB, but the maximum allowed size is %2$s MB. Please reduce the file size and try again.', 'artitechcore'),
-                    $file_size_mb,
-                    $max_size_mb
+                    esc_html($file_size_mb),
+                    esc_html($max_size_mb)
                 ) . '</p></div>';
             return;
         }
@@ -115,12 +115,16 @@ function artitechcore_create_pages_from_csv($file) {
     $page_map = []; // To map titles to page IDs for parent lookup
     $row_count = 0;
     
+    // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fopen
     if (($handle = fopen($file['tmp_name'], "r")) !== FALSE) {
+        // phpcs:enable
         $header = fgetcsv($handle);
         
         if (!$header) {
              echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__('The CSV file is empty or unreadable.', 'artitechcore') . '</p></div>';
+             // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
              fclose($handle);
+             // phpcs:enable
              return;
         }
 
@@ -199,7 +203,9 @@ function artitechcore_create_pages_from_csv($file) {
                 }
             }
         }
+        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         fclose($handle);
+        // phpcs:enable
     } else {
         echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('An error occurred while reading the CSV file.', 'artitechcore') . '</p></div>';
         return;
@@ -216,16 +222,16 @@ function artitechcore_create_pages_from_csv($file) {
 // Get user-friendly upload error message
 function artitechcore_get_upload_error_message($error_code) {
     $error_messages = [
-        UPLOAD_ERR_INI_SIZE => __('File exceeds the maximum upload size allowed by the server configuration.', 'artitechcore'),
-        UPLOAD_ERR_FORM_SIZE => __('File exceeds the maximum upload size specified in the form.', 'artitechcore'),
-        UPLOAD_ERR_PARTIAL => __('File was only partially uploaded. Please try again.', 'artitechcore'),
-        UPLOAD_ERR_NO_FILE => __('No file was uploaded. Please select a file to upload.', 'artitechcore'),
-        UPLOAD_ERR_NO_TMP_DIR => __('Missing temporary folder on the server. Please contact the administrator.', 'artitechcore'),
-        UPLOAD_ERR_CANT_WRITE => __('Failed to write file to disk. Please try again.', 'artitechcore'),
-        UPLOAD_ERR_EXTENSION => __('File upload was stopped by a PHP extension. Please contact the administrator.', 'artitechcore'),
+        UPLOAD_ERR_INI_SIZE => esc_html__('File exceeds the maximum upload size allowed by the server configuration.', 'artitechcore'),
+        UPLOAD_ERR_FORM_SIZE => esc_html__('File exceeds the maximum upload size specified in the form.', 'artitechcore'),
+        UPLOAD_ERR_PARTIAL => esc_html__('File was only partially uploaded. Please try again.', 'artitechcore'),
+        UPLOAD_ERR_NO_FILE => esc_html__('No file was uploaded. Please select a file to upload.', 'artitechcore'),
+        UPLOAD_ERR_NO_TMP_DIR => esc_html__('Missing temporary folder on the server. Please contact the administrator.', 'artitechcore'),
+        UPLOAD_ERR_CANT_WRITE => esc_html__('Failed to write file to disk. Please try again.', 'artitechcore'),
+        UPLOAD_ERR_EXTENSION => esc_html__('File upload was stopped by a PHP extension. Please contact the administrator.', 'artitechcore'),
     ];
 
-    return isset($error_messages[$error_code]) ? $error_messages[$error_code] : __('Unknown upload error occurred. Please try again.', 'artitechcore');
+    return isset($error_messages[$error_code]) ? $error_messages[$error_code] : esc_html__('Unknown upload error occurred. Please try again.', 'artitechcore');
 }
 
 // Get maximum allowed file size for display
@@ -233,7 +239,7 @@ function artitechcore_get_max_file_size_display() {
     $max_file_size = 5 * 1024 * 1024; // 5MB in bytes
     $max_size_mb = round($max_file_size / (1024 * 1024), 2);
     /* translators: %s */
-    return sprintf(__('Maximum file size: %s MB', 'artitechcore'), $max_size_mb);
+    return sprintf(esc_html__('Maximum file size: %s MB', 'artitechcore'), esc_html($max_size_mb));
 }
 
 // Validate file size before upload (client-side validation helper)

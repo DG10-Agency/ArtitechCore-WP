@@ -1190,7 +1190,7 @@ function artitechcore_output_schema_markup() {
         if (is_array($schema_data) || is_object($schema_data)) {
             echo wp_json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         } else {
-            echo $schema_data;
+            echo wp_kses_post($schema_data);
         }
 
         echo "\n" . '</script>' . "\n";
@@ -1383,8 +1383,8 @@ function artitechcore_generate_blog_schema($post_id) {
         '@type' => 'BlogPosting',
         'headline' => sanitize_text_field(get_the_title($post_id)),
         'description' => sanitize_text_field(get_the_excerpt($post_id)),
-        'datePublished' => get_the_gmdate('c', $post_id),
-        'dateModified' => get_the_modified_gmdate('c', $post_id),
+        'datePublished' => get_post_time('c', true, $post_id),
+        'dateModified' => get_post_modified_time('c', true, $post_id),
         'author' => [
             '@type' => 'Person',
             'name' => sanitize_text_field($author->display_name)
@@ -1417,8 +1417,8 @@ function artitechcore_generate_article_schema($post_id) {
         '@type' => 'Article',
         'headline' => sanitize_text_field(get_the_title($post_id)),
         'description' => sanitize_text_field(get_the_excerpt($post_id)),
-        'datePublished' => get_the_gmdate('c', $post_id),
-        'dateModified' => get_the_modified_gmdate('c', $post_id),
+        'datePublished' => get_post_time('c', true, $post_id),
+        'dateModified' => get_post_modified_time('c', true, $post_id),
         'mainEntityOfPage' => [
             '@type' => 'WebPage',
             '@id' => esc_url_raw(get_permalink($post_id))
@@ -2565,7 +2565,7 @@ function artitechcore_schema_management_dashboard() {
                     <?php printf(
                         /* translators: %d */
                         esc_html__('We found %d items in your legacy database format that haven\'t been synchronized to the new high-performance table yet. Syncing will move these items so they appear in your reports and remain functional.', 'artitechcore'),
-                        ($has_legacy_postmeta + $has_legacy_termmeta)
+                        esc_html($has_legacy_postmeta + $has_legacy_termmeta)
                     ); ?>
                 </p>
                 <p style="margin-bottom: 0;">
@@ -3319,7 +3319,9 @@ function artitechcore_admin_export_schema_csv() {
         }
     }
 
+    // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
     fclose($out);
+    // phpcs:enable
     exit;
 }
 add_action('admin_post_artitechcore_export_schema_csv', 'artitechcore_admin_export_schema_csv');

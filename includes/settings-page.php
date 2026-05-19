@@ -724,21 +724,21 @@ function artitechcore_ai_provider_callback() {
 function artitechcore_openai_api_key_callback() {
     $api_key = get_option('artitechcore_openai_api_key');
     echo '<input type="password" name="artitechcore_openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text" autocomplete="off">';
-    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="openai">' . __('Test OpenAI', 'artitechcore') . '</button>';
+    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="openai">' . esc_html__('Test OpenAI', 'artitechcore') . '</button>';
 }
 
 // Gemini API Key field callback
 function artitechcore_gemini_api_key_callback() {
     $api_key = get_option('artitechcore_gemini_api_key');
     echo '<input type="password" name="artitechcore_gemini_api_key" value="' . esc_attr($api_key) . '" class="regular-text" autocomplete="off">';
-    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="gemini">' . __('Test Gemini', 'artitechcore') . '</button>';
+    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="gemini">' . esc_html__('Test Gemini', 'artitechcore') . '</button>';
 }
 
 // DeepSeek API Key field callback
 function artitechcore_deepseek_api_key_callback() {
     $api_key = get_option('artitechcore_deepseek_api_key');
     echo '<input type="password" name="artitechcore_deepseek_api_key" value="' . esc_attr($api_key) . '" class="regular-text" autocomplete="off">';
-    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="deepseek">' . __('Test DeepSeek', 'artitechcore') . '</button>';
+    echo ' <button type="button" class="button artitechcore-test-conn" data-provider="deepseek">' . esc_html__('Test DeepSeek', 'artitechcore') . '</button>';
     echo '<div class="artitechcore-test-status" style="margin-top: 5px;"></div>';
 }
 
@@ -893,7 +893,7 @@ function artitechcore_ce_post_types_callback() {
     foreach ($post_types as $pt) {
         if ($pt->name === 'attachment') continue;
         $checked = in_array($pt->name, $selected) ? 'checked' : '';
-        echo '<label style="margin-right:15px;"><input type="checkbox" name="artitechcore_ce_post_types[]" value="' . esc_attr($pt->name) . '" ' . $checked . '> ' . esc_html($pt->label) . '</label>';
+        echo '<label style="margin-right:15px;"><input type="checkbox" name="artitechcore_ce_post_types[]" value="' . esc_attr($pt->name) . '"' . ($checked ? ' checked' : '') . '> ' . esc_html($pt->label) . '</label>';
     }
 }
 
@@ -910,7 +910,7 @@ function artitechcore_ce_persist_features_callback() {
     
     foreach ($features as $key => $label) {
         $checked = in_array($key, $selected) ? 'checked' : '';
-        echo '<label style="margin-right:15px;"><input type="checkbox" name="artitechcore_ce_persist_features[]" value="' . esc_attr($key) . '" ' . $checked . '> ' . esc_html($label) . '</label>';
+        echo '<label style="margin-right:15px;"><input type="checkbox" name="artitechcore_ce_persist_features[]" value="' . esc_attr($key) . '"' . ($checked ? ' checked' : '') . '> ' . esc_html($label) . '</label>';
     }
     echo '<p class="description">' . esc_html__('Select which AI enhancements should remain visible on your posts even after the plugin is deleted (uninstalled). Note: Deactivating the plugin will temporarily hide all enhancements until reactivated.', 'artitechcore') . '</p>';
 }
@@ -947,7 +947,7 @@ function artitechcore_ce_cta_native_callback() {
     ];
     ?>
     <div class="artitechcore-native-cta-config">
-        <label><strong><?php _e('Form Fields:', 'artitechcore'); ?></strong></label><br>
+        <label><strong><?php esc_html_e('Form Fields:', 'artitechcore'); ?></strong></label><br>
         <?php foreach ($available_fields as $key => $label) : ?>
             <label style="margin-right:15px;">
                 <input type="checkbox" name="artitechcore_ce_cta_native_fields[]" value="<?php echo esc_attr($key); ?>" <?php checked(in_array($key, $fields)); ?>> 
@@ -956,12 +956,12 @@ function artitechcore_ce_cta_native_callback() {
         <?php endforeach; ?>
         
         <div style="margin-top:15px;">
-            <label><strong><?php _e('Recipient Email:', 'artitechcore'); ?></strong></label><br>
+            <label><strong><?php esc_html_e('Recipient Email:', 'artitechcore'); ?></strong></label><br>
             <input type="email" name="artitechcore_ce_cta_native_email" value="<?php echo esc_attr($email); ?>" class="regular-text">
         </div>
         
         <div style="margin-top:15px;">
-            <label><strong><?php _e('Submit Button Text:', 'artitechcore'); ?></strong></label><br>
+            <label><strong><?php esc_html_e('Submit Button Text:', 'artitechcore'); ?></strong></label><br>
             <input type="text" name="artitechcore_ce_cta_native_button" value="<?php echo esc_attr($btn); ?>" class="regular-text">
         </div>
     </div>

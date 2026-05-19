@@ -105,13 +105,13 @@ class ArtitechCore_Menu_Generator {
         // Add legal pages
         $legal_pages = $this->detect_legal_pages();
         foreach ($legal_pages as $page) {
-            $this->add_menu_item($menu_id, $page['title'], $page['url']);
+            $this->add_menu_item($menu_id, esc_html($page['title']), $page['url']);
         }
         
         // Add sitemap if configured
         $sitemap_url = get_option('artitechcore_sitemap_url', '');
         if (!empty($sitemap_url)) {
-            $this->add_menu_item($menu_id, 'Sitemap', $sitemap_url);
+            $this->add_menu_item($menu_id, 'Sitemap', esc_url($sitemap_url));
         }
         
         // Add contact page if exists
@@ -817,7 +817,7 @@ class ArtitechCore_Menu_Generator {
         if (!empty($post_types)) {
             foreach ($post_types  as $post_type ) {
                 if ($post_type->has_archive) {
-                     $this->add_menu_item($menu_id, $post_type->labels->name, get_post_type_archive_link($post_type->name));
+                     $this->add_menu_item($menu_id, esc_html($post_type->labels->name), esc_url(get_post_type_archive_link($post_type->name)));
                 }
             }
         }
@@ -1015,7 +1015,7 @@ class ArtitechCore_Menu_Generator {
                 
                 // Add categories
                 foreach ($structure['resources']['categories'] as $category) {
-                    $this->add_menu_item($menu_id, $category->name, get_category_link($category->term_id), $resources_parent_id);
+                    $this->add_menu_item($menu_id, esc_html($category->name), esc_url(get_category_link($category->term_id)), $resources_parent_id);
                 }
             }
             
@@ -1117,7 +1117,7 @@ class ArtitechCore_Menu_Generator {
             if (!empty($categories)) {
                 $categories_parent_id = $this->add_menu_item($menu_id, 'Blog Categories', '#', $resources_parent_id);
                 foreach ($categories as $category) {
-                    $this->add_menu_item($menu_id, $category->name, get_category_link($category->term_id), $categories_parent_id);
+                    $this->add_menu_item($menu_id, esc_html($category->name), esc_url(get_category_link($category->term_id)), $categories_parent_id);
                 }
             }
         }

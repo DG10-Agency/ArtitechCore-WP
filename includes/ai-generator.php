@@ -402,7 +402,7 @@ function artitechcore_generate_pages_with_ai($business_type, $business_details, 
         
         echo '<div class="' . esc_attr($card_classes) . '" data-page="' . esc_attr($page_line) . '">';
         echo '<div class="card-select-wrap"><input type="checkbox" name="artitechcore_selected_pages[]" value="' . esc_attr($page_line) . '" class="artitechcore-page-checkbox" checked></div>';
-        echo '<span class="card-icon">' . $icon . '</span>';
+        echo '<span class="card-icon">' . esc_html($icon) . '</span>';
         echo '<h4 class="card-title">' . esc_html($display_title) . '</h4>';
         echo '<p class="card-excerpt">' . esc_html($excerpt) . '</p>';
         echo '<div class="card-meta">';
@@ -591,7 +591,7 @@ Focus on creating a complete website architecture that will rank well and conver
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI API error.', 'artitechcore');
             /* translators: %s */
-            throw new Exception(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['choices'][0]['message']['content'])) {
@@ -759,7 +759,7 @@ Focus on creating a complete website architecture that will rank well and conver
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown Gemini API error.', 'artitechcore');
             /* translators: %s */
-            throw new Exception(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['candidates'][0]['content']['parts'][0]['text'])) {
@@ -933,7 +933,7 @@ Focus on creating a complete website architecture that will rank well and conver
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown DeepSeek API error.', 'artitechcore');
             /* translators: %s */
-            throw new Exception(sprintf(__('DeepSeek API error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('DeepSeek API error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['choices'][0]['message']['content'])) {
@@ -1104,7 +1104,7 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
         artitechcore_log_ai_generation('page_creation', 'manual', true, $created_count);
 
     } catch (Exception $e) {
-        echo '<div class="notice notice-error"><p>' . __('An error occurred during page creation. Please try again.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html(__('An error occurred during page creation. Please try again.', 'artitechcore')) . '</p></div>';
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Page Creation Error: ' . $e->getMessage());
         }
@@ -1288,7 +1288,7 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
         if (isset($decoded_response['error'])) {
             $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI image generation error.', 'artitechcore');
             /* translators: %s */
-            throw new Exception(sprintf(__('OpenAI image generation error: %s', 'artitechcore'), $error_message));
+            throw new Exception(esc_html(sprintf(__('OpenAI image generation error: %s', 'artitechcore'), $error_message)));
         }
 
         if (!isset($decoded_response['data'][0]['url'])) {
@@ -1367,7 +1367,9 @@ function artitechcore_process_keywords_csv($file) {
         }
         
         $keywords = [];
+        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         $handle = fopen($file['tmp_name'], 'r');
+        // phpcs:enable
         
         if ($handle === false) {
             throw new Exception(esc_html(__('Failed to open CSV file for reading.', 'artitechcore')));
@@ -1381,9 +1383,11 @@ function artitechcore_process_keywords_csv($file) {
             
             // Prevent processing too many lines
             if ($line_count > $max_lines) {
+                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
                 fclose($handle);
+                // phpcs:enable
                 /* translators: %d */
-                throw new Exception(sprintf(__('CSV file has too many lines. Maximum allowed: %d', 'artitechcore'), $max_lines));
+                throw new Exception(esc_html(sprintf(__('CSV file has too many lines. Maximum allowed: %d', 'artitechcore'), $max_lines)));
             }
 
             if (!is_array($data)) {
@@ -1412,7 +1416,9 @@ function artitechcore_process_keywords_csv($file) {
                 }
             }
         }
+        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         fclose($handle);
+        // phpcs:enable
         
         if (empty($keywords)) {
             throw new Exception(esc_html(__('No valid keywords found in CSV file.', 'artitechcore')));
@@ -1719,7 +1725,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         // Input validation
         if (empty($business_type) || empty($business_details)) {
             error_log('ArtitechCore: Input validation failed - empty business_type or business_details');
-            echo '<div class="notice notice-error"><p>' . __('Business type and details are required for advanced AI generation.', 'artitechcore') . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html(__('Business type and details are required for advanced AI generation.', 'artitechcore')) . '</p></div>';
             return;
         }
 
@@ -1733,12 +1739,12 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
 
         // Validate input lengths
         if (strlen($business_type) > 100) {
-            echo '<div class="notice notice-error"><p>' . __('Business type must be 100 characters or less.', 'artitechcore') . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html(__('Business type must be 100 characters or less.', 'artitechcore')) . '</p></div>';
             return;
         }
 
         if (strlen($business_details) > 2000) {
-            echo '<div class="notice notice-error"><p>' . __('Business details must be 2000 characters or less.', 'artitechcore') . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html(__('Business details must be 2000 characters or less.', 'artitechcore')) . '</p></div>';
             return;
         }
 
@@ -1750,7 +1756,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         if (empty($api_key)) {
             error_log('ArtitechCore: API key is empty for provider: ' . $provider);
             /* translators: %s */
-            echo '<div class="notice notice-error"><p>' . sprintf(__('Please enter your %s API key in the Settings tab.', 'artitechcore'), esc_html(ucfirst($provider))) . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html(sprintf(__('Please enter your %s API key in the Settings tab.', 'artitechcore'), ucfirst($provider))) . '</p></div>';
             return;
         }
 
@@ -1758,7 +1764,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         if (!artitechcore_validate_api_key($api_key, $provider)) {
             error_log('ArtitechCore: API key validation failed for provider: ' . $provider);
             /* translators: %s */
-            echo '<div class="notice notice-error"><p>' . sprintf(__('Invalid %s API key format. Please check your API key.', 'artitechcore'), esc_html(ucfirst($provider))) . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html(sprintf(__('Invalid %s API key format. Please check your API key.', 'artitechcore'), ucfirst($provider))) . '</p></div>';
             return;
         }
         
@@ -1767,7 +1773,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         // Rate limiting check
         if (!artitechcore_check_ai_rate_limit($provider)) {
             error_log('ArtitechCore: Rate limit exceeded for provider: ' . $provider);
-            echo '<div class="notice notice-error"><p>' . __('Too many AI requests. Please wait a moment before trying again.', 'artitechcore') . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html(__('Too many AI requests. Please wait a moment before trying again.', 'artitechcore')) . '</p></div>';
             return;
         }
         
@@ -1787,7 +1793,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
                 break;
             default:
                 error_log('ArtitechCore: Invalid AI provider: ' . $provider);
-                echo '<div class="notice notice-error"><p>' . __('Invalid AI provider selected.', 'artitechcore') . '</p></div>';
+                echo '<div class="notice notice-error"><p>' . esc_html(__('Invalid AI provider selected.', 'artitechcore')) . '</p></div>';
                 return;
         }
         
@@ -1795,7 +1801,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
 
         if (empty($advanced_suggestions)) {
             error_log('ArtitechCore: AI returned empty suggestions');
-            echo '<div class="notice notice-warning"><p>' . __('Could not generate advanced content suggestions. Please check your API key and try again.', 'artitechcore') . '</p></div>';
+            echo '<div class="notice notice-warning"><p>' . esc_html(__('Could not generate advanced content suggestions. Please check your API key and try again.', 'artitechcore')) . '</p></div>';
             return;
         }
 
@@ -1803,7 +1809,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         $parsed_suggestions = artitechcore_parse_advanced_ai_response($advanced_suggestions);
         
         if (empty($parsed_suggestions['pages']) && empty($parsed_suggestions['custom_post_types'])) {
-            echo '<div class="notice notice-warning"><p>' . __('No content suggestions were generated. Please try with more detailed business information.', 'artitechcore') . '</p></div>';
+            echo '<div class="notice notice-warning"><p>' . esc_html(__('No content suggestions were generated. Please try with more detailed business information.', 'artitechcore')) . '</p></div>';
             return;
         }
 
@@ -1817,7 +1823,7 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
     } catch (Exception $e) {
         // Log error
         artitechcore_log_ai_generation('advanced_content', $provider ?? 'unknown', false, 0, $e->getMessage());
-        echo '<div class="notice notice-error"><p>' . __('An error occurred during advanced AI generation. Please try again.', 'artitechcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html(__('An error occurred during advanced AI generation. Please try again.', 'artitechcore')) . '</p></div>';
         error_log('ArtitechCore Advanced AI Generation Error: ' . $e->getMessage());
     }
 }
@@ -2138,7 +2144,7 @@ function artitechcore_display_advanced_content_suggestions($suggestions) {
             
             echo '<div class="artitechcore-suggestion-card is-selected" data-page="' . esc_attr(json_encode($page)) . '">';
             echo '<div class="card-select-wrap"><input type="checkbox" name="artitechcore_selected_pages[]" value="' . esc_attr(json_encode($page)) . '" class="artitechcore-page-checkbox" checked></div>';
-            echo '<span class="card-icon">' . $icon . '</span>';
+            echo '<span class="card-icon">' . esc_html($icon) . '</span>';
             echo '<h4 class="card-title">' . esc_html($page['title']) . '</h4>';
             echo '<p class="card-excerpt">' . esc_html($page['meta_description']) . '</p>';
             echo '<div class="card-meta">';

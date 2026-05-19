@@ -36,8 +36,12 @@ const ARTITECHCORE_COST = [
 ];
 
 // AI Model Parameters
-const ARTITECHCORE_AI_TEMPERATURE = 0.7;
-const ARTITECHCORE_AI_MAX_TOKENS = 4000;
+if (!defined('ARTITECHCORE_AI_TEMPERATURE')) {
+    define('ARTITECHCORE_AI_TEMPERATURE', 0.7);
+}
+if (!defined('ARTITECHCORE_AI_MAX_TOKENS')) {
+    define('ARTITECHCORE_AI_MAX_TOKENS', 4000);
+}
 const ARTITECHCORE_IMAGE_MODEL = 'dall-e-3';
 const ARTITECHCORE_IMAGE_SIZE = '1024x1024';
 
@@ -1285,14 +1289,14 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
 
     if (is_wp_error($response)) {
         /* translators: %s */
-        throw new Exception(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message()));
+        throw new Exception(esc_html(sprintf(__('OpenAI API request failed: %s', 'artitechcore'), $response->get_error_message())));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
         /* translators: %d, %s */
-        throw new Exception(sprintf(__('OpenAI API returned error %1$d: %2$s', 'artitechcore'), $response_code, $error_message));
+        throw new Exception(esc_html(sprintf(__('OpenAI API returned error %1$d: %2$s', 'artitechcore'), $response_code, $error_message)));
     }
 
     $response_body = wp_remote_retrieve_body($response);
@@ -1308,7 +1312,7 @@ function artitechcore_generate_page_content_with_openai($page_type, $brand_kit, 
     if (isset($decoded_response['error'])) {
         $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown OpenAI API error.', 'artitechcore');
         /* translators: %s */
-        throw new Exception(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message));
+        throw new Exception(esc_html(sprintf(__('OpenAI API error: %s', 'artitechcore'), $error_message)));
     }
 
     if (!isset($decoded_response['choices'][0]['message']['content'])) {
@@ -1415,14 +1419,14 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
 
     if (is_wp_error($response)) {
         /* translators: %s */
-        throw new Exception(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message()));
+        throw new Exception(esc_html(sprintf(__('Gemini API request failed: %s', 'artitechcore'), $response->get_error_message())));
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
         $error_message = wp_remote_retrieve_response_message($response);
         /* translators: %d, %s */
-        throw new Exception(sprintf(__('Gemini API returned error %1$d: %2$s', 'artitechcore'), $response_code, $error_message));
+        throw new Exception(esc_html(sprintf(__('Gemini API returned error %1$d: %2$s', 'artitechcore'), $response_code, $error_message)));
     }
 
     $response_body = wp_remote_retrieve_body($response);
@@ -1438,7 +1442,7 @@ function artitechcore_generate_page_content_with_gemini($page_type, $brand_kit, 
     if (isset($decoded_response['error'])) {
         $error_message = isset($decoded_response['error']['message']) ? $decoded_response['error']['message'] : __('Unknown Gemini API error.', 'artitechcore');
         /* translators: %s */
-        throw new Exception(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message));
+        throw new Exception(esc_html(sprintf(__('Gemini API error: %s', 'artitechcore'), $error_message)));
     }
 
     if (!isset($decoded_response['candidates'][0]['content']['parts'][0]['text'])) {
