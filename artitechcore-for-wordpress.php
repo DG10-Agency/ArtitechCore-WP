@@ -5,7 +5,7 @@
  * Description: The core engine for Artitech WP ecosystem, providing AI-powered page generation, hierarchy management, and structural organization.
  * Version: 1.1.2
  * Requires at least: 5.6
- * Tested up to: 6.9
+ * Tested up to: 6.9.4
  * Requires PHP: 7.4
  * Author: DG10 Agency
  * Author URI: https://www.dg10.agency

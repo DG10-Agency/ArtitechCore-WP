@@ -338,6 +338,7 @@ class ArtitechCore_Menu_Generator {
         ));
         
         echo "<h3>Debug: Service Page Detection</h3>";
+        /* translators: %d: description */
         echo '<p>' . esc_html(sprintf(__('Total pages found: %d', 'artitechcore'), count($all_pages))) . '</p>';
         
         $service_pages = array();
@@ -417,13 +418,15 @@ class ArtitechCore_Menu_Generator {
             }
         }
         
+        /* translators: %d: description */
         echo '<h4>' . esc_html(sprintf(__('Service Pages Detected (%d):', 'artitechcore'), count($service_pages))) . '</h4>';
         
         if (!empty($service_pages)) {
             $organized_services = $this->organize_services_intelligently($service_pages);
             
             foreach ($organized_services as $category => $services) {
-                echo '<h5>' . esc_html(sprintf(__('Category: %s (%d services)', 'artitechcore'), $category, count($services))) . '</h5>';
+                /* translators: %1$s: description %2$d: description */
+                echo '<h5>' . esc_html(sprintf(__('Category: %1$s (%2$d services)', 'artitechcore'), $category, count($services))) . '</h5>';
                 echo "<ul>";
                 foreach ($services as $service) {
                     echo '<li><strong>' . esc_html($service->post_title) . '</strong> - <a href="' . esc_url(get_permalink($service->ID)) . '" target="_blank">' . esc_html__('View', 'artitechcore') . '</a></li>';
@@ -1984,13 +1987,15 @@ class ArtitechCore_Menu_Generator {
         ));
         
         echo "<h3>Debug: Resource Page Detection</h3>";
+        /* translators: %d: description */
         echo '<p>' . esc_html(sprintf(__('Total pages found: %d', 'artitechcore'), count($all_pages))) . '</p>';
         
         $organized_resources = $this->organize_resource_pages_intelligently($all_pages);
         
         if (!empty($organized_resources)) {
             foreach ($organized_resources as $category => $pages) {
-                echo '<h4>' . esc_html(sprintf(__('Category: %s (%d pages)', 'artitechcore'), $category, count($pages))) . '</h4>';
+                /* translators: %1$s: description %2$d: description */
+                echo '<h4>' . esc_html(sprintf(__('Category: %1$s (%2$d pages)', 'artitechcore'), $category, count($pages))) . '</h4>';
                 echo "<ul>";
                 foreach ($pages as $page) {
                     echo '<li><strong>' . esc_html($page->post_title) . '</strong> - <a href="' . esc_url(get_permalink($page->ID)) . '" target="_blank">' . esc_html__('View', 'artitechcore') . '</a></li>';
@@ -2019,6 +2024,7 @@ class ArtitechCore_Menu_Generator {
         ));
         
         echo "<h3>Debug: Footer Links Detection</h3>";
+        /* translators: %d: description */
         echo '<p>' . esc_html(sprintf(__('Total pages found: %d', 'artitechcore'), count($all_pages))) . '</p>';
         
         $footer_structure = $this->organize_footer_links_by_priority($all_pages);
@@ -2026,7 +2032,8 @@ class ArtitechCore_Menu_Generator {
         if (!empty($footer_structure)) {
             foreach ($footer_structure as $priority => $pages) {
                 if (!empty($pages)) {
-                    echo '<h4>' . esc_html(sprintf(__('Priority: %s (%d pages)', 'artitechcore'), ucwords(str_replace('_', ' ', $priority)), count($pages))) . '</h4>';
+                    /* translators: %1$s: description %2$d: description */
+                    echo '<h4>' . esc_html(sprintf(__('Priority: %1$s (%2$d pages)', 'artitechcore'), ucwords(str_replace('_', ' ', $priority)), count($pages))) . '</h4>';
                     echo "<ul>";
                     foreach ($pages as $page) {
                         echo '<li><strong>' . esc_html($page->post_title) . '</strong> - <a href="' . esc_url(get_permalink($page->ID)) . '" target="_blank">' . esc_html__('View', 'artitechcore') . '</a></li>';
@@ -2056,13 +2063,15 @@ class ArtitechCore_Menu_Generator {
         ));
         
         echo "<h3>Debug: Support Page Detection</h3>";
+        /* translators: %d: description */
         echo '<p>' . esc_html(sprintf(__('Total pages found: %d', 'artitechcore'), count($all_pages))) . '</p>';
         
         $organized_support = $this->organize_support_pages_intelligently($all_pages);
         
         if (!empty($organized_support)) {
             foreach ($organized_support as $category => $pages) {
-                echo '<h4>' . esc_html(sprintf(__('Category: %s (%d pages)', 'artitechcore'), $category, count($pages))) . '</h4>';
+                /* translators: %1$s: description %2$d: description */
+                echo '<h4>' . esc_html(sprintf(__('Category: %1$s (%2$d pages)', 'artitechcore'), $category, count($pages))) . '</h4>';
                 echo "<ul>";
                 foreach ($pages as $page) {
                     echo '<li><strong>' . esc_html($page->post_title) . '</strong> - <a href="' . esc_url(get_permalink($page->ID)) . '" target="_blank">' . esc_html__('View', 'artitechcore') . '</a></li>';
@@ -2091,13 +2100,15 @@ class ArtitechCore_Menu_Generator {
         ));
         
         echo "<h3>Debug: Product Page Detection</h3>";
+        /* translators: %d: description */
         echo '<p>' . esc_html(sprintf(__('Total pages found: %d', 'artitechcore'), count($all_pages))) . '</p>';
         
         $organized_products = $this->organize_product_pages_intelligently($all_pages);
         
         if (!empty($organized_products)) {
             foreach ($organized_products as $category => $pages) {
-                echo '<h4>' . esc_html(sprintf(__('Category: %s (%d pages)', 'artitechcore'), $category, count($pages))) . '</h4>';
+                /* translators: %1$s: description %2$d: description */
+                echo '<h4>' . esc_html(sprintf(__('Category: %1$s (%2$d pages)', 'artitechcore'), $category, count($pages))) . '</h4>';
                 echo "<ul>";
                 foreach ($pages as $page) {
                     echo '<li><strong>' . esc_html($page->post_title) . '</strong> - <a href="' . esc_url(get_permalink($page->ID)) . '" target="_blank">' . esc_html__('View', 'artitechcore') . '</a></li>';

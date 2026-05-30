@@ -2413,7 +2413,7 @@ function artitechcore_create_advanced_content($pages, $custom_post_types, $gener
     }
 
     if (!empty($message_parts)) {
-        echo '<div class="notice notice-success is-dismissible"><p>' . implode(' ', $message_parts) . '</p></div>';
+        echo '<div class="notice notice-success is-dismissible"><p>' . wp_kses_post(implode(' ', $message_parts)) . '</p></div>';
     }
 }
 

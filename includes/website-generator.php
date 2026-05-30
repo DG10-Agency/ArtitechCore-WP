@@ -682,7 +682,7 @@ function artitechcore_website_builder_tab() {
                 
                 let costText = '<?php echo esc_js(
                     /* translators: %s, %s, %s — keep unordered for JS .replace() sequential matching */
-                    __('Estimated cost: $%s (Content: $%s, Images: $%s)', 'artitechcore')); ?>'
+                    __('Estimated cost: $%s (Content: $%s, Images: $%s)', 'artitechcore')); // phpcs:ignore WordPress.WP.I18n.UnorderedPlaceholdersText
                     .replace('%s', costTotal)
                     .replace('%s', contentCost)
                     .replace('%s', imageCost);
