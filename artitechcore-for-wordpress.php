@@ -94,7 +94,11 @@ function artitechcore_activate() {
     
     // Log activation
     if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore Plugin Activated - DB Version ' . ARTITECHCORE_DB_VERSION);
+        }
+        }
     }
 
     // Schedule background queue cleanup if builder files are present
@@ -143,7 +147,11 @@ function artitechcore_deactivate() {
     update_option('artitechcore_deactivation_date', current_time('mysql'));
     
     // Log deactivation
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log('ArtitechCore Plugin Deactivated');
+    }
+    }
 }
 
 
@@ -158,13 +166,21 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
     $mu_dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (ABSPATH . 'wp-content/mu-plugins');
     if (!is_dir($mu_dir)) {
         if (!wp_is_writable(dirname($mu_dir)) || !@wp_mkdir_p($mu_dir, 0755, true)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Error: Could not create mu-plugins directory.');
+            }
+            }
             return false;
         }
     }
     
     if (!wp_is_writable($mu_dir)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore Error: mu-plugins directory is not writable.');
+        }
+        }
         return false;
     }
 
@@ -488,6 +504,7 @@ register_deactivation_hook(__FILE__, 'artitechcore_deactivate');
  * Load plugin textdomain for internationalization
  */
 function artitechcore_load_textdomain() {
+    // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
     load_plugin_textdomain(
         'artitechcore',
         false,
@@ -546,10 +563,10 @@ function artitechcore_admin_scripts($hook) {
     
     // 2. Hierarchy Dependencies (only where needed)
     if (strpos($current_screen->id, 'artitechcore-') !== false && isset($_GET['tab']) && $_GET['tab'] === 'hierarchy') {
-        wp_enqueue_style('jstree', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/jstree/themes/default/style.min.css');
+        wp_enqueue_style('jstree', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/jstree/themes/default/style.min.css', array(), '3.3.15');
         wp_enqueue_script('jstree', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/jstree/jstree.min.js', array('jquery'), '3.3.15', true);
         wp_enqueue_script('d3', ARTITECHCORE_PLUGIN_URL . 'assets/vendor/d3/d3.v7.min.js', array(), '7.0.0', true);
-        wp_enqueue_style('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/css/hierarchy.css');
+        wp_enqueue_style('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/css/hierarchy.css', array(), ARTITECHCORE_VERSION);
         wp_enqueue_script('artitechcore-hierarchy', ARTITECHCORE_PLUGIN_URL . 'assets/js/hierarchy.js', array('jquery', 'jstree', 'd3'), ARTITECHCORE_VERSION, true);
     }
 

@@ -2540,7 +2540,7 @@ function artitechcore_handle_schema_generation_actions() {
     }
 
     if (isset($_GET['action']) && isset($_GET['post']) && isset($_GET['_wpnonce'])) {
-        $action = sanitize_text_field($_GET['action']);
+        $action = sanitize_text_field(wp_unslash($_GET['action']));
         $post_id = intval($_GET['post']);
 
         if ($action === 'generate_schema') {
@@ -2562,10 +2562,10 @@ add_action('admin_init', 'artitechcore_handle_schema_generation_actions');
 
 // Add admin notices for schema generation
 function artitechcore_schema_generation_notices() {
-    if (isset($_GET['schema_generated']) && sanitize_key($_GET['schema_generated']) == '1') {
+    if (isset($_GET['schema_generated']) && sanitize_key(wp_unslash($_GET['schema_generated'])) == '1') {
         echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Schema generated successfully!', 'artitechcore') . '</p></div>';
     }
-    if (isset($_GET['schema_regenerated']) && sanitize_key($_GET['schema_regenerated']) == '1') {
+    if (isset($_GET['schema_regenerated']) && sanitize_key(wp_unslash($_GET['schema_regenerated'])) == '1') {
         echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Schema regenerated successfully!', 'artitechcore') . '</p></div>';
     }
 }
@@ -2583,7 +2583,7 @@ function artitechcore_handle_schema_removal_actions() {
     }
 
     if (isset($_GET['action']) && isset($_GET['post']) && isset($_GET['_wpnonce'])) {
-        $action = sanitize_text_field($_GET['action']);
+        $action = sanitize_text_field(wp_unslash($_GET['action']));
         $post_id = intval($_GET['post']);
 
         if ($action === 'remove_schema') {
@@ -2599,7 +2599,7 @@ add_action('admin_init', 'artitechcore_handle_schema_removal_actions');
 
 // Add admin notices for schema removal
 function artitechcore_schema_removal_notices() {
-    if (isset($_GET['schema_removed']) && sanitize_key($_GET['schema_removed']) == '1') {
+    if (isset($_GET['schema_removed']) && sanitize_key(wp_unslash($_GET['schema_removed'])) == '1') {
         echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Schema removed successfully!', 'artitechcore') . '</p></div>';
     }
 }
@@ -2619,8 +2619,8 @@ function artitechcore_schema_management_dashboard() {
     $allowed_post_types = array_values($post_types);
 
     // Server-side filters + pagination (also used by bulk actions)
-    $filter_post_type = isset($_GET['artitechcore_post_type']) ? sanitize_key($_GET['artitechcore_post_type']) : '';
-    $filter_status = isset($_GET['artitechcore_status']) ? sanitize_key($_GET['artitechcore_status']) : '';
+    $filter_post_type = isset($_GET['artitechcore_post_type']) ? sanitize_key(wp_unslash($_GET['artitechcore_post_type'])) : '';
+    $filter_status = isset($_GET['artitechcore_status']) ? sanitize_key(wp_unslash($_GET['artitechcore_status'])) : '';
     $filter_search = isset($_GET['artitechcore_search']) ? sanitize_text_field(wp_unslash($_GET['artitechcore_search'])) : '';
     if ($filter_post_type && !in_array($filter_post_type, $allowed_post_types, true)) {
         $filter_post_type = '';
@@ -2678,20 +2678,20 @@ function artitechcore_schema_management_dashboard() {
 
     // Handle bulk actions
     if (isset($_POST['bulk_schema_action']) && check_admin_referer('artitechcore_bulk_schema_action')) {
-        $action = sanitize_text_field($_POST['bulk_schema_action']);
-        $apply_scope = isset($_POST['bulk_apply_scope']) ? sanitize_key($_POST['bulk_apply_scope']) : 'selected';
+        $action = sanitize_text_field(wp_unslash($_POST['bulk_schema_action']));
+        $apply_scope = isset($_POST['bulk_apply_scope']) ? sanitize_key(wp_unslash($_POST['bulk_apply_scope'])) : 'selected';
         $selected_pages = isset($_POST['selected_pages']) ? array_map('intval', (array)$_POST['selected_pages']) : [];
 
         // Rehydrate filters from POST so bulk acts on the same filtered set
         if (isset($_POST['artitechcore_post_type'])) {
-            $filter_post_type = sanitize_key($_POST['artitechcore_post_type']);
+            $filter_post_type = sanitize_key(wp_unslash($_POST['artitechcore_post_type']));
             if ($filter_post_type && !in_array($filter_post_type, $allowed_post_types, true)) {
                 $filter_post_type = '';
             }
             $query_args['post_type'] = $filter_post_type ? [$filter_post_type] : $allowed_post_types;
         }
         if (isset($_POST['artitechcore_status'])) {
-            $filter_status = sanitize_key($_POST['artitechcore_status']);
+            $filter_status = sanitize_key(wp_unslash($_POST['artitechcore_status']));
             $query_args['post_status'] = $filter_status ? [$filter_status] : 'any';
         }
         if (isset($_POST['artitechcore_search'])) {
@@ -2733,10 +2733,18 @@ function artitechcore_schema_management_dashboard() {
                         artitechcore_generate_schema_markup($page_id);
                         $processed++;
                     } catch (Exception $e) {
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
                         error_log('ArtitechCore Bulk Schema Error (Post ' . $page_id . '): ' . $e->getMessage());
+                        }
+                        }
                         $failed++;
                     } catch (Throwable $t) {
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
                         error_log('ArtitechCore Bulk Schema Fatal (Post ' . $page_id . '): ' . $t->getMessage());
+                        }
+                        }
                         $failed++;
                     }
                 } elseif ($action === 'remove') {
@@ -3093,7 +3101,7 @@ function artitechcore_schema_management_dashboard() {
 
             <?php
             $public_tax = get_taxonomies(['public' => true], 'objects');
-            $tax_filter = isset($_GET['artitechcore_taxonomy']) ? sanitize_key($_GET['artitechcore_taxonomy']) : '';
+            $tax_filter = isset($_GET['artitechcore_taxonomy']) ? sanitize_key(wp_unslash($_GET['artitechcore_taxonomy'])) : '';
             $tax_search = isset($_GET['artitechcore_term_search']) ? sanitize_text_field(wp_unslash($_GET['artitechcore_term_search'])) : '';
             if ($tax_filter && !isset($public_tax[$tax_filter])) {
                 $tax_filter = '';
@@ -3304,7 +3312,7 @@ function artitechcore_ajax_get_term_schema_preview() {
     }
 
     $term_id = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
-    $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+    $taxonomy = isset($_POST['taxonomy']) ? sanitize_key(wp_unslash($_POST['taxonomy'])) : '';
     if (!$term_id || !$taxonomy) {
         wp_send_json_error(['message' => esc_html__('Invalid term.', 'artitechcore')]);
     }
@@ -3389,7 +3397,7 @@ function artitechcore_ajax_save_term_schema_override() {
     }
 
     $term_id = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
-    $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+    $taxonomy = isset($_POST['taxonomy']) ? sanitize_key(wp_unslash($_POST['taxonomy'])) : '';
     if (!$term_id || !$taxonomy) {
         wp_send_json_error(['message' => esc_html__('Invalid term.', 'artitechcore')]);
     }
@@ -3444,9 +3452,9 @@ function artitechcore_handle_term_schema_actions() {
         return;
     }
 
-    $action = sanitize_key($_GET['action']);
+    $action = sanitize_key(wp_unslash($_GET['action']));
     $term_id = absint($_GET['term_id']);
-    $taxonomy = sanitize_key($_GET['taxonomy']);
+    $taxonomy = sanitize_key(wp_unslash($_GET['taxonomy']));
 
     if (!$term_id || !$taxonomy) {
         return;

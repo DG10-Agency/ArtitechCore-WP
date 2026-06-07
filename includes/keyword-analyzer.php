@@ -122,7 +122,7 @@ class ArtitechCore_Keyword_Analyzer {
             // Support both is_ai and ai_superpowers for backward compatibility during transition
             $is_ai = (isset($_POST['ai_superpowers']) && $_POST['ai_superpowers'] === 'true') || 
                      (isset($_POST['is_ai']) && $_POST['is_ai'] === 'true');
-            $intent = isset($_POST['intent']) ? sanitize_text_field($_POST['intent']) : '';
+            $intent = isset($_POST['intent']) ? sanitize_text_field(wp_unslash($_POST['intent'])) : '';
             $analysis = $this->analyze_page_keywords($page_id, $keywords_input, $is_ai, $intent);
             
             if ($analysis) {
@@ -153,7 +153,7 @@ class ArtitechCore_Keyword_Analyzer {
             wp_send_json_error(__('Insufficient permissions.', 'artitechcore'));
         }
         
-        $keywords_input = isset($_POST['keywords']) ? sanitize_textarea_field($_POST['keywords']) : '';
+        $keywords_input = isset($_POST['keywords']) ? sanitize_textarea_field(wp_unslash($_POST['keywords'])) : '';
         $page_id = isset($_POST['page_id']) ? intval($_POST['page_id']) : 0;
         
         if (empty($keywords_input)) {
@@ -237,7 +237,7 @@ class ArtitechCore_Keyword_Analyzer {
         }
         
         // Validate and sanitize input data
-        $format = isset($_POST['format']) ? sanitize_text_field($_POST['format']) : '';
+        $format = isset($_POST['format']) ? sanitize_text_field(wp_unslash($_POST['format'])) : '';
         $analysis_data_raw = isset($_POST['analysis_data']) ? $_POST['analysis_data'] : '';
         
         // Validate format
@@ -270,7 +270,11 @@ class ArtitechCore_Keyword_Analyzer {
             $this->export_analysis($format, $analysis_data);
         } catch (Exception $e) {
             // Log error
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Export Error: ' . $e->getMessage());
+            }
+            }
             wp_send_json_error(__('Export failed. Please try again.', 'artitechcore'));
         }
     }
@@ -315,12 +319,16 @@ class ArtitechCore_Keyword_Analyzer {
             'error_message' => $error_message,
             'ip_address' => $user_ip,
             'timestamp' => current_time('mysql'),
-            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'is_ai' => $is_ai ? 1 : 0
         );
         
         // Log to WordPress error log for security monitoring
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore Analysis Activity: ' . json_encode($log_data));
+        }
+        }
         
         // Store in database for detailed tracking (optional)
         $this->store_analysis_log($log_data);
@@ -456,7 +464,11 @@ class ArtitechCore_Keyword_Analyzer {
         if ($content_size > 500000) { // 500KB hard limit
             $content_data['full_content'] = substr($content_data['full_content'], 0, 500000);
             $content_data['content'] = substr($content_data['content'], 0, 400000);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Content truncated for page ID: ' . $page_id);
+            }
+            }
         }
         
         // Analyze each keyword with progress tracking
@@ -472,7 +484,11 @@ class ArtitechCore_Keyword_Analyzer {
             if ($index % 10 === 0) {
                 $current_memory = memory_get_usage();
                 if (($current_memory - $start_memory) > 50 * 1024 * 1024) { // 50MB limit
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('ArtitechCore: Memory limit reached during keyword analysis');
+                    }
+                    }
                     break;
                 }
             }
@@ -492,7 +508,11 @@ class ArtitechCore_Keyword_Analyzer {
         // Log memory usage
         $end_memory = memory_get_usage();
         $memory_used = ($end_memory - $start_memory) / 1024 / 1024; // MB
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Keyword analysis memory usage: ' . round($memory_used, 2) . 'MB');
+        }
+        }
         
         return array(
             'page_info' => array(
@@ -1329,7 +1349,11 @@ class ArtitechCore_Keyword_Analyzer {
             'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
         ], 'gemini');
         if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Gemini Error: ' . $response->get_error_message());
+            }
+            }
             return false;
         }
 
@@ -1354,7 +1378,11 @@ class ArtitechCore_Keyword_Analyzer {
             'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
         ], 'openai');
         if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore OpenAI Error: ' . $response->get_error_message());
+            }
+            }
             return false;
         }
 
@@ -1376,7 +1404,11 @@ class ArtitechCore_Keyword_Analyzer {
             'timeout' => defined('ARTITECHCORE_API_TIMEOUT') ? ARTITECHCORE_API_TIMEOUT : 120,
         ], 'deepseek');
         if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore DeepSeek Error: ' . $response->get_error_message());
+            }
+            }
             return false;
         }
 

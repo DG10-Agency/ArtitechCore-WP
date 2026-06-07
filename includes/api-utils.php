@@ -110,7 +110,11 @@ function artitechcore_safe_ai_remote_request($url, $args, $provider = 'openai', 
     try {
         while ($retry_count <= $max_retries) {
             if ($retry_count > 0) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log(sprintf('ArtitechCore: Retrying %s AI %s call (Attempt %d/%d)...', $provider, $method, $retry_count, $max_retries));
+                }
+                }
             }
 
             $response = wp_remote_request($url, $args);

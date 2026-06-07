@@ -30,7 +30,11 @@ if ($persist_schema || !empty($persist_ce)) {
     // We assume the main plugin file's bridge creation was already called 
     // or we can call it here if we include the main file (not recommended).
     // Instead, we just ensure we don't delete the data we want to persist.
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log('ArtitechCore Uninstall: Persisting data via bridge.');
+    }
+    }
 } else {
     // Clean up any old bridge files
     @wp_delete_file($mu_dir . '/artitechcore-schema-bridge.php');

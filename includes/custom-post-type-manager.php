@@ -176,7 +176,11 @@ function artitechcore_register_dynamic_custom_post_type($cpt_data) {
     $result = register_post_type($post_type, $args);
     
     if (is_wp_error($result)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore CPT Registration Error: ' . $result->get_error_message());
+        }
+        }
         return $result;
     }
     
@@ -248,11 +252,11 @@ function artitechcore_render_cpt_management_content($is_tab = false) {
         }
     }
     
-    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'list';
+    $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'list';
     
     // Adjust active tab if viewed as a sub-tab
     if ($is_tab) {
-        $active_tab = isset($_GET['cpt_subtab']) ? sanitize_key($_GET['cpt_subtab']) : 'list';
+        $active_tab = isset($_GET['cpt_subtab']) ? sanitize_key(wp_unslash($_GET['cpt_subtab'])) : 'list';
     }
     
     // Define menu items with their details
@@ -744,7 +748,7 @@ function artitechcore_cpt_create_tab() {
 // CPT settings tab
 function artitechcore_cpt_settings_tab() {
     // Handle settings save
-    if (isset($_POST['save_cpt_settings']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key($_POST['_wpnonce']), 'artitechcore_save_cpt_settings')) {
+    if (isset($_POST['save_cpt_settings']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key(wp_unslash($_POST['_wpnonce'])), 'artitechcore_save_cpt_settings')) {
         $settings = array(
             'auto_schema_generation' => isset($_POST['auto_schema_generation']),
             'include_in_menus' => isset($_POST['include_in_menus']),
@@ -1650,7 +1654,7 @@ function artitechcore_save_custom_field_data($post_id, $post) {
     
     // Verify nonce
     if (!isset($_POST['artitechcore_custom_fields_nonce']) || 
-        !wp_verify_nonce(sanitize_key($_POST['artitechcore_custom_fields_nonce']), 'artitechcore_save_custom_fields_' . $post_id)) {
+        !wp_verify_nonce(sanitize_key(wp_unslash($_POST['artitechcore_custom_fields_nonce'])), 'artitechcore_save_custom_fields_' . $post_id)) {
         return;
     }
     
@@ -1809,7 +1813,7 @@ function artitechcore_render_cpt_card($post_type, $cpt_data) {
 // Add placeholder functions for missing tabs
 function artitechcore_cpt_templates_tab() {
     // Handle template creation
-    if (isset($_POST['create_from_template']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key($_POST['_wpnonce']), 'artitechcore_create_from_template')) {
+    if (isset($_POST['create_from_template']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key(wp_unslash($_POST['_wpnonce'])), 'artitechcore_create_from_template')) {
         artitechcore_create_cpt_from_template();
     }
     
@@ -2032,13 +2036,13 @@ function artitechcore_cpt_import_export_tab() {
     $dynamic_cpts = get_option('artitechcore_dynamic_cpts', array());
     
     // Handle export request
-    if (isset($_POST['export_cpts']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key($_POST['_wpnonce']), 'artitechcore_export_cpts')) {
+    if (isset($_POST['export_cpts']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key(wp_unslash($_POST['_wpnonce'])), 'artitechcore_export_cpts')) {
         artitechcore_handle_cpt_export();
         return;
     }
     
     // Handle import request
-    if (isset($_POST['import_cpts']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key($_POST['_wpnonce']), 'artitechcore_import_cpts')) {
+    if (isset($_POST['import_cpts']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key(wp_unslash($_POST['_wpnonce'])), 'artitechcore_import_cpts')) {
         artitechcore_handle_cpt_import();
     }
     ?>
@@ -3175,7 +3179,11 @@ function artitechcore_register_dynamic_taxonomy($taxonomy_data) {
     $result = register_taxonomy($taxonomy_slug, $post_types, $args);
     
     if (is_wp_error($result)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore Taxonomy Registration Error: ' . $result->get_error_message());
+        }
+        }
         return $result;
     }
     
@@ -3385,7 +3393,7 @@ function artitechcore_cpt_taxonomies_tab() {
  */
 function artitechcore_handle_taxonomy_creation_ajax() {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_key($_POST['nonce']), 'artitechcore_create_taxonomy')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_key(wp_unslash($_POST['nonce'])), 'artitechcore_create_taxonomy')) {
         wp_send_json_error(__('Security check failed.', 'artitechcore'));
     }
     
@@ -3440,7 +3448,7 @@ function artitechcore_handle_taxonomy_creation_ajax() {
  */
 function artitechcore_handle_taxonomy_deletion_ajax() {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_key($_POST['nonce']), 'artitechcore_delete_taxonomy')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_key(wp_unslash($_POST['nonce'])), 'artitechcore_delete_taxonomy')) {
         wp_send_json_error(__('Security check failed.', 'artitechcore'));
     }
     

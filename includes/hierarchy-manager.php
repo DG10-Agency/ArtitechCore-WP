@@ -427,7 +427,11 @@ function artitechcore_get_page_hierarchy() {
         return $hierarchy_data;
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Error in get_page_hierarchy: ' . $e->getMessage());
+            }
+            }
         }
         return array(); // Return empty array on error
     }
@@ -453,7 +457,11 @@ function artitechcore_rest_get_hierarchy($request) {
         return rest_ensure_response($hierarchy_data);
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Hierarchy Error: ' . $e->getMessage());
+            }
+            }
         }
         return new WP_Error('hierarchy_error', $e->getMessage(), array('status' => 500));
     }

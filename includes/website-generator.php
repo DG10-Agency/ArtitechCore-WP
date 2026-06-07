@@ -167,12 +167,12 @@ function artitechcore_website_builder_tab() {
     $brand_kit_configured = ! empty( $saved_brand_kit['brand_name'] ) || ! empty( $saved_brand_kit['description'] );
 
     // Get selected blueprint from GET params
-    $selected_blueprint = isset( $_GET['blueprint'] ) ? sanitize_key( $_GET['blueprint'] ) : '';
+    $selected_blueprint = isset( $_GET['blueprint'] ) ? sanitize_key( wp_unslash($_GET['blueprint'] )) : '';
 
     // Get custom pages if blueprint is custom
     $custom_pages = [];
     if ( $selected_blueprint === 'custom' ) {
-        $raw          = isset( $_GET['custom_pages'] ) ? sanitize_textarea_field( $_GET['custom_pages'] ) : '';
+        $raw          = isset( $_GET['custom_pages'] ) ? sanitize_textarea_field( wp_unslash($_GET['custom_pages'] )) : '';
         $custom_pages = array_filter( array_map( 'trim', explode( "\n", $raw ) ) );
     }
     ?>
@@ -782,7 +782,7 @@ function artitechcore_ajax_build_website() {
     }
 
     // Sanitize and collect inputs
-    $blueprint = isset($_POST['blueprint']) ? sanitize_key($_POST['blueprint']) : '';
+    $blueprint = isset($_POST['blueprint']) ? sanitize_key(wp_unslash($_POST['blueprint'])) : '';
     $page_configs_raw = isset($_POST['page_configs']) ? wp_unslash($_POST['page_configs']) : '[]';
     $page_configs = json_decode($page_configs_raw, true);
 
@@ -793,7 +793,7 @@ function artitechcore_ajax_build_website() {
     }
 
     $generate_images = isset($_POST['generate_images']) && $_POST['generate_images'] == 1;
-    $publish_status = isset($_POST['publish_status']) ? sanitize_key($_POST['publish_status']) : 'draft';
+    $publish_status = isset($_POST['publish_status']) ? sanitize_key(wp_unslash($_POST['publish_status'])) : 'draft';
     $publish_status = in_array($publish_status, ['draft', 'publish', 'private', 'pending']) ? $publish_status : 'draft';
 
     // SECURITY: Fetch brand kit server-side to prevent client-side manipulation
@@ -920,7 +920,11 @@ function artitechcore_ajax_build_website() {
 
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Build Website Error: ' . $e->getMessage() . ' - Blueprint: ' . $blueprint . ' - Configs: ' . json_encode($page_configs));
+            }
+            }
         }
         wp_send_json_error([
             'message' => 'Failed to queue website generation: ' . $e->getMessage(),
@@ -1041,7 +1045,11 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                             }
                         } catch (Exception $e) {
                             if (defined('WP_DEBUG') && WP_DEBUG) {
+                                if (defined('WP_DEBUG') && WP_DEBUG) {
+                                if (defined('WP_DEBUG') && WP_DEBUG) {
                                 error_log('ArtitechCore: Image generation failed for page ' . $title . ': ' . $e->getMessage());
+                                }
+                                }
                             }
                         }
                     }
@@ -1053,7 +1061,11 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                             artitechcore_generate_schema_markup($page_id);
                         } catch (Exception $e) {
                             if (defined('WP_DEBUG') && WP_DEBUG) {
+                                if (defined('WP_DEBUG') && WP_DEBUG) {
+                                if (defined('WP_DEBUG') && WP_DEBUG) {
                                 error_log('ArtitechCore: Schema generation failed for page ' . $title . ': ' . $e->getMessage());
+                                }
+                                }
                             }
                             // Don't fail the page for schema errors
                         }
@@ -1068,7 +1080,11 @@ function artitechcore_build_website($blueprint, $page_configs, $brand_kit, $gene
                 $page_result['status'] = 'failed';
                 $page_result['error'] = $e->getMessage();
                 if (defined('WP_DEBUG') && WP_DEBUG) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('ArtitechCore: Failed to generate page: ' . $error_msg);
+                    }
+                    }
                 }
             }
 
@@ -1647,7 +1663,11 @@ function artitechcore_generate_and_set_featured_image_for_page($post_id, $page_t
     // Use the existing image generation from ai-generator.php with enhanced brand kit
     if (!function_exists('artitechcore_generate_and_set_featured_image')) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Image generation function not available. Make sure ai-generator.php is loaded.');
+            }
+            }
         }
         return false;
     }
@@ -1656,7 +1676,11 @@ function artitechcore_generate_and_set_featured_image_for_page($post_id, $page_t
     $openai_key = get_option('artitechcore_openai_api_key');
     if (empty($openai_key)) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: OpenAI API key not set for image generation');
+            }
+            }
         }
         return false;
     }
@@ -1668,7 +1692,11 @@ function artitechcore_generate_and_set_featured_image_for_page($post_id, $page_t
         return $result;
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Image generation failed for page ' . $page_title . ': ' . $e->getMessage());
+            }
+            }
         }
         return false;
     }
@@ -1685,7 +1713,7 @@ function artitechcore_ajax_get_job_status() {
         return;
     }
 
-    $job_id = isset($_GET['job_id']) ? sanitize_key($_GET['job_id']) : '';
+    $job_id = isset($_GET['job_id']) ? sanitize_key(wp_unslash($_GET['job_id'])) : '';
 
     if (empty($job_id)) {
         wp_send_json_error(['message' => 'No job ID specified']);
@@ -1727,7 +1755,7 @@ function artitechcore_ajax_cancel_job() {
         return;
     }
 
-    $job_id = isset($_POST['job_id']) ? sanitize_key($_POST['job_id']) : '';
+    $job_id = isset($_POST['job_id']) ? sanitize_key(wp_unslash($_POST['job_id'])) : '';
 
     if (empty($job_id)) {
         wp_send_json_error(['message' => 'No job ID specified']);

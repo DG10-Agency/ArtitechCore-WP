@@ -179,7 +179,11 @@ if (!function_exists('artitechcore_set_featured_image')) {
     
     if ($upload['error']) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Failed to upload image - ' . $upload['error']);
+            }
+            }
         }
         return;
     }

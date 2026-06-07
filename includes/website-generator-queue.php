@@ -101,7 +101,11 @@ class ArtitechCore_Website_Builder_Queue {
         } else {
             // Fallback: mark as pending, will be processed by manual trigger or AJAX polling
             if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore: WP-Cron not available. Job ' . $this->job_id . ' will need manual processing.');
+                }
+                }
             }
         }
 
@@ -163,7 +167,11 @@ class ArtitechCore_Website_Builder_Queue {
 
         if (!$job_data) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log("ArtitechCore: Cannot update job $job_id - not found");
+                }
+                }
             }
             return false;
         }
@@ -259,7 +267,11 @@ function artitechcore_process_builder_job($job_id) {
 
     if (false === $job_data) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: Job $job_id not found or expired");
+            }
+            }
         }
         return;
     }
@@ -290,7 +302,11 @@ function artitechcore_process_builder_job($job_id) {
             // Check if we are approaching timeout (P2-3)
             if ((microtime(true) - $start_time) > $time_limit) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log("ArtitechCore: Job $job_id reaching time limit. Rescheduling remaining batches.");
+                    }
+                    }
                 }
                 $queue::update_job($job_id, [
                     'status' => ARTITECHCORE_QUEUE_PENDING, // Requeue for next cron run
@@ -380,7 +396,11 @@ function artitechcore_process_builder_job($job_id) {
 
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: Job $job_id failed with exception: " . $e->getMessage());
+            }
+            }
         }
         $queue::update_job($job_id, [
             'status' => ARTITECHCORE_QUEUE_FAILED,

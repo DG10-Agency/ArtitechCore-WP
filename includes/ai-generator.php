@@ -343,7 +343,11 @@ function artitechcore_generate_pages_with_ai($business_type, $business_details, 
         artitechcore_log_ai_generation('page_suggestions', $provider ?? 'unknown', false, 0, $e->getMessage());
         echo '<div class="notice notice-error"><p>' . esc_html__('An error occurred during AI generation. Please try again.', 'artitechcore') . '</p></div>';
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore AI Generation Error: ' . $e->getMessage());
+            }
+            }
         }
         return;
     }
@@ -616,7 +620,11 @@ Focus on creating a complete website architecture that will rank well and conver
 
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore OpenAI API Error: ' . $e->getMessage());
+            }
+            }
         }
         return [];
     }
@@ -784,7 +792,11 @@ Focus on creating a complete website architecture that will rank well and conver
 
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Gemini API Error: ' . $e->getMessage());
+            }
+            }
         }
         return [];
     }
@@ -958,7 +970,11 @@ Focus on creating a complete website architecture that will rank well and conver
 
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore DeepSeek API Error: ' . $e->getMessage());
+            }
+            }
         }
         return [];
     }
@@ -1096,7 +1112,11 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
         // Log errors if any
         if (!empty($errors)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore Page Creation Errors: ' . implode('; ', $errors));
+                }
+                }
             }
         }
 
@@ -1106,7 +1126,11 @@ function artitechcore_create_suggested_pages($pages, $generate_images = false) {
     } catch (Exception $e) {
         echo '<div class="notice notice-error"><p>' . esc_html(__('An error occurred during page creation. Please try again.', 'artitechcore')) . '</p></div>';
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Page Creation Error: ' . $e->getMessage());
+            }
+            }
         }
         artitechcore_log_ai_generation('page_creation', 'manual', false, 0, $e->getMessage());
     }
@@ -1232,7 +1256,11 @@ This image will be used as a featured image for a webpage, so it should:
         
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Image Generation Error: ' . $e->getMessage());
+            }
+            }
         }
         return false;
     }
@@ -1304,7 +1332,11 @@ function artitechcore_generate_openai_image($prompt, $api_key) {
         
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore OpenAI Image Generation Error: ' . $e->getMessage());
+            }
+            }
         }
         return '';
     }
@@ -1440,7 +1472,11 @@ function artitechcore_process_keywords_csv($file) {
 
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore CSV Processing Error: ' . $e->getMessage());
+            }
+            }
         }
         return '';
     }
@@ -1473,7 +1509,11 @@ if (!function_exists('artitechcore_extract_primary_keywords')) {
             return implode(' ', $keywords) ?: sanitize_text_field($title);
         } catch (Exception $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore Keyword Extraction Error: ' . $e->getMessage());
+                }
+                }
             }
             return sanitize_text_field($title);
         }
@@ -1508,7 +1548,11 @@ if (!function_exists('artitechcore_check_ai_rate_limit')) {
             $valid_providers = ['openai', 'gemini', 'deepseek'];
             if (!in_array($provider, $valid_providers)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore Rate Limit: Invalid provider specified: ' . $provider);
+                }
+                }
             }
                 return true; // Allow on invalid provider to prevent blocking
             }
@@ -1516,7 +1560,11 @@ if (!function_exists('artitechcore_check_ai_rate_limit')) {
             $user_id = get_current_user_id();
             if (empty($user_id)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore Rate Limit: No user ID found');
+                }
+                }
             }
                 return true; // Allow for non-logged-in users (shouldn't happen in admin)
             }
@@ -1573,7 +1621,11 @@ if (!function_exists('artitechcore_check_ai_rate_limit')) {
             return true;
             
         } catch (Exception $e) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Rate Limit Check Error: ' . $e->getMessage());
+            }
+            }
             return true; // Allow on error to prevent blocking users
         }
     }
@@ -1620,7 +1672,11 @@ if (!function_exists('artitechcore_get_rate_limit_status')) {
             ];
             
         } catch (Exception $e) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Rate Limit Status Error: ' . $e->getMessage());
+            }
+            }
             return null;
         }
     }
@@ -1652,7 +1708,11 @@ if (!function_exists('artitechcore_test_rate_limiting')) {
             return $results;
             
         } catch (Exception $e) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Rate Limit Test Error: ' . $e->getMessage());
+            }
+            }
             return false;
         }
     }
@@ -1679,7 +1739,11 @@ if (!function_exists('artitechcore_log_ai_generation')) {
                 $log_message .= ', Error=' . $error_message;
             }
             
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log($log_message);
+            }
+            }
             
             // Try to insert into custom table - use correct column names from activation schema
             // The table schema uses: page_id, generation_type, ai_provider, tokens_used, success, error_message
@@ -1710,7 +1774,11 @@ if (!function_exists('artitechcore_log_ai_generation')) {
             
         } catch (Exception $e) {
             // Silently fail - logging errors shouldn't break the main feature
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore Logging Error: ' . $e->getMessage());
+            }
+            }
         }
     }
 }
@@ -1720,11 +1788,19 @@ if (!function_exists('artitechcore_log_ai_generation')) {
 // Generate advanced content with AI (pages + custom post types)
 function artitechcore_generate_advanced_content_with_ai($business_type, $business_details, $seo_keywords = '', $target_audience = '') {
     try {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Entering artitechcore_generate_advanced_content_with_ai');
+        }
+        }
         
         // Input validation
         if (empty($business_type) || empty($business_details)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Input validation failed - empty business_type or business_details');
+            }
+            }
             echo '<div class="notice notice-error"><p>' . esc_html(__('Business type and details are required for advanced AI generation.', 'artitechcore')) . '</p></div>';
             return;
         }
@@ -1735,7 +1811,11 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         $seo_keywords = sanitize_text_field($seo_keywords);
         $target_audience = sanitize_text_field($target_audience);
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Inputs sanitized - business_type: ' . substr($business_type, 0, 50));
+        }
+        }
 
         // Validate input lengths
         if (strlen($business_type) > 100) {
@@ -1751,10 +1831,18 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         $provider = get_option('artitechcore_ai_provider', 'openai');
         $api_key = get_option('artitechcore_' . $provider . '_api_key');
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Provider: ' . $provider . ', API key exists: ' . (!empty($api_key) ? 'YES (length: ' . strlen($api_key) . ')' : 'NO'));
+        }
+        }
 
         if (empty($api_key)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: API key is empty for provider: ' . $provider);
+            }
+            }
             /* translators: %s */
             echo '<div class="notice notice-error"><p>' . esc_html(sprintf(__('Please enter your %s API key in the Settings tab.', 'artitechcore'), ucfirst($provider))) . '</p></div>';
             return;
@@ -1762,22 +1850,38 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
 
         // Validate API key format
         if (!artitechcore_validate_api_key($api_key, $provider)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: API key validation failed for provider: ' . $provider);
+            }
+            }
             /* translators: %s */
             echo '<div class="notice notice-error"><p>' . esc_html(sprintf(__('Invalid %s API key format. Please check your API key.', 'artitechcore'), ucfirst($provider))) . '</p></div>';
             return;
         }
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: API key validated successfully');
+        }
+        }
 
         // Rate limiting check
         if (!artitechcore_check_ai_rate_limit($provider)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Rate limit exceeded for provider: ' . $provider);
+            }
+            }
             echo '<div class="notice notice-error"><p>' . esc_html(__('Too many AI requests. Please wait a moment before trying again.', 'artitechcore')) . '</p></div>';
             return;
         }
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Rate limit check passed, calling AI provider: ' . $provider);
+        }
+        }
 
         // Get advanced content suggestions from AI
         $advanced_suggestions = [];
@@ -1792,15 +1896,27 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
                 $advanced_suggestions = artitechcore_get_deepseek_advanced_suggestions($business_type, $business_details, $seo_keywords, $target_audience, $api_key);
                 break;
             default:
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('ArtitechCore: Invalid AI provider: ' . $provider);
+                }
+                }
                 echo '<div class="notice notice-error"><p>' . esc_html(__('Invalid AI provider selected.', 'artitechcore')) . '</p></div>';
                 return;
         }
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: AI call completed. Response type: ' . gettype($advanced_suggestions) . ', empty: ' . (empty($advanced_suggestions) ? 'YES' : 'NO'));
+        }
+        }
 
         if (empty($advanced_suggestions)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: AI returned empty suggestions');
+            }
+            }
             echo '<div class="notice notice-warning"><p>' . esc_html(__('Could not generate advanced content suggestions. Please check your API key and try again.', 'artitechcore')) . '</p></div>';
             return;
         }
@@ -1824,7 +1940,11 @@ function artitechcore_generate_advanced_content_with_ai($business_type, $busines
         // Log error
         artitechcore_log_ai_generation('advanced_content', $provider ?? 'unknown', false, 0, $e->getMessage());
         echo '<div class="notice notice-error"><p>' . esc_html(__('An error occurred during advanced AI generation. Please try again.', 'artitechcore')) . '</p></div>';
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore Advanced AI Generation Error: ' . $e->getMessage());
+        }
+        }
     }
 }
 
@@ -1851,7 +1971,11 @@ function artitechcore_get_openai_advanced_suggestions($business_type, $business_
     ], 'openai');
 
     if (is_wp_error($response)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore OpenAI API Error: ' . $response->get_error_message());
+        }
+        }
         return [];
     }
 
@@ -1873,7 +1997,11 @@ function artitechcore_get_gemini_advanced_suggestions($business_type, $business_
         'contents' => [['parts' => [['text' => $prompt]]]],
     ]);
 
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log('ArtitechCore: Making Gemini API request...');
+    }
+    }
 
     $response = artitechcore_safe_ai_remote_post($url, [
         'headers' => ['Content-Type' => 'application/json'],
@@ -1882,24 +2010,40 @@ function artitechcore_get_gemini_advanced_suggestions($business_type, $business_
     ], 'gemini');
 
     if (is_wp_error($response)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore Gemini API Error: ' . $response->get_error_message());
+        }
+        }
         return [];
     }
 
     $response_body = json_decode(wp_remote_retrieve_body($response), true);
     
     if (isset($response_body['error'])) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore Gemini API Error: ' . json_encode($response_body['error']));
+        }
+        }
         return [];
     }
 
     if (isset($response_body['candidates'][0]['content']['parts'][0]['text'])) {
         $text = $response_body['candidates'][0]['content']['parts'][0]['text'];
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Gemini API returned text (' . strlen($text) . ' chars)');
+        }
+        }
         return $text;
     }
 
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log('ArtitechCore: Gemini API response missing expected structure: ' . json_encode(array_keys($response_body ?? [])));
+    }
+    }
     return [];
 }
 
@@ -1926,7 +2070,11 @@ function artitechcore_get_deepseek_advanced_suggestions($business_type, $busines
     ], 'deepseek');
 
     if (is_wp_error($response)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore DeepSeek API Error: ' . $response->get_error_message());
+        }
+        }
         return [];
     }
 
@@ -2036,12 +2184,20 @@ function artitechcore_parse_advanced_ai_response($ai_response) {
 
     // Handle empty or array response (should be string)
     if (empty($ai_response)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: AI response is empty');
+        }
+        }
         return $parsed;
     }
 
     if (is_array($ai_response)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: AI response is already an array (unexpected)');
+        }
+        }
         return $parsed;
     }
 
@@ -2055,7 +2211,11 @@ function artitechcore_parse_advanced_ai_response($ai_response) {
 
     // Log the cleaned response for debugging
     if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Cleaned AI response (first 500 chars): ' . substr($response_text, 0, 500));
+        }
+        }
     }
 
     // Try to extract JSON from the response
@@ -2063,7 +2223,11 @@ function artitechcore_parse_advanced_ai_response($ai_response) {
     $json_end = strrpos($response_text, '}');
     
     if ($json_start === false || $json_end === false) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Could not find JSON brackets in AI response');
+        }
+        }
         return $parsed;
     }
 
@@ -2071,8 +2235,16 @@ function artitechcore_parse_advanced_ai_response($ai_response) {
     $data = json_decode($json_string, true);
     
     if (json_last_error() !== JSON_ERROR_NONE) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: JSON decode error: ' . json_last_error_msg());
+        }
+        }
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Failed JSON (first 1000 chars): ' . substr($json_string, 0, 1000));
+        }
+        }
         return $parsed;
     }
 
@@ -2083,7 +2255,11 @@ function artitechcore_parse_advanced_ai_response($ai_response) {
         $parsed['business_analysis'] = isset($data['business_analysis']) ? $data['business_analysis'] : [];
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore: Parsed ' . count($parsed['pages']) . ' pages and ' . count($parsed['custom_post_types']) . ' CPTs');
+            }
+            }
         }
     }
 
@@ -2247,7 +2423,7 @@ function artitechcore_display_advanced_content_suggestions($suggestions) {
 }
 
 // Handle creation of advanced content (pages + custom post types)
-if (isset($_POST['action']) && $_POST['action'] == 'create_advanced_content' && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key($_POST['_wpnonce']), 'artitechcore_create_advanced_content')) {
+if (isset($_POST['action']) && $_POST['action'] == 'create_advanced_content' && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key(wp_unslash($_POST['_wpnonce'])), 'artitechcore_create_advanced_content')) {
     if (isset($_POST['artitechcore_selected_pages']) && is_array($_POST['artitechcore_selected_pages'])) {
         $selected_pages = array_map('sanitize_text_field', wp_unslash($_POST['artitechcore_selected_pages']));
         $selected_cpts = isset($_POST['artitechcore_selected_cpts']) ? array_map('sanitize_text_field', wp_unslash($_POST['artitechcore_selected_cpts'])) : [];
@@ -2260,13 +2436,21 @@ if (isset($_POST['action']) && $_POST['action'] == 'create_advanced_content' && 
 // Create advanced content (pages + custom post types)
 function artitechcore_create_advanced_content($pages, $custom_post_types, $generate_images = false, $custom_taxonomies = []) {
     set_time_limit(0); // Prevent timeouts for complex generation logic
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log('ArtitechCore: Starting artitechcore_create_advanced_content');
+    }
+    }
     $created_pages = 0;
     $created_cpts = 0;
     $parent_id_stack = [];
 
     // Create standard pages
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log('ArtitechCore: Processing ' . count($pages) . ' pages');
+    }
+    }
     foreach ($pages as $index => $page_data) {
         // Handle both JSON strings and already decoded arrays
         if (is_string($page_data)) {
@@ -2275,12 +2459,20 @@ function artitechcore_create_advanced_content($pages, $custom_post_types, $gener
             $page = $page_data;
         }
         if (!$page || !is_array($page)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: Invalid page data at index $index");
+            }
+            }
             continue;
         }
 
         $page_title = $page['title'];
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log("ArtitechCore: Creating page: $page_title");
+        }
+        }
         
         $meta_description = $page['meta_description'];
         $hierarchy_level = isset($page['hierarchy_level']) ? $page['hierarchy_level'] : 0;
@@ -2303,18 +2495,30 @@ function artitechcore_create_advanced_content($pages, $custom_post_types, $gener
 
         if ($page_id) {
             $created_pages++;
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: Page created (ID: $page_id)");
+            }
+            }
             
             // Generate and set featured image if enabled
             if ($generate_images) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log("ArtitechCore: Generating image for page $page_id");
+                }
+                }
                 artitechcore_generate_and_set_featured_image($page_id, $page_title);
             }
             
             // Generate schema markup for the new page
             $auto_generate = get_option('artitechcore_auto_schema_generation', true);
             if ($auto_generate) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log("ArtitechCore: Generating schema for page $page_id");
+                }
+                }
                 // Pass false to disable expensive AI analysis during bulk creation
                 artitechcore_generate_schema_markup($page_id, false);
             }
@@ -2322,13 +2526,21 @@ function artitechcore_create_advanced_content($pages, $custom_post_types, $gener
             $parent_id_stack[$hierarchy_level] = $page_id;
             $parent_id_stack = array_slice($parent_id_stack, 0, $hierarchy_level + 1);
         } else {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: Failed to insert page: $page_title");
+            }
+            }
         }
     }
 
     // Create custom taxonomies FIRST (so CPTs can link to them)
     if (!empty($custom_taxonomies)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('ArtitechCore: Processing ' . count($custom_taxonomies) . ' custom taxonomies');
+        }
+        }
         $existing_taxonomies = get_option('artitechcore_dynamic_taxonomies', array());
         $updated_taxonomies = false;
 
@@ -2364,12 +2576,20 @@ function artitechcore_create_advanced_content($pages, $custom_post_types, $gener
             update_option('artitechcore_dynamic_taxonomies', $existing_taxonomies);
             // Flush rules
             update_option('artitechcore_flush_rewrite_rules', true);
+             if (defined('WP_DEBUG') && WP_DEBUG) {
+             if (defined('WP_DEBUG') && WP_DEBUG) {
              error_log("ArtitechCore: Taxonomies saved and registered.");
+             }
+             }
         }
     }
 
     // Create custom post types (linked to taxonomies)
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log('ArtitechCore: Processing ' . count($custom_post_types) . ' custom post types');
+    }
+    }
     foreach ($custom_post_types as $index => $cpt_data) {
         // Handle both JSON strings and already decoded arrays
         if (is_string($cpt_data)) {
@@ -2378,27 +2598,51 @@ function artitechcore_create_advanced_content($pages, $custom_post_types, $gener
             $cpt = $cpt_data;
         }
         if (!$cpt || !is_array($cpt)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: Invalid CPT data at index $index");
+            }
+            }
             continue;
         }
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log("ArtitechCore: Registering CPT: " . ($cpt['name'] ?? 'unknown'));
+        }
+        }
 
         if (artitechcore_register_dynamic_custom_post_type($cpt)) {
             $created_cpts++;
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: CPT registered successfully");
+            }
+            }
             
             // Create sample entries if specified
             if (!empty($cpt['sample_entries'])) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log("ArtitechCore: Creating sample entries for CPT");
+                }
+                }
                 artitechcore_create_sample_cpt_entries($cpt);
             }
         } else {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("ArtitechCore: Failed to register CPT");
+            }
+            }
         }
     }
 
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
     error_log("ArtitechCore: Finished content creation. Pages: $created_pages, CPTs: $created_cpts");
+    }
+    }
 
     // Display success message
     $message_parts = [];

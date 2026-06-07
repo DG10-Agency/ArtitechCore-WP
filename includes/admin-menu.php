@@ -129,8 +129,8 @@ add_action('admin_menu', 'artitechcore_add_admin_menu');
 // Admin page content
 function artitechcore_admin_page() {
     // Determine active tab from URL parameter or page slug
-    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-    $current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+    $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
+    $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
 
     if (empty($active_tab)) {
         switch ($current_page) {
@@ -596,10 +596,10 @@ function artitechcore_menu_generator_tab() {
     </div>';
     
     // Inline Notification Logic (Simplified for reliability)
-    if (isset($_POST['generate_menu']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key($_POST['_wpnonce']), 'artitechcore_generate_menu')) {
-        $menu_type = isset($_POST['menu_type']) ? sanitize_key($_POST['menu_type']) : '';
+    if (isset($_POST['generate_menu']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_key(wp_unslash($_POST['_wpnonce'])), 'artitechcore_generate_menu')) {
+        $menu_type = isset($_POST['menu_type']) ? sanitize_key(wp_unslash($_POST['menu_type'])) : '';
         $overwrite = isset($_POST['force_overwrite']) ? true : false;
-        $location  = isset($_POST['menu_location']) ? sanitize_key($_POST['menu_location']) : '';
+        $location  = isset($_POST['menu_location']) ? sanitize_key(wp_unslash($_POST['menu_location'])) : '';
 
         $result = false;
         

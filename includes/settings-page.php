@@ -335,7 +335,7 @@ function artitechcore_ajax_test_ai_connection() {
         wp_send_json_error(['message' => __('Insufficient permissions.', 'artitechcore')]);
     }
 
-    $provider = isset($_POST['provider']) ? sanitize_key($_POST['provider']) : '';
+    $provider = isset($_POST['provider']) ? sanitize_key(wp_unslash($_POST['provider'])) : '';
     $api_key = '';
 
     switch ($provider) {

@@ -280,21 +280,21 @@ function artitechcore_ce_save_meta_box($post_id) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     if (isset($_POST['artitechcore_ce_key_takeaways'])) {
-        $kt_raw = explode("\n", sanitize_textarea_field($_POST['artitechcore_ce_key_takeaways']));
+        $kt_raw = explode("\n", sanitize_textarea_field(wp_unslash($_POST['artitechcore_ce_key_takeaways'])));
         $kt = array_values(array_filter(array_map('trim', $kt_raw)));
         update_post_meta($post_id, '_artitechcore_ce_key_takeaways', $kt);
     }
     
     if (isset($_POST['artitechcore_ce_conclusion'])) {
-        update_post_meta($post_id, '_artitechcore_ce_conclusion', sanitize_textarea_field($_POST['artitechcore_ce_conclusion']));
+        update_post_meta($post_id, '_artitechcore_ce_conclusion', sanitize_textarea_field(wp_unslash($_POST['artitechcore_ce_conclusion'])));
     }
     
     if (isset($_POST['artitechcore_ce_cta_heading'])) {
-        update_post_meta($post_id, '_artitechcore_ce_cta_heading', sanitize_text_field($_POST['artitechcore_ce_cta_heading']));
+        update_post_meta($post_id, '_artitechcore_ce_cta_heading', sanitize_text_field(wp_unslash($_POST['artitechcore_ce_cta_heading'])));
     }
     
     if (isset($_POST['artitechcore_ce_cta_desc'])) {
-        update_post_meta($post_id, '_artitechcore_ce_cta_desc', sanitize_textarea_field($_POST['artitechcore_ce_cta_desc']));
+        update_post_meta($post_id, '_artitechcore_ce_cta_desc', sanitize_textarea_field(wp_unslash($_POST['artitechcore_ce_cta_desc'])));
     }
 
     if (isset($_POST['artitechcore_ce_faq']) && is_array($_POST['artitechcore_ce_faq'])) {
@@ -345,7 +345,7 @@ function artitechcore_ce_ajax_handler() {
         wp_send_json_error('API Key is missing for ' . ucfirst($provider) . '. Please check your ArtitechCore Settings.');
     }
 
-    $generate_type = isset($_POST['generate_type']) ? sanitize_key($_POST['generate_type']) : 'all';
+    $generate_type = isset($_POST['generate_type']) ? sanitize_key(wp_unslash($_POST['generate_type'])) : 'all';
     if (!in_array($generate_type, ['all', 'kt', 'conclusion', 'cta', 'faq'], true)) {
         $generate_type = 'all';
     }
@@ -764,7 +764,7 @@ function artitechcore_ce_enqueue_frontend_css() {
         }
     ";
     
-    wp_register_style('artitechcore-ce-style', false);
+    wp_register_style('artitechcore-ce-style', false, array(), ARTITECHCORE_VERSION);
     wp_enqueue_style('artitechcore-ce-style');
     wp_add_inline_style('artitechcore-ce-style', $css);
 }
@@ -985,7 +985,7 @@ function artitechcore_ce_admin_init_actions() {
     if (!current_user_can('manage_options')) return; // FIX #4
     
     if (isset($_GET['action']) && isset($_GET['post']) && isset($_GET['_wpnonce'])) {
-        $action = sanitize_text_field($_GET['action']);
+        $action = sanitize_text_field(wp_unslash($_GET['action']));
         $post_id = intval($_GET['post']);
         
         if ($action === 'generate_ce' || $action === 'regenerate_ce') {
@@ -1022,8 +1022,8 @@ function artitechcore_content_enhancer_tab() {
     if (!is_array($supported_types)) $supported_types = ['post'];
     
     // Server-side filters + pagination
-    $filter_post_type = isset($_GET['artitechcore_post_type']) ? sanitize_key($_GET['artitechcore_post_type']) : '';
-    $filter_status = isset($_GET['artitechcore_status']) ? sanitize_key($_GET['artitechcore_status']) : '';
+    $filter_post_type = isset($_GET['artitechcore_post_type']) ? sanitize_key(wp_unslash($_GET['artitechcore_post_type'])) : '';
+    $filter_status = isset($_GET['artitechcore_status']) ? sanitize_key(wp_unslash($_GET['artitechcore_status'])) : '';
     $filter_search = isset($_GET['artitechcore_search']) ? sanitize_text_field(wp_unslash($_GET['artitechcore_search'])) : '';
     if ($filter_post_type && !in_array($filter_post_type, $supported_types, true)) {
         $filter_post_type = '';
@@ -1274,7 +1274,7 @@ function artitechcore_content_enhancer_tab() {
 function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
     // Notices from redirects
     if (isset($_GET['ce_msg'])) {
-        $msg = sanitize_text_field($_GET['ce_msg']);
+        $msg = sanitize_text_field(wp_unslash($_GET['ce_msg']));
         if ($msg === 'generated') echo '<div class="notice notice-success is-dismissible"><p>AI Enhancements Generated Successfully!</p></div>';
         if ($msg === 'removed') echo '<div class="notice notice-success is-dismissible"><p>AI Enhancements Removed.</p></div>';
     }
@@ -1282,8 +1282,8 @@ function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
     if (isset($_POST['bulk_ce_action']) && check_admin_referer('artitechcore_bulk_ce_action')) {
         if (!current_user_can('manage_options')) return; // FIX #4
         
-        $action = sanitize_text_field($_POST['bulk_ce_action']);
-        $apply_scope = isset($_POST['bulk_apply_scope']) ? sanitize_key($_POST['bulk_apply_scope']) : 'selected';
+        $action = sanitize_text_field(wp_unslash($_POST['bulk_ce_action']));
+        $apply_scope = isset($_POST['bulk_apply_scope']) ? sanitize_key(wp_unslash($_POST['bulk_apply_scope'])) : 'selected';
         $selected_posts = isset($_POST['selected_posts']) ? array_map('intval', (array)$_POST['selected_posts']) : [];
 
         $target_ids = [];
@@ -1403,7 +1403,11 @@ function artitechcore_ce_generate_for_post($post_id, $generate_type = 'all') {
         return true;
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore CE Error (Post ' . $post_id . '): ' . $e->getMessage());
+            }
+            }
         }
         return false;
     }
@@ -1452,7 +1456,7 @@ function artitechcore_ce_native_cta_ajax_handler() {
     $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
     
     // Anti-spam Rate Limit: 1 per user/session per 30 seconds
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : 'unknown';
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
     $limit_key = 'artitechcore_ce_form_limit_' . md5($ip . $post_id);
     if (get_transient($limit_key)) {
         wp_send_json_error(esc_html__('Please wait 30 seconds before sending another message.', 'artitechcore'));
@@ -1475,7 +1479,7 @@ function artitechcore_ce_native_cta_ajax_handler() {
     
     $headers = ['Content-Type: text/plain; charset=UTF-8'];
     if (isset($_POST['email'])) {
-        $headers[] = 'Reply-To: ' . sanitize_email($_POST['email']);
+        $headers[] = 'Reply-To: ' . sanitize_email(wp_unslash($_POST['email']));
     }
     
     $sent = wp_mail($to, $subject, $body, $headers);
