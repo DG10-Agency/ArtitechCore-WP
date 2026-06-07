@@ -905,7 +905,7 @@ function artitechcore_ce_inject_content($content) {
 
     // 3. Inject CTA (Fixed #14: Every 3 H2s Algorithm)
     if ($has_cta) {
-        $cta_mode = get_option('artitechcore_ce_cta_mode', 'shortcode');
+        $cta_mode = get_option('artitechcore_ce_cta_mode', 'native');
         $cta_html = '<div class="artitechcore-ce-cta-wrapper">' . 
                     '<h3 class="artitechcore-ce-cta-head">' . esc_html($cta_head) . '</h3>' .
                     (!empty($cta_desc) ? '<p class="artitechcore-ce-cta-desc">' . esc_html($cta_desc) . '</p>' : '') .
@@ -1403,11 +1403,7 @@ function artitechcore_ce_generate_for_post($post_id, $generate_type = 'all') {
         return true;
     } catch (Exception $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('ArtitechCore CE Error (Post ' . $post_id . '): ' . $e->getMessage());
-            }
-            }
         }
         return false;
     }
