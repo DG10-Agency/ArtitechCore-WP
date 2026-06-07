@@ -1109,6 +1109,22 @@ function artitechcore_content_enhancer_tab() {
             </div>
         </div>
 
+        <!-- Delete All & Regenerate All Button -->
+        <div style="margin: 20px 0; padding: 20px; background: #fff; border: 2px solid #b47cfd; border-radius: 12px; box-shadow: 0 4px 20px rgba(180, 124, 253, 0.1);">
+            <form method="post" action="" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <?php wp_nonce_field('artitechcore_bulk_ce_action'); ?>
+                <input type="hidden" name="bulk_ce_action" value="delete_regenerate">
+                <input type="hidden" name="bulk_apply_scope" value="filtered">
+                <input type="hidden" name="artitechcore_post_type" value="<?php echo esc_attr($filter_post_type); ?>">
+                <input type="hidden" name="artitechcore_status" value="<?php echo esc_attr($filter_status); ?>">
+                <div>
+                    <strong style="font-size: 15px; color: #121322;">🗑️ Delete All & Regenerate All</strong>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">Removes all existing enhancements from filtered posts, then generates fresh ones using AI.</p>
+                </div>
+                <button type="submit" class="button button-primary" style="background: linear-gradient(135deg, #b47cfd 0%, #db2777 100%); border: none; padding: 8px 24px; font-weight: 700; font-size: 14px; white-space: nowrap;" onclick="return confirm('This will DELETE all existing enhancements and REGENERATE them with AI for ALL filtered posts. Continue?')">🔥 Delete & Regenerate All</button>
+            </form>
+        </div>
+
         <!-- Main Workspace -->
         <div class="artitechcore-schema-section" style="margin-bottom: 24px;">
             <form method="get" action="" style="margin-bottom: 20px;">
@@ -1170,6 +1186,7 @@ function artitechcore_content_enhancer_tab() {
                             <option value="generate_conclusion">Generate Conclusion Only</option>
                             <option value="generate_cta">Generate CTA Only</option>
                             <option value="remove">Remove Enhancements</option>
+                            <option value="delete_regenerate">🗑️ Delete & Regenerate All</option>
                         </select>
                         <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
                             <input type="radio" name="bulk_apply_scope" value="selected" checked>
@@ -1323,6 +1340,14 @@ function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
                 } elseif ($action === 'remove') {
                     artitechcore_ce_remove_from_post($p_id);
                     $processed++;
+                } elseif ($action === 'delete_regenerate') {
+                    artitechcore_ce_remove_from_post($p_id);
+                    if (function_exists('set_time_limit')) @set_time_limit(300);
+                    if (artitechcore_ce_generate_for_post($p_id, 'all')) {
+                        $processed++;
+                    } else {
+                        $failed++;
+                    }
                 }
             }
 
