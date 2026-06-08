@@ -1242,10 +1242,10 @@ function artitechcore_content_enhancer_tab() {
                                 <td>
                                     <div class="artitechcore-schema-actions">
                                         <?php if (!$has_enhancement): ?>
-                                            <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=generate_ce&post=' . $p->ID)), 'generate_ce_' . $p->ID)); ?>" class="button button-small">Generate</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=generate_ce&post=' . $p->ID), 'generate_ce_' . $p->ID)); ?>" class="button button-small">Generate</a>
                                         <?php else: ?>
-                                            <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=' . $p->ID)), 'regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
-                                            <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_ce&post=' . $p->ID)), 'remove_ce_' . $p->ID)); ?>" class="button button-small button-link-delete" onclick="return confirm('Remove AI enhancements from this post?')">Remove</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=' . $p->ID), 'regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_ce&post=' . $p->ID), 'remove_ce_' . $p->ID)); ?>" class="button button-small button-link-delete" onclick="return confirm('Remove AI enhancements from this post?')">Remove</a>
                                         <?php endif; ?>
                                     </div>
                                 </td>
