@@ -1230,7 +1230,13 @@ function artitechcore_content_enhancer_tab() {
                             <tr><td colspan="5">No posts found.</td></tr>
                             <?php else: ?>
                             <?php foreach ($pages as $p): ?>
-                                <?php $has_enhancement = !empty(get_post_meta($p->ID, '_artitechcore_ce_cta_heading', true)); ?>
+                                <?php 
+                                $has_enhancement = !empty(get_post_meta($p->ID, '_artitechcore_ce_cta_heading', true));
+                                $has_kt   = !empty(get_post_meta($p->ID, '_artitechcore_ce_key_takeaways', true));
+                                $has_cta  = !empty(get_post_meta($p->ID, '_artitechcore_ce_cta_heading', true));
+                                $has_conc = !empty(get_post_meta($p->ID, '_artitechcore_ce_conclusion', true));
+                                $has_faq  = !empty(get_post_meta($p->ID, '_artitechcore_ce_faq', true));
+                                ?>
                             <tr>
                                 <th class="check-column">
                                     <input type="checkbox" name="selected_posts[]" value="<?php echo esc_attr($p->ID); ?>">
@@ -1261,11 +1267,11 @@ function artitechcore_content_enhancer_tab() {
                                         <?php else: ?>
                                             <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
                                             <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=clean_regenerate&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('clean_regenerate_' . $p->ID)); ?>" class="button button-small" style="border-color:#b47cfd; color:#b47cfd;" title="Strips baked-in CE HTML from post content, removes all meta, then regenerates fresh">🧹 Clean & Reg.</a>
-                                            <br><small style="color:#999;">
-                                            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_kt&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_kt_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Key Takeaways" style="text-decoration:none; color:#d63638; font-size:11px;">✕ KT</a>
-                                            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_cta&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_cta_' . $p->ID)); ?>" class="button-link-delete" title="Remove only CTA" style="text-decoration:none; color:#d63638; font-size:11px;">✕ CTA</a>
-                                            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_conclusion&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_conclusion_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Conclusion" style="text-decoration:none; color:#d63638; font-size:11px;">✕ Conc.</a>
-                                            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_faq&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_faq_' . $p->ID)); ?>" class="button-link-delete" title="Remove only FAQs" style="text-decoration:none; color:#d63638; font-size:11px;">✕ FAQ</a>
+                                            <br><small style="color:#999; display:flex; flex-wrap:wrap; gap:2px 8px; margin-top:4px;">
+                                            <?php if ($has_kt): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_kt&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_kt_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Key Takeaways" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ KT</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ KT</span><?php endif; ?>
+                                            <?php if ($has_cta): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_cta&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_cta_' . $p->ID)); ?>" class="button-link-delete" title="Remove only CTA" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ CTA</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ CTA</span><?php endif; ?>
+                                            <?php if ($has_conc): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_conclusion&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_conclusion_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Conclusion" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ Conc.</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ Conc.</span><?php endif; ?>
+                                            <?php if ($has_faq): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_faq&post=' . $p->ID) . '&_wpnonce=' . wp_create_nonce('remove_faq_' . $p->ID)); ?>" class="button-link-delete" title="Remove only FAQs" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ FAQ</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ FAQ</span><?php endif; ?>
                                             </small>
                                         <?php endif; ?>
                                     </div>
