@@ -992,16 +992,14 @@ function artitechcore_ce_admin_init_actions() {
             if (wp_verify_nonce($_GET['_wpnonce'], $action . '_' . $post_id)) {
                 if (function_exists('set_time_limit')) @set_time_limit(300);
                 artitechcore_ce_generate_for_post($post_id);
-                $redirect_url = remove_query_arg(['action', 'post', '_wpnonce']);
-                $redirect_url = add_query_arg('ce_msg', 'generated', $redirect_url);
+                $redirect_url = admin_url('admin.php?page=artitechcore-main&tab=enhancer&ce_msg=generated');
                 wp_redirect($redirect_url);
                 exit;
             }
         } elseif ($action === 'remove_ce') {
             if (wp_verify_nonce($_GET['_wpnonce'], 'remove_ce_' . $post_id)) {
                 artitechcore_ce_remove_from_post($post_id);
-                $redirect_url = remove_query_arg(['action', 'post', '_wpnonce']);
-                $redirect_url = add_query_arg('ce_msg', 'removed', $redirect_url);
+                $redirect_url = admin_url('admin.php?page=artitechcore-main&tab=enhancer&ce_msg=removed');
                 wp_redirect($redirect_url);
                 exit;
             }
@@ -1111,12 +1109,13 @@ function artitechcore_content_enhancer_tab() {
 
         <!-- Delete All & Regenerate All Button -->
         <div style="margin: 20px 0; padding: 20px; background: #fff; border: 2px solid #b47cfd; border-radius: 12px; box-shadow: 0 4px 20px rgba(180, 124, 253, 0.1);">
-            <form method="post" action="" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer')); ?>" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <?php wp_nonce_field('artitechcore_bulk_ce_action'); ?>
                 <input type="hidden" name="bulk_ce_action" value="delete_regenerate">
                 <input type="hidden" name="bulk_apply_scope" value="filtered">
                 <input type="hidden" name="artitechcore_post_type" value="<?php echo esc_attr($filter_post_type); ?>">
                 <input type="hidden" name="artitechcore_status" value="<?php echo esc_attr($filter_status); ?>">
+                <input type="hidden" name="artitechcore_search" value="<?php echo esc_attr($filter_search); ?>">
                 <div>
                     <strong style="font-size: 15px; color: #121322;">🗑️ Delete All & Regenerate All</strong>
                     <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">Removes all existing enhancements from filtered posts, then generates fresh ones using AI.</p>
@@ -1170,7 +1169,7 @@ function artitechcore_content_enhancer_tab() {
 
             <hr style="margin-top: 24px; margin-bottom: 24px; border: 0; border-top: 1px solid #e2e8f0;"/>
 
-            <form method="post" action="">
+            <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer')); ?>">
                 <?php wp_nonce_field('artitechcore_bulk_ce_action'); ?>
                 <input type="hidden" name="artitechcore_post_type" value="<?php echo esc_attr($filter_post_type); ?>">
                 <input type="hidden" name="artitechcore_status" value="<?php echo esc_attr($filter_status); ?>">
