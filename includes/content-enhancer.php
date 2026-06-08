@@ -1003,6 +1003,21 @@ function artitechcore_ce_admin_init_actions() {
                 wp_redirect($redirect_url);
                 exit;
             }
+        } elseif (in_array($action, ['remove_kt', 'remove_cta', 'remove_conclusion', 'remove_faq'], true)) {
+            $part = str_replace('remove_', '', $action);
+            if (wp_verify_nonce($_GET['_wpnonce'], $action . '_' . $post_id)) {
+                artitechcore_ce_remove_single($post_id, $part);
+                $redirect_url = admin_url('admin.php?page=artitechcore-main&tab=enhancer&ce_msg=removed');
+                wp_redirect($redirect_url);
+                exit;
+            }
+        } elseif ($action === 'clean_regenerate') {
+            if (wp_verify_nonce($_GET['_wpnonce'], 'clean_regenerate_' . $post_id)) {
+                artitechcore_ce_clean_and_regenerate($post_id);
+                $redirect_url = admin_url('admin.php?page=artitechcore-main&tab=enhancer&ce_msg=generated');
+                wp_redirect($redirect_url);
+                exit;
+            }
         }
     }
 }
@@ -1245,7 +1260,13 @@ function artitechcore_content_enhancer_tab() {
                                             <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=generate_ce&post=' . $p->ID), 'generate_ce_' . $p->ID)); ?>" class="button button-small">Generate</a>
                                         <?php else: ?>
                                             <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=' . $p->ID), 'regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
-                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_ce&post=' . $p->ID), 'remove_ce_' . $p->ID)); ?>" class="button button-small button-link-delete" onclick="return confirm('Remove AI enhancements from this post?')">Remove</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=clean_regenerate&post=' . $p->ID), 'clean_regenerate_' . $p->ID)); ?>" class="button button-small" style="border-color:#b47cfd; color:#b47cfd;" title="Strips baked-in CE HTML from post content, removes all meta, then regenerates fresh">🧹 Clean & Reg.</a>
+                                            <br><small style="color:#999;">
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_kt&post=' . $p->ID), 'remove_kt_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Key Takeaways" style="text-decoration:none; color:#d63638; font-size:11px;">✕ KT</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_cta&post=' . $p->ID), 'remove_cta_' . $p->ID)); ?>" class="button-link-delete" title="Remove only CTA" style="text-decoration:none; color:#d63638; font-size:11px;">✕ CTA</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_conclusion&post=' . $p->ID), 'remove_conclusion_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Conclusion" style="text-decoration:none; color:#d63638; font-size:11px;">✕ Conc.</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_faq&post=' . $p->ID), 'remove_faq_' . $p->ID)); ?>" class="button-link-delete" title="Remove only FAQs" style="text-decoration:none; color:#d63638; font-size:11px;">✕ FAQ</a>
+                                            </small>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -1361,6 +1382,61 @@ function artitechcore_ce_remove_from_post($post_id) {
     delete_post_meta($post_id, '_artitechcore_ce_cta_heading');
     delete_post_meta($post_id, '_artitechcore_ce_cta_desc');
     delete_post_meta($post_id, '_artitechcore_ce_faq');
+}
+
+/**
+ * Remove a specific enhancement type from a post.
+ * @param int $post_id
+ * @param string $type 'kt', 'cta', 'conclusion', or 'faq'
+ */
+function artitechcore_ce_remove_single($post_id, $type) {
+    switch ($type) {
+        case 'kt':
+            delete_post_meta($post_id, '_artitechcore_ce_key_takeaways');
+            break;
+        case 'cta':
+            delete_post_meta($post_id, '_artitechcore_ce_cta_heading');
+            delete_post_meta($post_id, '_artitechcore_ce_cta_desc');
+            break;
+        case 'conclusion':
+            delete_post_meta($post_id, '_artitechcore_ce_conclusion');
+            break;
+        case 'faq':
+            delete_post_meta($post_id, '_artitechcore_ce_faq');
+            break;
+    }
+}
+
+/**
+ * Strip baked-in CE HTML from post content and clean all meta, then regenerate.
+ * Fixes duplicate KT/CTA/Conclusion/FAQ caused by previous saves with CE HTML baked in.
+ * @param int $post_id
+ * @return bool
+ */
+function artitechcore_ce_clean_and_regenerate($post_id) {
+    $post = get_post($post_id);
+    if (!$post) return false;
+
+    // 1. Strip baked-in CE HTML from post_content
+    $clean = $post->post_content;
+    $clean = preg_replace('/<div class="artitechcore-ce-kt">.*?<\/div>\s*/s', '', $clean);
+    $clean = preg_replace('/<div class="artitechcore-ce-conclusion">.*?<\/div>\s*/s', '', $clean);
+    $clean = preg_replace('/<div class="artitechcore-ce-cta-wrapper">.*?<\/div>\s*/s', '', $clean);
+    $clean = preg_replace('/<div class="artitechcore-ce-faq">.*?<\/div>\s*/s', '', $clean);
+    $clean = preg_replace('/<div class="artitechcore-ce-cta-form-container">.*?<\/div>\s*/s', '', $clean);
+
+    if ($clean !== $post->post_content) {
+        wp_update_post(array(
+            'ID' => $post_id,
+            'post_content' => $clean,
+        ));
+    }
+
+    // 2. Remove all CE meta
+    artitechcore_ce_remove_from_post($post_id);
+
+    // 3. Regenerate all
+    return artitechcore_ce_generate_for_post($post_id, 'all');
 }
 
 function artitechcore_ce_generate_for_post($post_id, $generate_type = 'all') {
