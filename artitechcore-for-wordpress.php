@@ -105,6 +105,18 @@ function artitechcore_activate() {
     if (!wp_next_scheduled('artitechcore_cleanup_old_builder_jobs')) {
         wp_schedule_event(time(), 'daily', 'artitechcore_cleanup_old_builder_jobs');
     }
+    
+    // Clean up any leftover persistence bridge from a previous deactivation/reactivation cycle.
+    // When the plugin is active, the Content Enhancer handles injection directly via
+    // content-enhancer.php. The persistence bridge (an MU-plugin) should only exist when
+    // the plugin is deactivated, to keep enhancements visible. Leaving it active alongside
+    // the plugin causes every section (KT, Conclusion, FAQ, CTA) to be injected TWICE with
+    // different CSS classes (artitechcore-ce-* vs artitech-bridge-*).
+    $mu_dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (ABSPATH . 'wp-content/mu-plugins');
+    $bridge_file = $mu_dir . '/artitechcore-persistence-bridge.php';
+    if (file_exists($bridge_file)) {
+        @wp_delete_file($bridge_file);
+    }
 }
 
 /**
@@ -117,6 +129,14 @@ function artitechcore_init() {
     
     if (empty($brand_kit) && !$scan_completed) {
         update_option('artitechcore_brand_kit', artitechcore_auto_detect_brand_kit());
+    }
+    
+    // Also clean up persistence bridge on every init as a safety net
+    // (catches edge cases where the bridge was created outside the deactivation flow)
+    $mu_dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (ABSPATH . 'wp-content/mu-plugins');
+    $bridge_file = $mu_dir . '/artitechcore-persistence-bridge.php';
+    if (file_exists($bridge_file)) {
+        @wp_delete_file($bridge_file);
     }
 }
 add_action('init', 'artitechcore_init');
