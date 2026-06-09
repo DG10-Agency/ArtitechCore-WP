@@ -1311,6 +1311,28 @@ function artitechcore_content_enhancer_tab() {
             var checked = $(this).is(':checked');
             $('input[name="selected_posts[]"]').prop('checked', checked);
         });
+        
+        // Warn about long bulk AI generation times BEFORE form submits
+        $('select[name="bulk_ce_action"]').on('change', function() {
+            var action = $(this).val();
+            if (action && action.indexOf('generate') === 0) {
+                var count = $('input[name="selected_posts[]"]:checked').length;
+                if (count === 0) {
+                    if ($('input[name="bulk_apply_scope"]:checked').val() === 'filtered') {
+                        count = 'all filtered';
+                    }
+                }
+                if (typeof count === 'number' && count > 5) {
+                    var mins = Math.ceil(count * 15 / 60);
+                    $('#ce-bulk-warning').remove();
+                    $('<div id="ce-bulk-warning" class="notice notice-warning" style="margin:10px 0;"><p>⏳ You are about to generate AI content for <strong>' + count + '</strong> posts. Each post takes ~5-15 seconds. This may take up to <strong>' + mins + ' minutes</strong>. Do not close the tab until complete.</p></div>').insertBefore($(this).closest('form'));
+                } else {
+                    $('#ce-bulk-warning').remove();
+                }
+            } else {
+                $('#ce-bulk-warning').remove();
+            }
+        });
     });
     </script>
     <?php
