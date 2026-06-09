@@ -1199,6 +1199,7 @@ function artitechcore_content_enhancer_tab() {
                             <option value="generate_kt">Generate KT Only</option>
                             <option value="generate_conclusion">Generate Conclusion Only</option>
                             <option value="generate_cta">Generate CTA Only</option>
+                            <option value="generate_faq">Generate FAQ Only</option>
                             <option value="remove">Remove Enhancements</option>
                             <option value="delete_regenerate">🗑️ Delete & Regenerate All</option>
                         </select>
@@ -1356,6 +1357,7 @@ function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
                     if ($action === 'generate_kt') $gen_type = 'kt';
                     if ($action === 'generate_conclusion') $gen_type = 'conclusion';
                     if ($action === 'generate_cta') $gen_type = 'cta';
+                    if ($action === 'generate_faq') $gen_type = 'faq';
 
                     if (function_exists('set_time_limit')) @set_time_limit(300);
                     if (artitechcore_ce_generate_for_post($p_id, $gen_type)) {
