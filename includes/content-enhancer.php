@@ -1265,15 +1265,15 @@ function artitechcore_content_enhancer_tab() {
                                 <td>
                                     <div class="artitechcore-schema-actions">
                                         <?php if (!$has_enhancement): ?>
-                                            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=generate_ce&post=' . $p->ID)); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('generate_ce_' . $p->ID)); ?>" class="button button-small">Generate</a>
-                                        <?php else: ?>
-                                            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=' . $p->ID)); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
-                                            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=clean_regenerate&post=' . $p->ID)); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('clean_regenerate_' . $p->ID)); ?>" class="button button-small" style="border-color:#b47cfd; color:#b47cfd;" title="Strips baked-in CE HTML from post content, removes all meta, then regenerates fresh">🧹 Clean & Reg.</a>
-                                            <br><small style="color:#999; display:flex; flex-wrap:wrap; gap:2px 8px; margin-top:4px;">
-                                            <?php if ($has_kt): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_kt&post=' . $p->ID)); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_kt_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Key Takeaways" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ KT</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ KT</span><?php endif; ?>
-                                            <?php if ($has_cta): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_cta&post=' . $p->ID)); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_cta_' . $p->ID)); ?>" class="button-link-delete" title="Remove only CTA" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ CTA</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ CTA</span><?php endif; ?>
-                                            <?php if ($has_conc): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_conclusion&post=' . $p->ID)); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_conclusion_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Conclusion" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ Conc.</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ Conc.</span><?php endif; ?>
-                                            <?php if ($has_faq): ?><a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=enhancer&action=remove_faq&post=' . $p->ID)); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_faq_' . $p->ID)); ?>" class="button-link-delete" title="Remove only FAQs" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ FAQ</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ FAQ</span><?php endif; ?>
+                                            <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=enhancer&action=generate_ce&post=<?php echo absint($p->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('generate_ce_' . $p->ID)); ?>" class="button button-small">Generate</a>
+                                         <?php else: ?>
+                                            <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=enhancer&action=regenerate_ce&post=<?php echo absint($p->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('regenerate_ce_' . $p->ID)); ?>" class="button button-small">Regenerate</a>
+                                            <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=enhancer&action=clean_regenerate&post=<?php echo absint($p->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('clean_regenerate_' . $p->ID)); ?>" class="button button-small" style="border-color:#b47cfd; color:#b47cfd;" title="Strips baked-in CE HTML from post content, removes all meta, then regenerates fresh">🧹 Clean & Reg.</a>
+                                             <br><small style="color:#999; display:flex; flex-wrap:wrap; gap:2px 8px; margin-top:4px;">
+                                             <?php if ($has_kt): ?><a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=enhancer&action=remove_kt&post=<?php echo absint($p->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_kt_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Key Takeaways" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ KT</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ KT</span><?php endif; ?>
+                                             <?php if ($has_cta): ?><a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=enhancer&action=remove_cta&post=<?php echo absint($p->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_cta_' . $p->ID)); ?>" class="button-link-delete" title="Remove only CTA" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ CTA</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ CTA</span><?php endif; ?>
+                                             <?php if ($has_conc): ?><a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=enhancer&action=remove_conclusion&post=<?php echo absint($p->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_conclusion_' . $p->ID)); ?>" class="button-link-delete" title="Remove only Conclusion" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ Conc.</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ Conc.</span><?php endif; ?>
+                                             <?php if ($has_faq): ?><a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=enhancer&action=remove_faq&post=<?php echo absint($p->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_faq_' . $p->ID)); ?>" class="button-link-delete" title="Remove only FAQs" style="text-decoration:none; color:#d63638; font-size:11px; white-space:nowrap;">✕ FAQ</a><?php else: ?><span style="color:#ccc; font-size:11px; white-space:nowrap;">✕ FAQ</span><?php endif; ?>
                                             </small>
                                         <?php endif; ?>
                                     </div>
@@ -1349,6 +1349,15 @@ function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
 
             if (function_exists('set_time_limit')) @set_time_limit(0);
             @ini_set('memory_limit', '512M');
+                
+            // Warn about long execution time for bulk AI generation
+            $is_ai_generation = (strpos($action, 'generate') === 0);
+            if ($is_ai_generation && count($target_ids) > 5) {
+                echo '<div class="notice notice-warning is-dismissible"><p>⏳ Bulk AI generation in progress. Each post takes ~5-15 seconds. For ' . esc_html(count($target_ids)) . ' posts, this may take up to ' . esc_html(ceil(count($target_ids) * 15 / 60)) . ' minutes. <strong>Do not close this tab.</strong></p></div>';
+                // Flush output so the user sees the warning
+                if (ob_get_level()) ob_flush();
+                flush();
+            }
 
             foreach ($target_ids as $p_id) {
                 if (!current_user_can('edit_post', $p_id)) continue;
