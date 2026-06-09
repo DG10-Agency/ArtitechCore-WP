@@ -212,12 +212,14 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
     $bridge_code .= " * Author: ArtitechCore\n";
     $bridge_code .= " */\n\n";
     $bridge_code .= "if (!defined('ABSPATH')) exit;\n\n";
-    $bridge_code .= "// Do not run if the main plugin is active\n";
-    $bridge_code .= "if (defined('ARTITECHCORE_VERSION')) return;\n\n";
+    // Runtime guard added inside each callback below.
+    // (Load-time guard removed — MU-plugins load before regular plugins,
+    //  so the constant is never defined when this file first runs.)
 
     if ($persist_schema) {
         $bridge_code .= "/** Schema Injection */\n";
         $bridge_code .= "add_action('wp_head', function() {\n";
+        $bridge_code .= "    if (defined('ARTITECHCORE_VERSION')) return;\n";
         $bridge_code .= "    global \$wpdb;\n";
         $bridge_code .= "    \$obj_id = is_singular() ? get_the_ID() : (is_front_page() ? get_option('page_on_front') : null);\n";
         $bridge_code .= "    \$obj_type = 'post';\n";
@@ -246,31 +248,137 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
         $kt_h = get_option('artitechcore_ce_kt_heading', 'Key Takeaways');
         $conc_h = get_option('artitechcore_ce_conclusion_heading', 'Conclusion');
         
+        // CSS matches the active plugin's frontend styles (content-enhancer.php artitechcore_ce_enqueue_frontend_css())
+        // Uses the same artitechcore-ce-* class names so the output is identical whether the plugin is active or not.
         $css = "<style>
-            .artitech-bridge-ce { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen-Sans, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif; }
-            .artitech-bridge-kt { background:#fff; border-left:4px solid $color; padding:20px; margin:30px 0; border-radius:0 12px 12px 0; box-shadow:0 4px 20px rgba($r,$g,$b,0.08); }
-            .artitech-bridge-kt h3 { margin:0 0 15px 0; font-weight:800; font-size:1.25em; color:#121322; }
-            .artitech-bridge-conc { margin:40px 0 20px 0; padding:25px; background:rgba($r,$g,$b,0.03); border-radius:12px; border-left:4px solid $color; }
-            .artitech-bridge-conc h3 { margin:0 0 15px 0; font-weight:800; font-size:1.4em; color:#121322; }
-            .artitech-bridge-faq { margin:40px 0; padding:25px; background:#fff; border:1px solid #e2e8f0; border-radius:16px; }
-            .artitech-bridge-faq h3 { margin:0 0 20px 0; font-weight:800; }
-            .artitech-bridge-faq-item { margin-bottom:20px; }
-            .artitech-bridge-faq-q { font-weight:700; color:#1e293b; margin-bottom:5px; }
-            .artitech-bridge-faq-a { color:#475569; line-height:1.6; }
-            .artitech-bridge-cta-box { background:#fff; border:2px solid $color; padding:25px; margin:35px 0; border-radius:16px; box-shadow:0 10px 40px rgba($r,$g,$b,0.12); border-left-width:6px; }
-            .artitech-bridge-cta-h { font-size:1.4em; font-weight:900; margin:0 0 8px 0; color:#121322; }
-            .artitech-bridge-cta-d { color:#475569; }
+            :root {
+                --artitechcore-brand: $color;
+                --artitechcore-brand-rgb: $r, $g, $b;
+            }
+            .artitechcore-ce-kt {
+                background: #ffffff;
+                border-left: 4px solid var(--artitechcore-brand);
+                padding: 20px 25px;
+                margin: 30px 0;
+                border-radius: 0 12px 12px 0;
+                box-shadow: 0 4px 20px rgba(var(--artitechcore-brand-rgb), 0.08);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+            }
+            .artitechcore-ce-kt-title {
+                margin-top: 0;
+                color: #121322;
+                font-size: 1.25em;
+                font-weight: 800;
+                margin-bottom: 15px;
+            }
+            .artitechcore-ce-kt ul {
+                margin: 0;
+                padding-left: 20px;
+                list-style: disc;
+            }
+            .artitechcore-ce-kt li {
+                margin-bottom: 8px;
+                line-height: 1.6;
+                color: #334155;
+            }
+            .artitechcore-ce-conclusion {
+                margin: 40px 0 20px 0;
+                padding: 25px;
+                background: rgba(var(--artitechcore-brand-rgb), 0.03);
+                border-radius: 12px;
+                border-left: 4px solid var(--artitechcore-brand);
+            }
+            .artitechcore-ce-conclusion h3 {
+                font-size: 1.5em;
+                font-weight: 800;
+                margin: 0 0 15px 0;
+                color: #121322;
+            }
+            .artitechcore-ce-conclusion p {
+                color: #334155;
+                line-height: 1.7;
+                margin: 0;
+            }
+            .artitechcore-ce-cta-wrapper {
+                background: #ffffff;
+                border: 2px solid var(--artitechcore-brand);
+                padding: 25px;
+                margin: 35px 0;
+                border-radius: 16px;
+                box-shadow: 0 10px 40px rgba(var(--artitechcore-brand-rgb), 0.12);
+                text-align: left;
+                position: relative;
+                overflow: hidden;
+            }
+            .artitechcore-ce-cta-wrapper::before {
+                content: '';
+                position: absolute;
+                top: 0; left: 0; bottom: 0; width: 6px;
+                background: var(--artitechcore-brand);
+            }
+            .artitechcore-ce-cta-head {
+                font-size: 1.4em;
+                font-weight: 900;
+                margin: 0 0 8px 0;
+                color: #121322;
+                line-height: 1.2;
+            }
+            .artitechcore-ce-cta-desc {
+                color: #475569;
+                margin: 8px 0 0 0;
+                line-height: 1.5;
+            }
+            .artitechcore-ce-faq {
+                margin: 40px 0;
+                padding: 25px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+            }
+            .artitechcore-ce-faq-title {
+                font-size: 1.25em;
+                font-weight: 800;
+                margin: 0 0 20px 0;
+                color: #121322;
+            }
+            .artitechcore-ce-faq-item {
+                margin-bottom: 20px;
+            }
+            .artitechcore-ce-faq-item:last-child {
+                margin-bottom: 0;
+            }
+            .artitechcore-ce-faq-q {
+                font-weight: 700;
+                color: #1e293b;
+                margin-bottom: 5px;
+                display: block;
+            }
+            .artitechcore-ce-faq-a {
+                color: #475569;
+                line-height: 1.6;
+            }
+            .artitechcore-ce-faq-a > div {
+                margin: 0;
+            }
+            .artitechcore-ce-faq-a p {
+                margin: 0 0 8px 0;
+            }
+            .artitechcore-ce-faq-a p:last-child {
+                margin-bottom: 0;
+            }
         </style>";
 
         $bridge_code .= "/** Content Enhancements Injection */\n";
         $bridge_code .= "add_filter('the_content', function(\$content) {\n";
+        $bridge_code .= "    // If main plugin is active, it handles injection — skip\n";
+        $bridge_code .= "    if (defined('ARTITECHCORE_VERSION')) return \$content;\n";
         $bridge_code .= "    if (!is_singular() || !in_the_loop() || !is_main_query()) return \$content;\n";
         $bridge_code .= "    \$pid = get_the_ID(); \$added = false; \$html_top = ''; \$html_bottom = '';\n";
-        
+
         if (in_array('key_takeaways', $persist_ce)) {
             $bridge_code .= "    \$kt = get_post_meta(\$pid, '_artitechcore_ce_key_takeaways', true);\n";
             $bridge_code .= "    if (!empty(\$kt)) {\n";
-            $bridge_code .= "        \$added = true; \$html_top .= '<div class=\"artitech-bridge-ce artitech-bridge-kt\"><h3>" . esc_html($kt_h) . "</h3><ul>';\n";
+            $bridge_code .= "        \$added = true; \$html_top .= '<div class=\"artitechcore-ce-kt\"><h3 class=\"artitechcore-ce-kt-title\">" . esc_html($kt_h) . "</h3><ul>';\n";
             $bridge_code .= "        foreach ((array)\$kt as \$p) \$html_top .= '<li>' . esc_html(\$p) . '</li>';\n";
             $bridge_code .= "        \$html_top .= '</ul></div>';\n";
             $bridge_code .= "    }\n";
@@ -281,9 +389,9 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
             $bridge_code .= "    \$ctad = get_post_meta(\$pid, '_artitechcore_ce_cta_desc', true);\n";
             $bridge_code .= "    if (!empty(\$ctah)) {\n";
             $bridge_code .= "        \$added = true;\n";
-            $bridge_code .= "        \$cta_html = '<div class=\"artitech-bridge-ce artitech-bridge-cta-box\"><div class=\"artitech-bridge-cta-h\">' . esc_html(\$ctah) . '</div>';\n";
-            $bridge_code .= "        if (\$ctad) \$cta_html .= '<div class=\"artitech-bridge-cta-d\">' . esc_html(\$ctad) . '</div>';\n";
-            $bridge_code .= "        \$cta_html .= '</div>';\n";
+            $bridge_code .= "        \$cta_html = '<div class=\"artitechcore-ce-cta-wrapper\"><h3 class=\"artitechcore-ce-cta-head\">' . esc_html(\$ctah) . '</h3>';\n";
+            $bridge_code .= "        if (\$ctad) \$cta_html .= '<p class=\"artitechcore-ce-cta-desc\">' . esc_html(\$ctad) . '</p>';\n";
+            $bridge_code .= "        \$cta_html .= '<div class=\"artitechcore-ce-cta-form-container\"></div></div>';\n";
             $bridge_code .= "        // Insert CTA in the middle of content if possible\n";
             $bridge_code .= "        \$paragraphs = explode('</p>', \$content);\n";
             $bridge_code .= "        if (count(\$paragraphs) > 4) {\n";
@@ -299,11 +407,11 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
         if (in_array('faq', $persist_ce)) {
             $bridge_code .= "    \$faq = get_post_meta(\$pid, '_artitechcore_ce_faq', true);\n";
             $bridge_code .= "    if (!empty(\$faq) && is_array(\$faq)) {\n";
-            $bridge_code .= "        \$added = true; \$faq_html = '<div class=\"artitech-bridge-ce artitech-bridge-faq\"><h3>Frequently Asked Questions</h3>';\n";
+            $bridge_code .= "        \$added = true; \$faq_html = '<div class=\"artitechcore-ce-faq\"><h3 class=\"artitechcore-ce-faq-title\">Frequently Asked Questions</h3>';\n";
             $bridge_code .= "        \$schema = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => []];\n";
             $bridge_code .= "        foreach (\$faq as \$f) {\n";
             $bridge_code .= "            if (empty(\$f['q']) || empty(\$f['a'])) continue;\n";
-            $bridge_code .= "            \$faq_html .= '<div class=\"artitech-bridge-faq-item\"><div class=\"artitech-bridge-faq-q\">' . esc_html(\$f['q']) . '</div><div class=\"artitech-bridge-faq-a\">' . nl2br(esc_html(\$f['a'])) . '</div></div>';\n";
+            $bridge_code .= "            \$faq_html .= '<div class=\"artitechcore-ce-faq-item\"><span class=\"artitechcore-ce-faq-q\">' . esc_html(\$f['q']) . '</span><div class=\"artitechcore-ce-faq-a\"><div>' . nl2br(esc_html(\$f['a'])) . '</div></div></div>';\n";
             $bridge_code .= "            \$schema['mainEntity'][] = ['@type' => 'Question', 'name' => \$f['q'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => \$f['a']]];\n";
             $bridge_code .= "        }\n";
             $bridge_code .= "        \$faq_html .= '</div><script type=\"application/ld+json\">' . json_encode(\$schema) . '</script>';\n";
@@ -314,7 +422,7 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
         if (in_array('conclusion', $persist_ce)) {
             $bridge_code .= "    \$cn = get_post_meta(\$pid, '_artitechcore_ce_conclusion', true);\n";
             $bridge_code .= "    if (!empty(\$cn)) {\n";
-            $bridge_code .= "        \$added = true; \$html_bottom .= '<div class=\"artitech-bridge-ce artitech-bridge-conc\"><h3>" . esc_html($conc_h) . "</h3><p>' . nl2br(esc_html(\$cn)) . '</p></div>';\n";
+            $bridge_code .= "        \$added = true; \$html_bottom .= '<div class=\"artitechcore-ce-conclusion\"><h3>" . esc_html($conc_h) . "</h3><p>' . nl2br(esc_html(\$cn)) . '</p></div>';\n";
             $bridge_code .= "    }\n";
         }
 
