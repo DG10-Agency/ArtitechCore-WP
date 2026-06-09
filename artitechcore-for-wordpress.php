@@ -346,25 +346,33 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
             }
             .artitechcore-ce-faq-item:last-child {
                 margin-bottom: 0;
+                border-bottom: none;
+                padding-bottom: 0;
             }
             .artitechcore-ce-faq-q {
-                font-weight: 700;
-                color: #1e293b;
-                margin-bottom: 5px;
-                display: block;
+                font-weight: 800;
+                color: var(--artitechcore-brand);
+                margin-bottom: 10px;
+                font-size: 1.15em;
+                display: flex;
+                gap: 12px;
+            }
+            .artitechcore-ce-faq-q::before {
+                content: 'Q.';
+                opacity: 0.5;
+                font-weight: 400;
             }
             .artitechcore-ce-faq-a {
-                color: #475569;
-                line-height: 1.6;
+                color: #334155;
+                line-height: 1.7;
+                font-size: 1em;
+                display: flex;
+                gap: 12px;
             }
-            .artitechcore-ce-faq-a > div {
-                margin: 0;
-            }
-            .artitechcore-ce-faq-a p {
-                margin: 0 0 8px 0;
-            }
-            .artitechcore-ce-faq-a p:last-child {
-                margin-bottom: 0;
+            .artitechcore-ce-faq-a::before {
+                content: 'A.';
+                opacity: 0.5;
+                font-weight: 400;
             }
         </style>";
 
@@ -411,7 +419,7 @@ function artitechcore_create_persistence_bridge($persist_schema, $persist_ce) {
             $bridge_code .= "        \$schema = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => []];\n";
             $bridge_code .= "        foreach (\$faq as \$f) {\n";
             $bridge_code .= "            if (empty(\$f['q']) || empty(\$f['a'])) continue;\n";
-            $bridge_code .= "            \$faq_html .= '<div class=\"artitechcore-ce-faq-item\"><span class=\"artitechcore-ce-faq-q\">' . esc_html(\$f['q']) . '</span><div class=\"artitechcore-ce-faq-a\"><div>' . nl2br(esc_html(\$f['a'])) . '</div></div></div>';\n";
+            $bridge_code .= "            \$faq_html .= '<div class=\"artitechcore-ce-faq-item\"><div class=\"artitechcore-ce-faq-q\">' . esc_html(\$f['q']) . '</div><div class=\"artitechcore-ce-faq-a\">' . nl2br(esc_html(\$f['a'])) . '</div></div>';\n";
             $bridge_code .= "            \$schema['mainEntity'][] = ['@type' => 'Question', 'name' => \$f['q'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => \$f['a']]];\n";
             $bridge_code .= "        }\n";
             $bridge_code .= "        \$faq_html .= '</div><script type=\"application/ld+json\">' . json_encode(\$schema) . '</script>';\n";

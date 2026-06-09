@@ -945,10 +945,8 @@ function artitechcore_ce_inject_content($content) {
         $faq_html .= '<h3 class="artitechcore-ce-faq-title">' . esc_html__('Frequently Asked Questions', 'artitechcore') . '</h3>';
         foreach ($faq as $item) {
             $faq_html .= '<div class="artitechcore-ce-faq-item">';
-            $faq_html .= '<span class="artitechcore-ce-faq-q">' . esc_html($item['q']) . '</span>';
-            $faq_html .= '<div class="artitechcore-ce-faq-a">';
-            $faq_html .= '<div>' . wpautop(esc_html($item['a'])) . '</div>';
-            $faq_html .= '</div></div>';
+            $faq_html .= '<div class="artitechcore-ce-faq-q">' . esc_html($item['q']) . '</div>';
+            $faq_html .= '<div class="artitechcore-ce-faq-a">' . wpautop(esc_html($item['a'])) . '</div></div>';
         }
         $faq_html .= '</div>';
         
