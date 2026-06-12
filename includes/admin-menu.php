@@ -680,7 +680,7 @@ function artitechcore_menu_generator_tab() {
             <div class="menu-category">
                 <h3>🧭 Primary Navigation</h3>
                 <div class="menu-cards-grid">
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -699,7 +699,7 @@ function artitechcore_menu_generator_tab() {
                         </div>
                     </form>
 
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -722,7 +722,7 @@ function artitechcore_menu_generator_tab() {
             <div class="menu-category">
                 <h3>📄 Content & Products</h3>
                 <div class="menu-cards-grid">
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -739,7 +739,7 @@ function artitechcore_menu_generator_tab() {
                         </div>
                     </form>
 
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -756,7 +756,7 @@ function artitechcore_menu_generator_tab() {
                         </div>
                     </form>
 
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -779,7 +779,7 @@ function artitechcore_menu_generator_tab() {
             <div class="menu-category">
                 <h3>🔗 Footer & Links</h3>
                 <div class="menu-cards-grid">
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -797,7 +797,7 @@ function artitechcore_menu_generator_tab() {
                         </div>
                     </form>
 
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -820,7 +820,7 @@ function artitechcore_menu_generator_tab() {
             <div class="menu-category">
                 <h3>🏢 Company & Social</h3>
                 <div class="menu-cards-grid">
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">
@@ -837,7 +837,7 @@ function artitechcore_menu_generator_tab() {
                         </div>
                     </form>
 
-                    <form method="post" action="">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=menu')); ?>">
                         <?php wp_nonce_field('artitechcore_generate_menu'); ?>
 
                         <div class="menu-option-card">

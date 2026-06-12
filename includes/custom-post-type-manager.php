@@ -771,7 +771,7 @@ function artitechcore_cpt_settings_tab() {
     <div class="artitechcore-cpt-settings">
         <p>Configure how custom post types integrate with other ArtitechCore features.</p>
         
-        <form method="post" action="">
+        <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=cpt')); ?>">
             <?php wp_nonce_field('artitechcore_save_cpt_settings'); ?>
             
             <table class="form-table">

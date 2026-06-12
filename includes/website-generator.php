@@ -204,7 +204,7 @@ function artitechcore_website_builder_tab() {
             </div>
             <?php endforeach; ?>
         </div>
-        <a href="<?php echo esc_url( esc_url(admin_url( 'admin.php?page=artitechcore-main&tab=settings' )) ); ?>"
+        <a href="<?php echo esc_url(admin_url( 'admin.php?page=artitechcore-main&tab=settings' )); ?>"
            style="display:inline-block;font-size:1em;font-weight:600;padding:12px 32px;background:linear-gradient(135deg,#4A90E2,#6C63FF);color:#fff;border-radius:8px;text-decoration:none;box-shadow:0 4px 14px rgba(108,99,255,.3);">
             <?php esc_html_e( '⚡ Configure Brand Kit Now →', 'artitechcore' ); ?>
         </a>

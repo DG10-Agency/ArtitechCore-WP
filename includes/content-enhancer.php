@@ -1322,7 +1322,7 @@ function artitechcore_content_enhancer_tab() {
                         count = 'all filtered';
                     }
                 }
-                if (typeof count === 'number' && count > 5) {
+                if (typeof count === 'number' && count >= 1) {
                     var mins = Math.ceil(count * 15 / 60);
                     $('#ce-bulk-warning').remove();
                     $('<div id="ce-bulk-warning" class="notice notice-warning" style="margin:10px 0;"><p>⏳ You are about to generate AI content for <strong>' + count + '</strong> posts. Each post takes ~5-15 seconds. This may take up to <strong>' + mins + ' minutes</strong>. Do not close the tab until complete.</p></div>').insertBefore($(this).closest('form'));
@@ -1368,13 +1368,14 @@ function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
         if (!empty($target_ids)) {
             $processed = 0;
             $failed = 0;
+            $failed_posts = [];
 
             if (function_exists('set_time_limit')) @set_time_limit(0);
             @ini_set('memory_limit', '512M');
                 
             // Warn about long execution time for bulk AI generation
             $is_ai_generation = (strpos($action, 'generate') === 0);
-            if ($is_ai_generation && count($target_ids) > 5) {
+            if ($is_ai_generation && count($target_ids) >= 1) {
                 echo '<div class="notice notice-warning is-dismissible"><p>⏳ Bulk AI generation in progress. Each post takes ~5-15 seconds. For ' . esc_html(count($target_ids)) . ' posts, this may take up to ' . esc_html(ceil(count($target_ids) * 15 / 60)) . ' minutes. <strong>Do not close this tab.</strong></p></div>';
                 // Flush output so the user sees the warning
                 if (ob_get_level()) ob_flush();
@@ -1396,6 +1397,7 @@ function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
                         $processed++;
                     } else {
                         $failed++;
+                        $failed_posts[] = get_the_title($p_id) . ' (ID: ' . $p_id . ')';
                     }
                 } elseif ($action === 'remove') {
                     artitechcore_ce_remove_from_post($p_id);
@@ -1407,11 +1409,27 @@ function artitechcore_ce_handle_bulk_actions($query_args, $supported_types) {
                         $processed++;
                     } else {
                         $failed++;
+                        $failed_posts[] = get_the_title($p_id) . ' (ID: ' . $p_id . ')';
                     }
                 }
             }
 
-            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html(sprintf('Bulk process complete! %d success, %d failed.', $processed, $failed)) . '</p></div>';
+            $notice_class = ($failed > 0) ? 'notice-warning' : 'notice-success';
+            $notice = '<div class="notice ' . $notice_class . ' is-dismissible"><p>';
+            $notice .= esc_html(sprintf('Bulk process complete! %d success, %d failed.', $processed, $failed));
+            if (!empty($failed_posts)) {
+                $notice .= '<br><strong>Failed posts:</strong><ul style="margin:5px 0 0 20px;">';
+                foreach (array_slice($failed_posts, 0, 10) as $fp) {
+                    $notice .= '<li>' . esc_html($fp) . '</li>';
+                }
+                if (count($failed_posts) > 10) {
+                    $notice .= '<li>...and ' . esc_html(count($failed_posts) - 10) . ' more</li>';
+                }
+                $notice .= '</ul>';
+                $notice .= '<p style="font-size:12px;color:#666;">Common reasons: empty post content, missing API key, or API timeout.</p>';
+            }
+            $notice .= '</p></div>';
+            echo wp_kses_post($notice);
         }
     }
 }

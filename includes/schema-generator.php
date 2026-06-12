@@ -2523,10 +2523,10 @@ function artitechcore_add_schema_quick_actions($actions, $post) {
     $schema_type = !empty($schema_row['schema_type']) ? $schema_row['schema_type'] : '';
 
     if (empty($schema_type)) {
-        $actions['generate_schema'] = '<a href="' . wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&action=generate_schema&post=' . $post->ID)), 'generate_schema_' . $post->ID) . '">Generate Schema</a>';
+        $actions['generate_schema'] = '<a href="' . wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&action=generate_schema&post=' . $post->ID)), 'generate_schema_' . $post->ID) . '">Generate Schema</a>';
     } else {
-        $actions['regenerate_schema'] = '<a href="' . wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&action=regenerate_schema&post=' . $post->ID)), 'regenerate_schema_' . $post->ID) . '">Regenerate Schema</a>';
-        $actions['remove_schema'] = '<a href="' . wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&action=remove_schema&post=' . $post->ID)), 'remove_schema_' . $post->ID) . '" onclick="return confirm(\'Are you sure you want to remove schema from this page?\')">Remove Schema</a>';
+        $actions['regenerate_schema'] = '<a href="' . wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&action=regenerate_schema&post=' . $post->ID)), 'regenerate_schema_' . $post->ID) . '">Regenerate Schema</a>';
+        $actions['remove_schema'] = '<a href="' . wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&action=remove_schema&post=' . $post->ID)), 'remove_schema_' . $post->ID) . '" onclick="return confirm(\'Are you sure you want to remove schema from this page?\')">Remove Schema</a>';
     }
 
     return $actions;
@@ -2546,13 +2546,13 @@ function artitechcore_handle_schema_generation_actions() {
         if ($action === 'generate_schema') {
             if (wp_verify_nonce($_GET['_wpnonce'], 'generate_schema_' . $post_id)) {
                 artitechcore_generate_schema_markup($post_id);
-                wp_redirect(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&schema_generated=1')));
+                wp_redirect(admin_url('admin.php?page=artitechcore-main&tab=schema&schema_generated=1'));
                 exit;
             }
         } elseif ($action === 'regenerate_schema') {
             if (wp_verify_nonce($_GET['_wpnonce'], 'regenerate_schema_' . $post_id)) {
                 artitechcore_generate_schema_markup($post_id);
-                wp_redirect(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&schema_regenerated=1')));
+                wp_redirect(admin_url('admin.php?page=artitechcore-main&tab=schema&schema_regenerated=1'));
                 exit;
             }
         }
@@ -2589,7 +2589,7 @@ function artitechcore_handle_schema_removal_actions() {
         if ($action === 'remove_schema') {
             if (wp_verify_nonce($_GET['_wpnonce'], 'remove_schema_' . $post_id)) {
                 artitechcore_remove_schema_from_page($post_id);
-                wp_redirect(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&schema_removed=1')));
+                wp_redirect(admin_url('admin.php?page=artitechcore-main&tab=schema&schema_removed=1'));
                 exit;
             }
         }
@@ -2856,7 +2856,7 @@ function artitechcore_schema_management_dashboard() {
                 Export a CSV backup of all schema stored in the custom high-performance database table.
             </p>
             <p>
-                <a class="button button-primary" href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin-post.php?action=artitechcore_export_schema_csv')), 'artitechcore_export_schema_csv')); ?>">
+                <a class="button button-primary" href="<?php echo esc_url(admin_url('admin-post.php?action=artitechcore_export_schema_csv')); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('artitechcore_export_schema_csv')); ?>">
                     Export Schema CSV
                 </a>
             </p>
@@ -2899,7 +2899,7 @@ function artitechcore_schema_management_dashboard() {
             <?php endif; ?>
                <!-- EXPORT BUTTON MOVED HERE -->
         <p>
-            <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&action=export_schema_csv')), 'export_schema_csv')); ?>" 
+            <a href="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&action=export_schema_csv')); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('export_schema_csv')); ?>" 
                class="button button-secondary">Export All Schema to CSV</a>
         </p>
 
@@ -2953,7 +2953,7 @@ function artitechcore_schema_management_dashboard() {
 
                 <hr style="margin-top: 24px; margin-bottom: 24px; border: 0; border-top: 1px solid #e2e8f0;"/>
 
-                <form method="post" action="">
+                <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema')); ?>">
                     <?php wp_nonce_field('artitechcore_bulk_schema_action'); ?>
                     <!-- Preserve filter context on submit -->
                     <input type="hidden" name="artitechcore_post_type" value="<?php echo esc_attr($filter_post_type); ?>">
@@ -3053,14 +3053,15 @@ function artitechcore_schema_management_dashboard() {
                             </td>
                             <td>
                                 <div class="artitechcore-schema-actions">
-                                    <?php if (empty($schema_type)): ?>
-                                        <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&action=generate_schema&post=' . $page->ID)), 'generate_schema_' . $page->ID)); ?>" 
+                                    <?php 
+                                    if (empty($schema_type)): ?>
+                                        <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=schema&action=generate_schema&post=<?php echo absint($page->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('generate_schema_' . $page->ID)); ?>" 
                                            class="button button-small">Generate Schema</a>
                                     <?php else: ?>
                                         <button type="button" class="button button-small artitechcore-preview-schema" data-page-id="<?php echo esc_attr($page->ID); ?>">Preview</button>
-                                        <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&action=regenerate_schema&post=' . $page->ID)), 'regenerate_schema_' . $page->ID)); ?>" 
+                                        <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=schema&action=regenerate_schema&post=<?php echo absint($page->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('regenerate_schema_' . $page->ID)); ?>" 
                                            class="button button-small">Regenerate</a>
-                                        <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&action=remove_schema&post=' . $page->ID)), 'remove_schema_' . $page->ID)); ?>" 
+                                        <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=schema&action=remove_schema&post=<?php echo absint($page->ID); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('remove_schema_' . $page->ID)); ?>" 
                                            class="button button-small button-link-delete" 
                                            onclick="return confirm('Are you sure you want to remove schema from this page?')">Remove</a>
                                     <?php endif; ?>
@@ -3191,12 +3192,13 @@ function artitechcore_schema_management_dashboard() {
                             </td>
                             <td>
                                 <div class="artitechcore-schema-actions">
-                                    <?php if (!$has_schema): ?>
-                                        <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&action=generate_term_schema&taxonomy=' . $term->taxonomy . '&term_id=' . $term->term_id)), 'artitechcore_generate_term_schema_' . $term->term_id)); ?>" class="button button-small">Generate</a>
+                                    <?php
+                                    if (!$has_schema): ?>
+                                        <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=schema&action=generate_term_schema&taxonomy=<?php echo esc_attr($term->taxonomy); ?>&term_id=<?php echo absint($term->term_id); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('artitechcore_generate_term_schema_' . $term->term_id)); ?>" class="button button-small">Generate</a>
                                     <?php else: ?>
                                         <button type="button" class="button button-small artitechcore-preview-schema-term" data-term-id="<?php echo esc_attr($term->term_id); ?>" data-taxonomy="<?php echo esc_attr($term->taxonomy); ?>">Preview</button>
-                                        <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&action=regenerate_term_schema&taxonomy=' . $term->taxonomy . '&term_id=' . $term->term_id)), 'artitechcore_regenerate_term_schema_' . $term->term_id)); ?>" class="button button-small">Regenerate</a>
-                                        <a href="<?php echo esc_url(wp_nonce_url(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&action=remove_term_schema&taxonomy=' . $term->taxonomy . '&term_id=' . $term->term_id)), 'artitechcore_remove_term_schema_' . $term->term_id)); ?>" class="button button-small button-link-delete" onclick="return confirm('Remove schema for this term?')">Remove</a>
+                                        <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=schema&action=regenerate_term_schema&taxonomy=<?php echo esc_attr($term->taxonomy); ?>&term_id=<?php echo absint($term->term_id); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('artitechcore_regenerate_term_schema_' . $term->term_id)); ?>" class="button button-small">Regenerate</a>
+                                        <a href="<?php echo esc_url(admin_url('admin.php')); ?>?page=artitechcore-main&tab=schema&action=remove_term_schema&taxonomy=<?php echo esc_attr($term->taxonomy); ?>&term_id=<?php echo absint($term->term_id); ?>&_wpnonce=<?php echo esc_attr(wp_create_nonce('artitechcore_remove_term_schema_' . $term->term_id)); ?>" class="button button-small button-link-delete" onclick="return confirm('Remove schema for this term?')">Remove</a>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -3462,7 +3464,7 @@ function artitechcore_handle_term_schema_actions() {
 
     if ($action === 'generate_term_schema' && wp_verify_nonce($_GET['_wpnonce'], 'artitechcore_generate_term_schema_' . $term_id)) {
         artitechcore_generate_term_schema_markup($term_id, $taxonomy, true);
-        wp_redirect(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&term_schema_generated=1')));
+        wp_redirect(admin_url('admin.php?page=artitechcore-main&tab=schema&term_schema_generated=1'));
         exit;
     }
 
@@ -3470,13 +3472,13 @@ function artitechcore_handle_term_schema_actions() {
         // Regenerate should overwrite lock
         delete_term_meta($term_id, '_artitechcore_schema_locked');
         artitechcore_generate_term_schema_markup($term_id, $taxonomy, true);
-        wp_redirect(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&term_schema_regenerated=1')));
+        wp_redirect(admin_url('admin.php?page=artitechcore-main&tab=schema&term_schema_regenerated=1'));
         exit;
     }
 
     if ($action === 'remove_term_schema' && wp_verify_nonce($_GET['_wpnonce'], 'artitechcore_remove_term_schema_' . $term_id)) {
         artitechcore_remove_schema_from_term($term_id);
-        wp_redirect(esc_url(admin_url('admin.php?page=artitechcore-main&tab=schema&term_schema_removed=1')));
+        wp_redirect(admin_url('admin.php?page=artitechcore-main&tab=schema&term_schema_removed=1'));
         exit;
     }
 }
