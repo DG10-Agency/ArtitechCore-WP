@@ -3,9 +3,9 @@
  * Plugin Name: ArtitechCore
  * Plugin URI: https://github.com/DG10-Agency/ArtitechCore-WP
  * Description: The core engine for Artitech WP ecosystem, providing AI-powered page generation, hierarchy management, and structural organization.
- * Version: 1.1.2
+ * Version: 1.0.0
  * Requires at least: 5.6
- * Tested up to: 7.1
+ * Tested up to: 7.0
  * Requires PHP: 7.4
  * Author: DG10 Agency
  * Author URI: https://www.dg10.agency
@@ -15,12 +15,12 @@
  * Domain Path: /languages
  * 
  * @package ArtitechCore
- * @version 1.1.2
+ * @version 1.0.0
  * @author DG10 Agency
  * @license GPL-2.0+
  */
 
-define('ARTITECHCORE_VERSION', '1.1.2');
+define('ARTITECHCORE_VERSION', '1.0.0');
 define('ARTITECHCORE_DB_VERSION', 1);
 
 if (!defined('ABSPATH')) {
@@ -49,7 +49,7 @@ if (!defined('ARTITECHCORE_AI_MAX_TOKENS')) {
 function artitechcore_activate() {
     // Set default plugin options
     $default_options = array(
-        'artitechcore_version' => '1.1.2',
+        'artitechcore_version' => '1.0.0',
         'artitechcore_ai_provider' => 'openai',
         'artitechcore_openai_api_key' => '',
         'artitechcore_gemini_api_key' => '',
@@ -669,6 +669,10 @@ require_once ARTITECHCORE_PLUGIN_PATH . 'includes/keyword-analyzer.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/content-enhancer.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/website-generator.php';
 require_once ARTITECHCORE_PLUGIN_PATH . 'includes/website-generator-queue.php';
+require_once ARTITECHCORE_PLUGIN_PATH . 'includes/class-link-consent.php';
+
+// Initialize link consent system
+ArtitechCore_Link_Consent::init();
 
 // Output schema markup in wp_head is now handled in includes/schema-generator.php
 

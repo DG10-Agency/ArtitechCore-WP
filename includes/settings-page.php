@@ -462,6 +462,9 @@ function artitechcore_register_settings() {
 
     // Brand Kit Settings
     register_setting('artitechcore_settings_group', 'artitechcore_brand_kit', 'artitechcore_sanitize_brand_kit');
+
+    // Link Consent Setting
+    register_setting('artitechcore_settings_group', 'artitechcore_link_consent', 'sanitize_key');
 }
 add_action('admin_init', 'artitechcore_register_settings');
 
@@ -694,6 +697,22 @@ function artitechcore_settings_init() {
     add_settings_field('artitechcore_ce_cta_mode', __('CTA Form Mode', 'artitechcore'), 'artitechcore_ce_cta_mode_callback', 'artitechcore-main', 'artitechcore_ce_settings_section');
     add_settings_field('artitechcore_ce_cta_shortcode', __('Global CTA Shortcode', 'artitechcore'), 'artitechcore_ce_cta_shortcode_callback', 'artitechcore-main', 'artitechcore_ce_settings_section');
     add_settings_field('artitechcore_ce_cta_native', __('Native CTA Configuration', 'artitechcore'), 'artitechcore_ce_cta_native_callback', 'artitechcore-main', 'artitechcore_ce_settings_section');
+
+    // Link Consent Section
+    add_settings_section(
+        'artitechcore_link_consent_section',
+        __('Support Link Consent', 'artitechcore'),
+        'artitechcore_link_consent_section_callback',
+        'artitechcore-main'
+    );
+
+    add_settings_field(
+        'artitechcore_link_consent',
+        __('Show Support Links', 'artitechcore'),
+        'artitechcore_link_consent_callback',
+        'artitechcore-main',
+        'artitechcore_link_consent_section'
+    );
 }
 add_action('admin_init', 'artitechcore_settings_init');
 
@@ -1256,6 +1275,28 @@ function artitechcore_db_maintenance_callback() {
         });
     });
     </script>
+    <?php
+}
+
+/**
+ * Link Consent section description callback.
+ */
+function artitechcore_link_consent_section_callback() {
+    echo '<p>' . esc_html__('Control whether DG10 Agency support links are shown in the admin interface. These links help support the free development of this plugin.', 'artitechcore') . '</p>';
+}
+
+/**
+ * Link Consent field callback — Yes/No dropdown.
+ */
+function artitechcore_link_consent_callback() {
+    $consent = get_option('artitechcore_link_consent', '');
+    ?>
+    <select name="artitechcore_link_consent">
+        <option value="" <?php selected($consent, ''); ?>><?php esc_html_e('Undecided (will ask)', 'artitechcore'); ?></option>
+        <option value="yes" <?php selected($consent, 'yes'); ?>><?php esc_html_e('Yes, show support links', 'artitechcore'); ?></option>
+        <option value="no" <?php selected($consent, 'no'); ?>><?php esc_html_e('No, hide support links', 'artitechcore'); ?></option>
+    </select>
+    <p class="description"><?php esc_html_e('When set to "Yes", external support links (DG10 website and Calendly) will be shown in the plugin admin footer. This helps support free plugin development.', 'artitechcore'); ?></p>
     <?php
 }
 

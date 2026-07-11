@@ -1,0 +1,14 @@
+.git/
+.gitignore
+.DS_Store
+tests/
+bin/
+*.md
+.github/
+.vscode/
+.idea/
+composer.lock
+package-lock.json
+.phpcs.xml
+phpcs.xml
+node_modules/

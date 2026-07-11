@@ -343,6 +343,7 @@ function artitechcore_admin_page() {
                             <div class="dg10-promotion-content">
                                 <p role="text"><?php esc_html_e('We are the ultimate growth ecosystem for visionary entrepreneurs. Leveraging over a decade of expertise, we empower you to Build | Market | Analyze | Automate | Scale with our services, elite software products, and high-performance AI tools. We aren’t just an agency; we are your digital infrastructure powerhouse, providing the advanced technology and strategic edge you need to dominate your market.', 'artitechcore'); ?></p>
                                 <div class="dg10-promotion-buttons" role="group" aria-label="<?php esc_attr_e('Action Buttons', 'artitechcore'); ?>">
+                                    <?php if (ArtitechCore_Link_Consent::is_allowed()) : ?>
                                     <a href="https://www.dg10.agency" target="_blank" class="dg10-btn dg10-btn-primary" role="button" aria-label="<?php esc_attr_e('Visit DG10 Agency Website - Opens in new tab', 'artitechcore'); ?>">
                                         <span class="btn-text"><?php esc_html_e('Visit Website', 'artitechcore'); ?></span>
                                         <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('External link icon', 'artitechcore'); ?>">→</span>
@@ -351,6 +352,7 @@ function artitechcore_admin_page() {
                                         <span class="dg10-btn-icon" aria-hidden="true" role="img" aria-label="<?php esc_attr_e('Calendar icon', 'artitechcore'); ?>">📅</span>
                                         <span class="btn-text"><?php esc_html_e('Book a Free Consultation', 'artitechcore'); ?></span>
                                     </a>
+                                    <?php endif; ?>
                                 </div>
                                 <p class="dg10-promotion-footer" role="text">
                                     <?php echo wp_kses_post(sprintf(
