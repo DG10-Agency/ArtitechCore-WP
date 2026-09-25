@@ -2704,7 +2704,9 @@ function artitechcore_generate_sample_field_value($field) {
         case 'url':
             return 'https://example.com';
         case 'image':
-            return 'https://via.placeholder.com/400x300';
+            // WP.org guideline: no offloading to remote placeholder services.
+            // Sample/draft entries ship with no image; the author adds media locally.
+            return '';
         case 'textarea':
             return 'This is a sample ' . strtolower($field['label']) . ' entry.';
         default:

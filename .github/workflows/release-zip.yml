@@ -55,6 +55,8 @@ jobs:
             --exclude='.phpcs.xml' \
             --exclude='phpcs.xml' \
             --exclude='node_modules/' \
+            --exclude='build/' \
+            --exclude='*.zip' \
             ./ build/artitechcore/
           test -f build/artitechcore/artitechcore-for-wordpress.php
           test -f build/artitechcore/readme.txt
