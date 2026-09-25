@@ -1,0 +1,106 @@
+name: Release ZIP + Plugin Check
+
+# Builds the WP.org distribution ZIP (slug: artitechcore) on every tag push,
+# attaches it to a GitHub Release only if Plugin Check reports zero errors,
+# and always uploads the ZIP as a workflow artifact for inspection.
+# Manual runs: gh workflow run release-zip.yml
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP (lint only)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: PHP lint plugin entry points
+        run: |
+          php -l artitechcore-for-wordpress.php
+          php -l includes/schema-generator.php
+          php -l uninstall.php
+
+      - name: Build clean distribution dir (mirrors .distignore)
+        run: |
+          mkdir -p build/artitechcore
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.gitignore' \
+            --exclude='.distignore' \
+            --exclude='.DS_Store' \
+            --exclude='tests/' \
+            --exclude='bin/' \
+            --exclude='*.md' \
+            --exclude='.vscode/' \
+            --exclude='.idea/' \
+            --exclude='composer.lock' \
+            --exclude='package-lock.json' \
+            --exclude='.phpcs.xml' \
+            --exclude='phpcs.xml' \
+            --exclude='node_modules/' \
+            ./ build/artitechcore/
+          test -f build/artitechcore/artitechcore-for-wordpress.php
+          test -f build/artitechcore/readme.txt
+          test -f build/artitechcore/uninstall.php
+
+      - name: Pack ZIP with slug top-level dir
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME:-manual}"
+          cd build && zip -r "../artitechcore-${TAG_NAME}.zip" artitechcore
+          cd ..
+          ls -la artitechcore-*.zip
+
+      - name: Verify ZIP shape (slug dir, no dotfiles, required files)
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME:-manual}"
+          ZIP="artitechcore-${TAG_NAME}.zip"
+          echo "--- listing ---"
+          unzip -l "$ZIP"
+          echo "--- assertions ---"
+          unzip -l "$ZIP" | grep -q 'artitechcore/artitechcore-for-wordpress.php'
+          unzip -l "$ZIP" | grep -q 'artitechcore/readme.txt'
+          # No hidden files / VCS dirs may ship in the distribution shape.
+          if unzip -l "$ZIP" | grep -E 'artitechcore/\.(git|github|distignore|vscode|idea)|artitechcore/.*/\.git/'; then
+            echo 'FAIL: dotfiles or VCS dirs leaked into ZIP'
+            exit 1
+          fi
+          # Slug check: Text Domain header must equal the zip top-level dir.
+          grep -q 'Text Domain: artitechcore' build/artitechcore/artitechcore-for-wordpress.php
+          echo 'ZIP shape OK'
+
+      - name: Upload ZIP artifact (always, even if checks fail)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: artitechcore-plugin-zip
+          path: artitechcore-*.zip
+          retention-days: 30
+
+      - name: Run Plugin Check (WP.org gate, zero errors required)
+        uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: './build/artitechcore'
+
+      - name: Attach ZIP to GitHub Release (only on tag, only if checks passed)
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: artitechcore-*.zip
+          generate_release_notes: true
