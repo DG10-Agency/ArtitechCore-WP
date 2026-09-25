@@ -3,7 +3,7 @@
  * Plugin Name: ArtitechCore
  * Plugin URI: https://github.com/DG10-Agency/ArtitechCore-WP
  * Description: The core engine for Artitech WP ecosystem, providing AI-powered page generation, hierarchy management, and structural organization.
- * Version: 1.1.2
+ * Version: 1.2.0
  * Requires at least: 5.6
  * Tested up to: 7.1
  * Requires PHP: 7.4
@@ -15,13 +15,13 @@
  * Domain Path: /languages
  * 
  * @package ArtitechCore
- * @version 1.1.2
+ * @version 1.2.0
  * @author DG10 Agency
  * @license GPL-2.0+
  */
 
-define('ARTITECHCORE_VERSION', '1.1.2');
-define('ARTITECHCORE_DB_VERSION', 1);
+define('ARTITECHCORE_VERSION', '1.2.0');
+define('ARTITECHCORE_DB_VERSION', 2);
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
@@ -85,6 +85,9 @@ function artitechcore_activate() {
     if ($installed_db_version < ARTITECHCORE_DB_VERSION) {
         if ($installed_db_version < 1) {
             artitechcore_migrate_schema_data_v1();
+        }
+        if ($installed_db_version < 2) {
+            artitechcore_migrate_schema_data_v2();
         }
         update_option('artitechcore_db_version', ARTITECHCORE_DB_VERSION);
     }
@@ -485,7 +488,7 @@ function artitechcore_create_database_tables() {
         created_date datetime DEFAULT CURRENT_TIMESTAMP,
         updated_date datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY  (id),
-        UNIQUE KEY object_identity (object_id, object_type),
+        UNIQUE KEY object_identity (object_id, object_type, schema_type),
         KEY schema_type (schema_type)
     ) $charset_collate;";
     
@@ -613,6 +616,96 @@ function artitechcore_migrate_schema_data_v1($batch_limit = 500) {
     
     // Return true if more data potentially remains in this category
     return (count($post_ids) >= $batch_limit || (isset($term_ids) && count($term_ids) >= $remaining_limit));
+}
+
+/**
+ * Migration v2: allow multiple schema rows per object (one per schema_type).
+ *
+ * v1 used UNIQUE KEY object_identity (object_id, object_type), so only one
+ * schema row could exist per post/term. v2 widens the key to
+ * (object_id, object_type, schema_type) so FAQ + Service + MedicalBusiness
+ * rows coexist and are merged at render time.
+ *
+ * Safe to run repeatedly. Handles legacy installs where dbDelta never added
+ * the v1 UNIQUE key (duplicate rows) by keeping the newest row per legacy key.
+ */
+function artitechcore_migrate_schema_data_v2() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'artitechcore_schema_data';
+
+    // Bail if the table does not exist yet (fresh install path creates v2 directly).
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- internal table check, no user input.
+    $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name));
+    if ($exists !== $table_name) {
+        return false;
+    }
+
+    // Concurrency lock.
+    if (get_transient('artitechcore_migrating_schema_v2')) {
+        return false;
+    }
+    set_transient('artitechcore_migrating_schema_v2', true, 300);
+
+    // 1. De-duplicate legacy rows that share (object_id, object_type).
+    // Keep the newest row (highest id), drop the rest. Only needed for
+    // installs whose table predates the v1 UNIQUE key.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- internal dedupe, no user input.
+    $dup_keys = $wpdb->get_results(
+        "SELECT object_id, object_type, MAX(id) AS keep_id, COUNT(*) AS c FROM $table_name GROUP BY object_id, object_type HAVING c > 1",
+        ARRAY_A
+    );
+    if (!empty($dup_keys) && is_array($dup_keys)) {
+        foreach ($dup_keys as $dup) {
+            $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- internal dedupe, values prepared.
+                $wpdb->prepare(
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- internal dedupe, values prepared.
+                    "DELETE FROM $table_name WHERE object_id = %d AND object_type = %s AND id != %d",
+                    absint($dup['object_id']),
+                    sanitize_key($dup['object_type']),
+                    absint($dup['keep_id'])
+                )
+            );
+        }
+    }
+
+    // 2. Drop the legacy unique key if present, then add the widened key.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- internal index check, no user input.
+    $indexes = $wpdb->get_results("SHOW INDEX FROM $table_name", ARRAY_A);
+    $has_legacy = false;
+    $has_v2 = false;
+    if (is_array($indexes)) {
+        foreach ($indexes as $idx) {
+            if (isset($idx['Key_name']) && 'object_identity' === $idx['Key_name']) {
+                $cols = array();
+                foreach ($indexes as $i2) {
+                    if (isset($i2['Key_name']) && 'object_identity' === $i2['Key_name'] && isset($i2['Column_name'])) {
+                        $cols[] = $i2['Column_name'];
+                    }
+                }
+                sort($cols);
+                if (array('object_id', 'object_type') === $cols) {
+                    $has_legacy = true;
+                }
+                if (array('object_id', 'object_type', 'schema_type') === $cols) {
+                    $has_v2 = true;
+                }
+                break;
+            }
+        }
+    }
+
+    if ($has_legacy) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $wpdb->query("ALTER TABLE $table_name DROP INDEX object_identity"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    }
+    if (!$has_v2) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $wpdb->query('ALTER TABLE ' . $table_name . ' ADD UNIQUE KEY object_identity (object_id, object_type, schema_type)'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter
+    }
+
+    delete_transient('artitechcore_migrating_schema_v2');
+    return true;
 }
 
 /**

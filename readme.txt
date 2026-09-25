@@ -4,7 +4,7 @@ Tags: pages, schema markup, bulk creation, ai content, seo generator
 Requires at least: 5.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,15 @@ You can choose to keep SEO schemas and/or AI enhancement data after uninstallati
 5. **Import/Export System** - Managing large datasets with CSV tools.
 
 == Changelog ==
+
+= 1.2.0 =
+* **NEW**: Multiple schema rows per post/term (one per schema type) with merged @graph output — FAQ + Service + MedicalBusiness rows now coexist instead of overwriting each other. Includes automatic v2 database migration (dedupes legacy rows, keeps newest).
+* **NEW**: Global Organization + WebSite schema fallback for non-singular pages (blog index, archives, search, 404) — these pages are never schema-less now.
+* **FIX**: Singular output uses get_queried_object_id() with get_the_ID() fallback for reliable rendering in wp_head.
+* **FIX**: Homepage fallback schema is now persisted to the database on first render instead of being rebuilt on every view.
+* **FIX**: `artitechcore_skip_schema_output` filter now genuinely suppresses output (previously it printed an "additive" note and kept rendering).
+* **IMPROVED**: Schema @type emits the single most specific type (e.g. Dentist) instead of the redundant ancestry chain.
+* **IMPROVED**: medicalSpecialty now only carries valid schema.org MedicalSpecialty enum values (e.g. Dental); free-text procedures move to knowsAbout.
 
 = 1.1.0 =
 * **NEW**: AI Content Enhancer (Conversion Booster).

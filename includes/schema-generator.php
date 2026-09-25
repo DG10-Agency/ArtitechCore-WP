@@ -19,6 +19,12 @@ if (!defined('ArtitechCore_SCHEMA_MEDICAL_BUSINESS')) define('ArtitechCore_SCHEM
 
 /**
  * Get schema data from custom table
+ *
+ * Note: v2 allows multiple rows per object (one per schema_type). This helper
+ * returns the newest row for backward compatibility. Use
+ * artitechcore_get_all_schema_data() + artitechcore_get_merged_schema_data()
+ * on the render path so no stored type is silently dropped.
+ *
  * @param int $object_id The post or term ID.
  * @param string $object_type The object type ('post' or 'term').
  * @return array|false The row data as an associative array or false if not found.
@@ -28,12 +34,106 @@ function artitechcore_get_schema_data($object_id, $object_type = 'post') {
     $table_name = $wpdb->prefix . 'artitechcore_schema_data';
     
     $row = $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM $table_name WHERE object_id = %d AND object_type = %s",
-        $object_id,
-        $object_type
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- table name is internal prefix, not user input.
+        "SELECT * FROM $table_name WHERE object_id = %d AND object_type = %s ORDER BY updated_date DESC, id DESC LIMIT 1",
+        absint($object_id),
+        sanitize_key($object_type)
     ), ARRAY_A);
     
     return $row ? $row : false;
+}
+
+/**
+ * Get ALL schema rows for an object (v2 multi-row support).
+ *
+ * @param int $object_id The post or term ID.
+ * @param string $object_type The object type ('post' or 'term').
+ * @return array List of row arrays (possibly empty).
+ */
+function artitechcore_get_all_schema_data($object_id, $object_type = 'post') {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'artitechcore_schema_data';
+
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- internal table, no user input.
+    $rows = $wpdb->get_results($wpdb->prepare(
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- table name is internal prefix, not user input.
+        "SELECT * FROM $table_name WHERE object_id = %d AND object_type = %s ORDER BY updated_date DESC, id DESC",
+        absint($object_id),
+        sanitize_key($object_type)
+    ), ARRAY_A);
+
+    return is_array($rows) ? $rows : array();
+}
+
+/**
+ * Merge all stored schema rows for an object into one JSON-LD payload.
+ *
+ * Each row holds a full {"@context": ..., "@graph": [...]} document. Merging
+ * concatenates graph nodes and dedupes by @id so Organization/WebSite nodes
+ * shared across rows appear once. Single-row installs behave as before.
+ *
+ * @param int $object_id The post or term ID.
+ * @param string $object_type The object type ('post' or 'term').
+ * @return array|null Merged schema array, or null when nothing stored/decodable.
+ */
+function artitechcore_get_merged_schema_data($object_id, $object_type = 'post') {
+    $rows = artitechcore_get_all_schema_data($object_id, $object_type);
+    if (empty($rows)) {
+        return null;
+    }
+
+    // Fast path: single row.
+    if (1 === count($rows)) {
+        if (empty($rows[0]['schema_data'])) {
+            return null;
+        }
+        $single = json_decode($rows[0]['schema_data'], true);
+        return is_array($single) ? $single : null;
+    }
+
+    $merged_graph = array();
+    $seen_ids = array();
+
+    foreach ($rows as $row) {
+        if (empty($row['schema_data'])) {
+            continue;
+        }
+        $decoded = json_decode($row['schema_data'], true);
+        if (!is_array($decoded)) {
+            continue;
+        }
+        $nodes = array();
+        if (isset($decoded['@graph']) && is_array($decoded['@graph'])) {
+            $nodes = $decoded['@graph'];
+        } else {
+            // Row stored a bare node instead of a graph document.
+            $nodes = array($decoded);
+        }
+        foreach ($nodes as $node) {
+            if (!is_array($node)) {
+                continue;
+            }
+            if (isset($node['@id']) && is_string($node['@id']) && '' !== $node['@id']) {
+                if (isset($seen_ids[$node['@id']])) {
+                    continue;
+                }
+                $seen_ids[$node['@id']] = true;
+            }
+            // Strip per-row context; the merged document carries one.
+            unset($node['@context']);
+            $merged_graph[] = $node;
+        }
+    }
+
+    if (empty($merged_graph)) {
+        return null;
+    }
+
+    // ponytail: O(n) single pass over stored rows; row count per object is tiny (types), no index needed.
+    return array(
+        '@context' => 'https://schema.org',
+        '@graph' => $merged_graph,
+    );
 }
 
 /**
@@ -49,12 +149,12 @@ function artitechcore_save_schema_data($object_id, $data, $schema_type, $object_
     }
 
     return $wpdb->replace($table_name, [
-        'object_id' => $object_id,
-        'object_type' => $object_type,
-        'schema_type' => $schema_type,
+        'object_id' => absint($object_id),
+        'object_type' => sanitize_key($object_type),
+        'schema_type' => sanitize_key($schema_type),
         'schema_data' => $data,
-        'origin' => $origin,
-        'is_locked' => $is_locked
+        'origin' => sanitize_key($origin),
+        'is_locked' => absint($is_locked)
     ]);
 }
 
@@ -375,13 +475,148 @@ function artitechcore_get_ai_entity_profile() {
 }
 }
 
+/**
+ * Pick the single most specific schema.org type from a list.
+ *
+ * Stored profiles historically keep the full ancestry chain
+ * (e.g. Organization > LocalBusiness > MedicalBusiness > Dentist), which is
+ * valid JSON-LD 1.1 but redundant: the most specific subtype already implies
+ * its parents. Emitting one type keeps output clean for validators.
+ *
+ * @param array $types Candidate type names, generic-first when from detection.
+ * @return string Most specific type name.
+ */
+if (!function_exists('artitechcore_pick_most_specific_type')) {
+function artitechcore_pick_most_specific_type($types) {
+    $types = array_values(array_unique(array_filter(array_map('sanitize_text_field', (array) $types))));
+    if (empty($types)) {
+        return '';
+    }
+    if (1 === count($types)) {
+        return $types[0];
+    }
+
+    // Specificity ranking: higher wins. Unknown types score 0 and fall back
+    // to list order via the end() fallback below.
+    $rank = array(
+        'Organization' => 10,
+        'LocalBusiness' => 20,
+        'MedicalBusiness' => 30,
+        'Store' => 30,
+        'Corporation' => 30,
+        'ProfessionalService' => 40,
+        'LegalService' => 40,
+        'FinancialService' => 40,
+        'RealEstateAgent' => 40,
+        'AutomotiveBusiness' => 40,
+        'HealthAndBeautyBusiness' => 40,
+        'LodgingBusiness' => 40,
+        'Restaurant' => 50,
+        'FoodEstablishment' => 50,
+        'EducationalOrganization' => 50,
+        'NGO' => 50,
+        'ReligiousOrganization' => 50,
+        'Dentist' => 60,
+        'Physician' => 60,
+        'Attorney' => 60,
+        'Person' => 10,
+    );
+
+    $best = $types[0];
+    $best_score = isset($rank[$best]) ? $rank[$best] : 0;
+    foreach ($types as $t) {
+        $score = isset($rank[$t]) ? $rank[$t] : 0;
+        if ($score > $best_score) {
+            $best = $t;
+            $best_score = $score;
+        }
+    }
+    // If nothing ranked (all unknown), keep the last entry: detection lists
+    // are ordered generic-first, so the tail is the most specific guess.
+    if (0 === $best_score) {
+        $last = end($types);
+        return is_string($last) ? $last : $types[0];
+    }
+    return $best;
+}
+}
+
+/**
+ * Split free-text specialties into valid schema.org MedicalSpecialty enum
+ * values vs. everything else.
+ *
+ * medicalSpecialty formally expects a MedicalSpecialty enumeration (e.g.
+ * "Dental"). Free-text procedure names ("Root Canal Treatment") belong in
+ * knowsAbout instead, where validators accept arbitrary text.
+ *
+ * @param array $specialties Raw specialty strings.
+ * @return array Array with 'medical' (valid enum names) and 'other' (free text).
+ */
+if (!function_exists('artitechcore_split_medical_specialties')) {
+function artitechcore_split_medical_specialties($specialties) {
+    $valid_enum = array(
+        'Anesthesia', 'Audiology', 'Cardiology', 'Cardiovascular', 'Dental',
+        'Dermatology', 'Emergency', 'Endocrine', 'Gastroenterology', 'Genetics',
+        'Geriatrics', 'Gynecology', 'Hematology', 'InfectiousDisease',
+        'Neurology', 'Nursing', 'Obstetrics', 'Oncology', 'Ophthalmology',
+        'Orthopedics', 'Otolaryngology', 'Pathology', 'Pediatrics', 'Pharmacy',
+        'Physiotherapy', 'PlasticSurgery', 'Podiatry', 'PrimaryCare',
+        'Psychiatry', 'PublicHealth', 'Pulmonary', 'Radiology', 'Renal',
+        'Rheumatology', 'SportsMedicine', 'Surgery', 'Toxicology',
+        'Transplant', 'Urology',
+    );
+    $lookup = array();
+    foreach ($valid_enum as $v) {
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.strtolower_strtolower -- case-insensitive enum match, not a slug.
+        $lookup[strtolower($v)] = $v;
+    }
+
+    // Common procedure/specialty phrases that imply the Dental enum.
+    $dental_hints = array('dental', 'dentist', 'dentistry', 'orthodont', 'tooth', 'teeth', 'gum', 'root canal', 'implant', 'filling', 'crown', 'bridge', 'denture', 'scaling', 'extraction', 'oral');
+
+    $medical = array();
+    $other = array();
+    foreach ((array) $specialties as $spec) {
+        $spec = sanitize_text_field($spec);
+        if ('' === $spec) {
+            continue;
+        }
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.strtolower_strtolower -- case-insensitive enum match, not a slug.
+        $key = strtolower($spec);
+        if (isset($lookup[$key])) {
+            $medical[] = $lookup[$key];
+            continue;
+        }
+        $is_dental = false;
+        foreach ($dental_hints as $hint) {
+            if (false !== strpos($key, $hint)) {
+                $is_dental = true;
+                break;
+            }
+        }
+        if ($is_dental) {
+            if (!in_array('Dental', $medical, true)) {
+                $medical[] = 'Dental';
+            }
+            continue;
+        }
+        $other[] = $spec;
+    }
+
+    return array(
+        'medical' => array_values(array_unique($medical)),
+        'other' => array_values(array_unique($other)),
+    );
+}
+}
+
 if (!function_exists('artitechcore_schema_types_to_at_type')) {
 function artitechcore_schema_types_to_at_type($types, $fallback) {
     $types = array_values(array_unique(array_filter(array_map('sanitize_text_field', (array)$types))));
     if (empty($types)) {
-        return $fallback;
+        return sanitize_text_field($fallback);
     }
-    return count($types) > 1 ? $types : $types[0];
+    return artitechcore_pick_most_specific_type($types);
 }
 }
 
@@ -409,11 +644,20 @@ function artitechcore_build_primary_person_node($profile) {
 
     $specialties = (array)($profile['primaryPerson']['specialties'] ?? []);
     if (!empty($specialties)) {
-        $types_str = strtolower(is_array($node['@type']) ? implode(' ', $node['@type']) : $node['@type']);
-        if (strpos($types_str, 'physician') !== false || strpos($types_str, 'medical') !== false || strpos($types_str, 'dentist') !== false) {
-            $node['medicalSpecialty'] = array_values($specialties);
+        $type_str = is_string($node['@type']) ? $node['@type'] : 'Person';
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.strtolower_strtolower -- type-name check, not a slug.
+        $types_str = strtolower($type_str);
+        $is_medical_person = (false !== strpos($types_str, 'physician') || false !== strpos($types_str, 'medical') || false !== strpos($types_str, 'dentist'));
+        if ($is_medical_person) {
+            $split = artitechcore_split_medical_specialties($specialties);
+            if (!empty($split['medical'])) {
+                $node['medicalSpecialty'] = $split['medical'];
+            }
+            if (!empty($split['other'])) {
+                $node['knowsAbout'] = $split['other'];
+            }
         } else {
-            $node['knowsAbout'] = array_values($specialties);
+            $node['knowsAbout'] = array_values(array_filter(array_map('sanitize_text_field', $specialties)));
         }
     }
 
@@ -1302,24 +1546,36 @@ if (!function_exists('artitechcore_generate_schema_markup')) {
 }
 
 /**
- * Output schema markup in wp_head (posts + taxonomy archives).
+ * Output schema markup in wp_head (posts + taxonomy archives + archive fallbacks).
  *
- * - Singular: outputs schema data from custom table if present.
- * - Term archives: outputs schema data from custom table if present; if missing and auto-enabled, generates a baseline CollectionPage graph.
+ * - Singular: outputs merged schema rows from custom table if present.
+ * - Term archives: outputs merged schema rows if present; if missing and
+ *   auto-enabled, generates a baseline CollectionPage graph.
+ * - Non-singular (blog index, archives, search, 404): outputs a global
+ *   Organization + WebSite graph so these pages are never schema-less.
  */
 /**
- * Check if a known SEO plugin that generates schema markup is active.
- * If so, ArtitechCore defers to avoid duplicate structured data.
+ * Whether schema output is force-suppressed via filter.
  *
- * @return bool True if a conflicting schema plugin is active.
+ * Separate from SEO-plugin detection: a suppressed page outputs nothing.
+ *
+ * @return bool True when output must be skipped entirely.
+ */
+function artitechcore_should_suppress_schema_output() {
+    return (bool) apply_filters('artitechcore_skip_schema_output', false);
+}
+
+/**
+ * Check if a known SEO plugin that generates schema markup is active.
+ *
+ * ArtitechCore runs ADDITIVELY alongside these plugins: it still outputs its
+ * per-post custom schemas (FAQ, Service, MedicalBusiness, Review, etc.) while
+ * the SEO plugin outputs its base schemas (Organization, WebSite, WebPage).
+ * Multiple JSON-LD blocks on a page are standard and handled by Google.
+ *
+ * @return bool True if a known SEO schema plugin is active.
  */
 function artitechcore_has_conflicting_schema_plugin() {
-    // Allow developers/site owners to force-suppress schema output via filter
-    $skip = apply_filters('artitechcore_skip_schema_output', false);
-    if ($skip) {
-        return true;
-    }
-
     $conflicting_plugins = [
         'wordpress-seo/wp-seo.php',                          // Yoast SEO
         'seo-by-rank-math/rank-math.php',                    // RankMath
@@ -1369,85 +1625,188 @@ function artitechcore_get_active_schema_plugins() {
     return $found;
 }
 
+/**
+ * Build the homepage fallback schema (persisted on first render).
+ *
+ * Dynamically detects the site type from content and generates the most
+ * specific Organization subtype. No AI API key required.
+ *
+ * @return array JSON-LD-ready schema array.
+ */
+function artitechcore_build_homepage_fallback_schema() {
+    $profile = artitechcore_get_ai_entity_profile();
+    $org_types = (!is_array($profile) || empty($profile['organization']['types']))
+        ? array('Organization')
+        : (array) $profile['organization']['types'];
+    $org_specialties = (is_array($profile) && !empty($profile['organization']['specialties']))
+        ? (array) $profile['organization']['specialties']
+        : array();
+
+    $schema_data = array(
+        '@context' => 'https://schema.org',
+        '@type'    => artitechcore_schema_types_to_at_type($org_types, 'Organization'),
+        'name'     => sanitize_text_field(get_bloginfo('name')),
+        'url'      => esc_url_raw(home_url()),
+        'description' => sanitize_text_field(get_bloginfo('description')),
+    );
+
+    if (!empty($org_specialties)) {
+        $type_str = is_string($schema_data['@type']) ? $schema_data['@type'] : 'Organization';
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.strtolower_strtolower -- type-name check, not a slug.
+        $type_lower = strtolower($type_str);
+        $is_medical = (false !== strpos($type_lower, 'medical') || false !== strpos($type_lower, 'dentist') || false !== strpos($type_lower, 'physician') || false !== strpos($type_lower, 'clinic'));
+        if ($is_medical) {
+            $split = artitechcore_split_medical_specialties($org_specialties);
+            if (!empty($split['medical'])) {
+                $schema_data['medicalSpecialty'] = $split['medical'];
+            }
+            if (!empty($split['other'])) {
+                $schema_data['knowsAbout'] = $split['other'];
+            }
+        } else {
+            $schema_data['knowsAbout'] = array_values(array_filter(array_map('sanitize_text_field', $org_specialties)));
+        }
+    }
+
+    $business_name = get_option('artitechcore_business_name', '');
+    $business_address = get_option('artitechcore_business_address', '');
+    $business_phone = get_option('artitechcore_business_phone', '');
+    $business_email = get_option('artitechcore_business_email', '');
+    if (!empty($business_name)) {
+        $schema_data['legalName'] = sanitize_text_field($business_name);
+    }
+    if (!empty($business_address)) {
+        $parsed = artitechcore_build_postal_address($business_address);
+        if (!empty($parsed)) {
+            $schema_data['address'] = $parsed;
+        }
+    }
+    if (!empty($business_phone)) {
+        $schema_data['telephone'] = sanitize_text_field($business_phone);
+    }
+    if (!empty($business_email)) {
+        $schema_data['email'] = sanitize_email($business_email);
+    }
+
+    return $schema_data;
+}
+
+/**
+ * Build the global Organization + WebSite graph for non-singular pages
+ * (blog index, date/author archives, search, 404).
+ *
+ * @return array JSON-LD-ready schema array.
+ */
+function artitechcore_build_global_schema_fallback() {
+    $site_url = home_url();
+    $graph = array();
+    $graph[] = artitechcore_get_organization_schema();
+    $graph[] = artitechcore_generate_website_schema();
+
+    // On the posts homepage, enrich with the homepage identity node so the
+    // page carries a named entity, not just publisher plumbing.
+    if (is_home() || is_front_page()) {
+        $home_node = artitechcore_build_homepage_fallback_schema();
+        unset($home_node['@context']);
+        if (!isset($home_node['@id'])) {
+            $home_node['@id'] = esc_url_raw($site_url) . '/#organization';
+        }
+        $graph[] = $home_node;
+    }
+
+    return array(
+        '@context' => 'https://schema.org',
+        '@graph' => $graph,
+    );
+}
+
+/**
+ * Echo a schema payload with consistent wrappers.
+ *
+ * @param array $schema_data JSON-LD-ready array.
+ */
+function artitechcore_echo_schema_payload($schema_data) {
+    if (empty($schema_data) || !is_array($schema_data)) {
+        return;
+    }
+    echo "\n" . '<!-- ArtitechCore Schema -->' . "\n";
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_json_encode produces safe JSON-LD; escaping would corrupt it.
+    echo '<script type="application/ld+json">' . "\n";
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_json_encode produces safe JSON-LD; escaping would corrupt it.
+    echo wp_json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    echo "\n" . '</script>' . "\n";
+    echo '<!-- /ArtitechCore Schema -->' . "\n";
+}
+
 function artitechcore_output_schema_markup() {
-    // Check if a major SEO plugin (Yoast, RankMath, AIOSEO) is active.
-    // Unlike before (which aborted all output), ArtitechCore now outputs its
-    // per-post custom schemas (FAQ, Service, MedicalBusiness, Review, etc.)
-    // alongside the SEO plugin's base schemas (Organization, WebSite, WebPage).
-    // Multiple JSON-LD blocks on a page are standard and handled correctly by Google.
+    // Explicit suppression wins over everything: output nothing but a note.
+    if (artitechcore_should_suppress_schema_output()) {
+        echo '<!-- ArtitechCore Schema: Output suppressed by artitechcore_skip_schema_output filter -->' . "\n";
+        return;
+    }
+
+    // Additive mode: note the SEO plugin coexistence, then continue and
+    // output ArtitechCore's own schemas. Multiple JSON-LD blocks are standard.
     if (artitechcore_has_conflicting_schema_plugin()) {
-        echo "<!-- ArtitechCore Schema: Running alongside " . esc_html(implode(', ', artitechcore_get_active_schema_plugins())) . " (additive, not conflicting) -->" . "\n";
+        $active = artitechcore_get_active_schema_plugins();
+        if (!empty($active)) {
+            echo '<!-- ArtitechCore Schema: Running alongside ' . esc_html(implode(', ', $active)) . ' (additive, not conflicting) -->' . "\n";
+        } else {
+            echo "<!-- ArtitechCore Schema: Running alongside a known SEO plugin (additive, not conflicting) -->\n";
+        }
     }
     // Term archives (category/tag/custom tax)
     if (is_category() || is_tag() || is_tax()) {
         $term = get_queried_object();
         if ($term && isset($term->term_id, $term->taxonomy)) {
-            $schema_row = artitechcore_get_schema_data($term->term_id, 'term');
-            $schema_data = !empty($schema_row['schema_data']) ? json_decode($schema_row['schema_data'], true) : null;
+            $schema_data = artitechcore_get_merged_schema_data(absint($term->term_id), 'term');
 
             if (empty($schema_data) && get_option('artitechcore_auto_schema_generation', true)) {
-                $schema_data = artitechcore_generate_term_schema_markup($term->term_id, $term->taxonomy, true);
+                $schema_data = artitechcore_generate_term_schema_markup(absint($term->term_id), sanitize_key($term->taxonomy), true);
             }
 
             if (!empty($schema_data)) {
-                echo "\n" . '<!-- ArtitechCore Schema -->' . "\n";
-                echo '<script type="application/ld+json">' . "\n";
-                echo wp_json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                echo "\n" . '</script>' . "\n";
-                echo '<!-- /ArtitechCore Schema -->' . "\n";
+                artitechcore_echo_schema_payload($schema_data);
             }
         }
         return;
     }
 
-    // Singular (posts, pages, CPT)
+    // Non-singular (blog index, archives, search, 404, posts-page homepage):
+    // never leave these pages schema-less; output the global fallback graph.
     if (!is_singular()) {
+        artitechcore_echo_schema_payload(artitechcore_build_global_schema_fallback());
         return;
     }
 
-    $schema_row = artitechcore_get_schema_data(get_the_ID(), 'post');
-    $schema_data = !empty($schema_row['schema_data']) ? json_decode($schema_row['schema_data'], true) : null;
+    // Singular (posts, pages, CPT): prefer the queried object ID, which is
+    // reliable in wp_head. Fall back to get_the_ID() for edge contexts.
+    $object_id = absint(get_queried_object_id());
+    if (0 === $object_id && function_exists('get_the_ID')) {
+        $object_id = absint(get_the_ID());
+    }
+    $schema_data = (0 !== $object_id) ? artitechcore_get_merged_schema_data($object_id, 'post') : null;
     
     // Homepage / front page fallback: dynamically detect site type from content
-    // and generate appropriate Organization/LocalBusiness/MedicalBusiness schema.
-    // Works for ANY industry — no AI API key required.
+    // and generate appropriate Organization subtype. Works for ANY industry —
+    // no AI API key required. Persisted so later views read from the DB.
     if (empty($schema_data) && is_front_page()) {
-        $profile = artitechcore_get_ai_entity_profile();
-        $org_types = !empty($profile['organization']['types']) ? $profile['organization']['types'] : ['Organization'];
-        $org_specialties = !empty($profile['organization']['specialties']) ? $profile['organization']['specialties'] : [];
-        
-        $schema_data = [
-            '@context' => 'https://schema.org',
-            '@type'    => $org_types,
-            'name'     => get_bloginfo('name'),
-            'url'      => home_url(),
-            'description' => get_bloginfo('description'),
-        ];
-        if (!empty($org_specialties)) {
-            $schema_data['medicalSpecialty'] = $org_specialties;
+        $schema_data = artitechcore_build_homepage_fallback_schema();
+        if (0 !== $object_id && is_array($schema_data)) {
+            artitechcore_save_schema_data($object_id, $schema_data, 'homepage', 'post', 'generated', 0);
         }
-        $business_name = get_option('artitechcore_business_name', '');
-        $business_address = get_option('artitechcore_business_address', '');
-        $business_phone = get_option('artitechcore_business_phone', '');
-        $business_email = get_option('artitechcore_business_email', '');
-        if (!empty($business_name)) $schema_data['legalName'] = $business_name;
-        if (!empty($business_address)) $schema_data['address'] = ['@type' => 'PostalAddress', 'address' => $business_address];
-        if (!empty($business_phone)) $schema_data['telephone'] = $business_phone;
-        if (!empty($business_email)) $schema_data['email'] = $business_email;
     }
     
     if (!empty($schema_data)) {
-        echo "\n" . '<!-- ArtitechCore Schema -->' . "\n";
-        echo '<script type="application/ld+json">' . "\n";
-
-        if (is_array($schema_data) || is_object($schema_data)) {
-            echo wp_json_encode($schema_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if (is_array($schema_data)) {
+            artitechcore_echo_schema_payload($schema_data);
         } else {
+            echo "\n" . '<!-- ArtitechCore Schema -->' . "\n";
+            echo '<script type="application/ld+json">' . "\n";
             echo wp_kses_post($schema_data);
+            echo "\n" . '</script>' . "\n";
+            echo '<!-- /ArtitechCore Schema -->' . "\n";
         }
-
-        echo "\n" . '</script>' . "\n";
-        echo '<!-- /ArtitechCore Schema -->' . "\n";
     }
 }
 add_action('wp_head', 'artitechcore_output_schema_markup');
@@ -1932,17 +2291,27 @@ function artitechcore_get_organization_schema() {
         $schema['@type'] = artitechcore_schema_types_to_at_type($profile['organization']['types'], 'Organization');
 
         if (!empty($profile['organization']['specialties'])) {
-            $types_str = strtolower(is_array($schema['@type']) ? implode(' ', $schema['@type']) : $schema['@type']);
-            if (strpos($types_str, 'medical') !== false || strpos($types_str, 'clinic') !== false || strpos($types_str, 'physician') !== false || strpos($types_str, 'dentist') !== false) {
-                $schema['medicalSpecialty'] = array_values((array)$profile['organization']['specialties']);
+            $type_str = is_string($schema['@type']) ? $schema['@type'] : 'Organization';
+            // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.strtolower_strtolower -- type-name check, not a slug.
+            $types_str = strtolower($type_str);
+            $is_medical_org = (false !== strpos($types_str, 'medical') || false !== strpos($types_str, 'clinic') || false !== strpos($types_str, 'physician') || false !== strpos($types_str, 'dentist'));
+            if ($is_medical_org) {
+                $split = artitechcore_split_medical_specialties((array) $profile['organization']['specialties']);
+                if (!empty($split['medical'])) {
+                    $schema['medicalSpecialty'] = $split['medical'];
+                }
+                if (!empty($split['other'])) {
+                    $schema['knowsAbout'] = $split['other'];
+                }
             } else {
-                $schema['knowsAbout'] = array_values((array)$profile['organization']['specialties']);
+                $schema['knowsAbout'] = array_values(array_filter(array_map('sanitize_text_field', (array) $profile['organization']['specialties'])));
             }
         }
 
-        $rel = $profile['relationship']['personToOrganization'] ?? 'none';
-        if ($rel !== 'none' && !empty($profile['primaryPerson']['name'])) {
-            $schema[$rel] = ['@id' => $site_url . '/#primaryPerson'];
+        $allowed_rels = array('founder', 'employee', 'member', 'worksFor', 'owner');
+        $rel = isset($profile['relationship']['personToOrganization']) ? sanitize_key($profile['relationship']['personToOrganization']) : 'none';
+        if (in_array($rel, $allowed_rels, true) && !empty($profile['primaryPerson']['name'])) {
+            $schema[$rel] = array('@id' => $site_url . '/#primaryPerson');
         }
     }
 
@@ -2011,7 +2380,7 @@ function artitechcore_generate_local_business_schema($post_id) {
     // AI-enrich LocalBusiness subtype/specificity when applicable (generic across industries).
     $profile = artitechcore_get_ai_entity_profile();
     if (is_array($profile) && !empty($profile['organization']['types'])) {
-        $types = (array)$profile['organization']['types'];
+        $types = array_values(array_unique(array_filter(array_map('sanitize_text_field', (array) $profile['organization']['types']))));
         // Ensure LocalBusiness is present when we are explicitly generating a local business node.
         if (!in_array('LocalBusiness', $types, true)) {
             array_unshift($types, 'LocalBusiness');
@@ -2019,17 +2388,26 @@ function artitechcore_generate_local_business_schema($post_id) {
         $schema['@type'] = artitechcore_schema_types_to_at_type($types, 'LocalBusiness');
 
         if (!empty($profile['organization']['specialties'])) {
-            $types_str = strtolower(is_array($schema['@type']) ? implode(' ', $schema['@type']) : $schema['@type']);
-            if (strpos($types_str, 'medical') !== false || strpos($types_str, 'clinic') !== false || strpos($types_str, 'physician') !== false || strpos($types_str, 'dentist') !== false) {
-                $schema['medicalSpecialty'] = array_values((array)$profile['organization']['specialties']);
+            $type_str = is_string($schema['@type']) ? $schema['@type'] : 'LocalBusiness';
+            // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.strtolower_strtolower -- type-name check, not a slug.
+            $types_str = strtolower($type_str);
+            $is_medical_lb = (false !== strpos($types_str, 'medical') || false !== strpos($types_str, 'clinic') || false !== strpos($types_str, 'physician') || false !== strpos($types_str, 'dentist'));
+            if ($is_medical_lb) {
+                $split = artitechcore_split_medical_specialties((array) $profile['organization']['specialties']);
+                if (!empty($split['medical'])) {
+                    $schema['medicalSpecialty'] = $split['medical'];
+                }
+                if (!empty($split['other'])) {
+                    $schema['knowsAbout'] = $split['other'];
+                }
             } else {
-                $schema['knowsAbout'] = array_values((array)$profile['organization']['specialties']);
+                $schema['knowsAbout'] = array_values(array_filter(array_map('sanitize_text_field', (array) $profile['organization']['specialties'])));
             }
         }
 
         // Link to primary person if present (helps “flat hierarchy” issue)
         if (!empty($profile['primaryPerson']['name'])) {
-            $schema['employee'] = ['@id' => home_url() . '/#primaryPerson'];
+            $schema['employee'] = array('@id' => home_url() . '/#primaryPerson');
         }
     }
 
@@ -2466,13 +2844,25 @@ function artitechcore_add_schema_column($columns) {
 }
 add_filter('manage_page_posts_columns', 'artitechcore_add_schema_column');
 
-// Display schema type in the schema column
+// Display schema type in the schema column (lists all stored types in v2).
 function artitechcore_display_schema_column($column, $post_id) {
     if ($column === 'schema') {
-        $schema_row = artitechcore_get_schema_data($post_id, 'post');
-        $schema_type = !empty($schema_row['schema_type']) ? $schema_row['schema_type'] : '';
-        if (!empty($schema_type)) {
-            echo '<span class="artitechcore-schema-badge artitechcore-schema-' . esc_attr($schema_type) . '">' . esc_html(ucfirst($schema_type)) . '</span>';
+        $rows = artitechcore_get_all_schema_data(absint($post_id), 'post');
+        if (!empty($rows)) {
+            $badges = array();
+            foreach ($rows as $schema_row) {
+                $schema_type = !empty($schema_row['schema_type']) ? sanitize_key($schema_row['schema_type']) : '';
+                if ('' === $schema_type) {
+                    continue;
+                }
+                $badges[] = '<span class="artitechcore-schema-badge artitechcore-schema-' . esc_attr($schema_type) . '">' . esc_html(ucfirst($schema_type)) . '</span>';
+            }
+            if (!empty($badges)) {
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- badges built with esc_attr/esc_html above.
+                echo implode(' ', $badges);
+            } else {
+                echo '<span class="artitechcore-schema-badge artitechcore-schema-none">Not Generated</span>';
+            }
         } else {
             echo '<span class="artitechcore-schema-badge artitechcore-schema-none">Not Generated</span>';
         }
@@ -3589,10 +3979,16 @@ function artitechcore_admin_export_schema_csv() {
 }
 add_action('admin_post_artitechcore_export_schema_csv', 'artitechcore_admin_export_schema_csv');
 
-// Prevent auto-regeneration from overwriting a user override
+// Prevent auto-regeneration from overwriting a user override.
+// v2: skip when ANY stored row for the object is locked.
 function artitechcore_should_skip_auto_schema_generation($post_id) {
-    $schema = artitechcore_get_schema_data($post_id, 'post');
-    return $schema && !empty($schema['is_locked']);
+    $rows = artitechcore_get_all_schema_data(absint($post_id), 'post');
+    foreach ($rows as $schema) {
+        if (!empty($schema['is_locked'])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
