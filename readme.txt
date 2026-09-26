@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-ArtitechCore is the ultimate page management and SEO infrastructure plugin, combining DG10 Agency design with powerful AI-driven content and schema...
+ArtitechCore is the AI website builder and automatic schema.org JSON-LD plugin for WordPress: generate full sites from industry blueprints, auto-generate valid structured data (FAQ, Service, MedicalBusiness, Article, LocalBusiness) for rich results, and enhance content for SEO with OpenAI, Gemini, or DeepSeek.
 
 == Description ==
 
@@ -70,11 +70,20 @@ You can choose to keep SEO schemas and/or AI enhancement data after uninstallati
 
 == Screenshots ==
 
-1. **Branded Dashboard** - The central hub for all business management.
-2. **AI Logic Engine** - Creating structured site maps from simple descriptions.
-3. **Advanced Schema UI** - The full dashboard for structured data management.
-4. **JSON Modal Editor** - Live code editing with validation tools.
-5. **Import/Export System** - Managing large datasets with CSV tools.
+1. **Manual Page Creation** - Build page hierarchies by hand with custom parent-child structure.
+2. **Schema Generator Dashboard** - Coverage stats, per-type distribution, bulk generate/remove, CSV export.
+3. **AI Ecosystem Architect** - Describe the business, get a full page ecosystem with AI.
+4. **Settings: Providers & Brand Kit** - OpenAI/Gemini/DeepSeek keys, rate limits, brand identity.
+5. **Website Builder Blueprints** - Dental, legal, restaurant, e-commerce, services, portfolio, corporate.
+6. **Content Enhancer** - Bulk Key Takeaways (TL;DR), Smart Conclusions, adaptive CTAs.
+7. **CSV Bulk Import** - Hundreds of validated SEO pages with parent-child mapping in seconds.
+8. **Menu Generator** - Nav, service, and footer menus generated from your hierarchy.
+9. **Page Hierarchy** - Visual sitemap to audit site structure at a glance.
+10. **Keyword Analysis** - Density and on-page SEO signals per post.
+11. **Custom Post Types** - Industry post types (Doctors, Products) with taxonomies.
+12. **Post Templates** - Dynamic templates per post type for consistent output.
+
+🎬 Video tour (26 sec, all features working live): https://github.com/DG10-Agency/ArtitechCore-WP/blob/main/.github/readme/artitechcore-tour.mp4
 
 == Changelog ==
 
