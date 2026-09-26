@@ -66,16 +66,47 @@ function artitechcore_get_all_schema_data($object_id, $object_type = 'post') {
 }
 
 /**
- * Merge all stored schema rows for an object into one JSON-LD payload.
+ * Dedupe graph nodes by @id (first node wins; later dupes fill gaps).
  *
- * Each row holds a full {"@context": ..., "@graph": [...]} document. Merging
- * concatenates graph nodes and dedupes by @id so Organization/WebSite nodes
- * shared across rows appear once. Single-row installs behave as before.
+ * Single choke point for @id uniqueness across assembly paths. Nodes without
+ * an @id are always kept. @type is never unioned (single most-specific type
+ * invariant); only missing/empty properties are backfilled.
  *
- * @param int $object_id The post or term ID.
- * @param string $object_type The object type ('post' or 'term').
- * @return array|null Merged schema array, or null when nothing stored/decodable.
+ * ponytail: one-level (non-recursive) merge; nested dupes (e.g. two contactPoints
+ * with own @ids) are out of scope — node counts per graph are tiny.
+ *
+ * @param array $nodes List of schema node arrays.
+ * @return array Deduped node list, original order preserved.
  */
+function artitechcore_dedupe_graph_nodes($nodes) {
+    $deduped = array();
+    $index_by_id = array();
+    foreach ((array) $nodes as $node) {
+        if (!is_array($node)) {
+            continue;
+        }
+        if (isset($node['@id']) && is_string($node['@id']) && '' !== $node['@id']) {
+            $id = $node['@id'];
+            if (isset($index_by_id[$id])) {
+                $pos = $index_by_id[$id];
+                foreach ($node as $k => $v) {
+                    if ('@type' === $k || '@context' === $k || '@id' === $k) {
+                        continue;
+                    }
+                    if (!isset($deduped[$pos][$k]) || '' === $deduped[$pos][$k] || array() === $deduped[$pos][$k]) {
+                        $deduped[$pos][$k] = $v;
+                    }
+                }
+                continue;
+            }
+            $index_by_id[$id] = count($deduped);
+        }
+        $deduped[] = $node;
+    }
+    return array_values($deduped);
+}
+
+/** Merge stored rows for one object; nodes deduped by @id via helper. */
 function artitechcore_get_merged_schema_data($object_id, $object_type = 'post') {
     $rows = artitechcore_get_all_schema_data($object_id, $object_type);
     if (empty($rows)) {
@@ -92,7 +123,6 @@ function artitechcore_get_merged_schema_data($object_id, $object_type = 'post') 
     }
 
     $merged_graph = array();
-    $seen_ids = array();
 
     foreach ($rows as $row) {
         if (empty($row['schema_data'])) {
@@ -113,17 +143,14 @@ function artitechcore_get_merged_schema_data($object_id, $object_type = 'post') 
             if (!is_array($node)) {
                 continue;
             }
-            if (isset($node['@id']) && is_string($node['@id']) && '' !== $node['@id']) {
-                if (isset($seen_ids[$node['@id']])) {
-                    continue;
-                }
-                $seen_ids[$node['@id']] = true;
-            }
             // Strip per-row context; the merged document carries one.
             unset($node['@context']);
             $merged_graph[] = $node;
         }
     }
+
+    // Single choke point: dedupe by @id (later dupes backfill gaps).
+    $merged_graph = artitechcore_dedupe_graph_nodes($merged_graph);
 
     if (empty($merged_graph)) {
         return null;
@@ -318,7 +345,10 @@ function artitechcore_detect_site_profile_from_content() {
     } else {
         $primary = $top_industries[0];
         $org_types  = $org_type_map[$primary] ?? ['Organization', 'LocalBusiness'];
-        $spec       = $primary === 'Medical' ? ['Naturopathic Medicine', 'Homeopathy', 'Holistic Health'] : [];
+        // Omit-when-unknown: no invented specialties. The no-AI content fallback
+        // cannot know a clinic's real specialty, so it emits none — downstream
+        // builders only add medicalSpecialty/knowsAbout when non-empty.
+        $spec       = [];
         $person_types = $person_type_map[$primary] ?? ['Person'];
     }
 
@@ -1494,6 +1524,9 @@ if (!function_exists('artitechcore_generate_schema_markup')) {
             case ArtitechCore_SCHEMA_LOCAL_BUSINESS:
                 $main_entity = artitechcore_generate_local_business_schema($post_id);
                 break;
+            case ArtitechCore_SCHEMA_MEDICAL_BUSINESS:
+                $main_entity = artitechcore_generate_medical_business_schema($post_id);
+                break;
             case ArtitechCore_SCHEMA_HOWTO:
                 $main_entity = artitechcore_generate_howto_schema($post_id);
                 break;
@@ -1713,6 +1746,10 @@ function artitechcore_build_global_schema_fallback() {
         }
         $graph[] = $home_node;
     }
+
+    // Enforce @id uniqueness across paths: the home node above reuses the
+    // org @id, so merge it into the org node instead of emitting a duplicate.
+    $graph = artitechcore_dedupe_graph_nodes($graph);
 
     return array(
         '@context' => 'https://schema.org',
@@ -2429,6 +2466,52 @@ function artitechcore_generate_local_business_schema($post_id) {
     if ($logo_url) {
         $schema['logo'] = esc_url_raw($logo_url);
     }
+
+    return $schema;
+}
+
+/**
+ * Generate MedicalBusiness schema for clinic/practitioner pages.
+ *
+ * Reuses the local-business enrichment chain (contact, address, specialties,
+ * person link) so medical typing stays single-sourced, then re-heads the node
+ * as the page-level medical entity with the most-specific medical @type.
+ * No @id here: the generator assigns permalink#article like sibling builders.
+ *
+ * @param int $post_id The post ID.
+ * @return array Medical business schema node.
+ */
+function artitechcore_generate_medical_business_schema($post_id) {
+    $schema = artitechcore_generate_local_business_schema($post_id);
+
+    $profile = artitechcore_get_ai_entity_profile();
+    $types = (is_array($profile) && !empty($profile['organization']['types']))
+        ? (array) $profile['organization']['types']
+        : array('MedicalBusiness');
+    $type_str = implode(' ', array_map('strval', $types));
+    // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.strtolower_strtolower -- type-name check, not a slug.
+    $is_medical = false !== strpos(strtolower($type_str), 'medical')
+        || false !== strpos(strtolower($type_str), 'clinic')
+        || false !== strpos(strtolower($type_str), 'physician')
+        || false !== strpos(strtolower($type_str), 'dentist')
+        || false !== strpos(strtolower($type_str), 'hospital');
+    if ($is_medical) {
+        if (!in_array('MedicalBusiness', $types, true)) {
+            array_unshift($types, 'MedicalBusiness');
+        }
+        $schema['@type'] = artitechcore_schema_types_to_at_type($types, 'MedicalBusiness');
+    } else {
+        // No medical signal anywhere: generic MedicalBusiness, never an invented subtype.
+        $schema['@type'] = 'MedicalBusiness';
+    }
+
+    // Page-level identity (the local builder defaults to site-level).
+    $schema['name'] = sanitize_text_field(get_the_title($post_id));
+    $excerpt = get_the_excerpt($post_id);
+    if ('' !== $excerpt) {
+        $schema['description'] = sanitize_text_field($excerpt);
+    }
+    $schema['url'] = esc_url_raw(get_permalink($post_id));
 
     return $schema;
 }
