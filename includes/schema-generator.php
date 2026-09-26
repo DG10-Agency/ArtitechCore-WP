@@ -93,6 +93,10 @@ function artitechcore_dedupe_graph_nodes($nodes) {
                     if ('@type' === $k || '@context' === $k || '@id' === $k) {
                         continue;
                     }
+                    // Never backfill empties: keeps previously-absent keys absent.
+                    if (null === $v || '' === $v || array() === $v) {
+                        continue;
+                    }
                     if (!isset($deduped[$pos][$k]) || '' === $deduped[$pos][$k] || array() === $deduped[$pos][$k]) {
                         $deduped[$pos][$k] = $v;
                     }
