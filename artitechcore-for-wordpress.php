@@ -3,7 +3,7 @@
  * Plugin Name: ArtitechCore
  * Plugin URI: https://github.com/DG10-Agency/ArtitechCore-WP
  * Description: The core engine for Artitech WP ecosystem, providing AI-powered page generation, hierarchy management, and structural organization.
- * Version: 1.2.0
+ * Version: 1.0.0
  * Requires at least: 5.6
  * Tested up to: 7.1
  * Requires PHP: 7.4
@@ -15,12 +15,12 @@
  * Domain Path: /languages
  * 
  * @package ArtitechCore
- * @version 1.2.0
+ * @version 1.0.0
  * @author DG10 Agency
  * @license GPL-2.0+
  */
 
-define('ARTITECHCORE_VERSION', '1.2.0');
+define('ARTITECHCORE_VERSION', '1.0.0');
 define('ARTITECHCORE_DB_VERSION', 2);
 
 if (!defined('ABSPATH')) {
@@ -49,7 +49,7 @@ if (!defined('ARTITECHCORE_AI_MAX_TOKENS')) {
 function artitechcore_activate() {
     // Set default plugin options
     $default_options = array(
-        'artitechcore_version' => '1.2.0',
+        'artitechcore_version' => '1.0.0',
         'artitechcore_ai_provider' => 'openai',
         'artitechcore_openai_api_key' => '',
         'artitechcore_gemini_api_key' => '',

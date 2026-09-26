@@ -4,7 +4,7 @@ Tags: pages, schema markup, bulk creation, ai content, seo generator
 Requires at least: 5.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -78,7 +78,7 @@ You can choose to keep SEO schemas and/or AI enhancement data after uninstallati
 
 == Changelog ==
 
-= 1.2.0 =
+= 1.0.0 =
 * **NEW**: Multiple schema rows per post/term (one per schema type) with merged @graph output — FAQ + Service + MedicalBusiness rows now coexist instead of overwriting each other. Includes automatic v2 database migration (dedupes legacy rows, keeps newest).
 * **NEW**: Global Organization + WebSite schema fallback for non-singular pages (blog index, archives, search, 404) — these pages are never schema-less now.
 * **FIX**: Singular output uses get_queried_object_id() with get_the_ID() fallback for reliable rendering in wp_head.
